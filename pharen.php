@@ -41,12 +41,12 @@ class Lexer{
         $this->char = $code[$i++];
     }
 
-    public function expression(){
+    public function lex_char(){
         if($this->char == "("){
             $this->tok = new OpenParenToken;
         }else if($this->char == ")"){
             $this->tok = new CloseParenToken;
-        }
+        }else if
     }
 
 }
