@@ -1,16 +1,52 @@
 <?php
-class phLexer{
-	const PAREN_OPEN = "PAREN_OPEN";
-	const PAREN_CLOSE = "PAREN_CLOSE";
-    const PARAMS_START = "PARAMS_START";
-    const PARAMS_CLOSE = "PARAMS_CLOSE";
-	const INT_VALUE = "PAREN_OPEN";
-	const FUNC_CALL = "PAREN_OPEN";
-	
+class Token{
+    private $value;
+
+    public function __construct($value=null){
+        $this->value = $value;
+    }
+}
+
+class OpenParenToken{
+}
+
+class CloseParenToken{
+}
+
+class StringToken{
+}
+
+class NameToken{
+}
+
+class Lexer{
 	private $code;
-	private $state;
+    private $char;
+    private $tok;
+	private $state = "";
+    private $toks = array();
+    private $escaping = false;
+    private $i=0;
 	
 	public function __construct($code){
 		$this->code = $code;
 	}
+
+    public function lex(){
+        $this->next_char();
+        $this->state = 
+    }
+
+    public function next_char(){
+        $this->char = $code[$i++];
+    }
+
+    public function expression(){
+        if($this->char == "("){
+            $this->tok = new OpenParenToken;
+        }else if($this->char == ")"){
+            $this->tok = new CloseParenToken;
+        }
+    }
+
 }
