@@ -33,11 +33,11 @@ class Lexer{
 	}
 
     public function lex(){
-        $this->next_char();
-        $this->state = 
+        for($this->i=0;$this->i<strlen($this->code);$this->i++){
+
     }
 
-    public function next_char(){
+    public function get_char(){
         $this->char = $code[$i++];
     }
 
@@ -46,7 +46,7 @@ class Lexer{
             $this->tok = new OpenParenToken;
         }else if($this->char == ")"){
             $this->tok = new CloseParenToken;
-        }else if
+        }else if(
     }
 
 }
