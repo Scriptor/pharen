@@ -95,6 +95,36 @@ class Lexer{
     }
 }
 
+class Node{
+    static $INFIX_OPERATORS = array("+", "-", "*", "/", "and", "or", "==", '=');
+
+    public $parent;
+    private $children;
+    private $infix = False;
+
+    public function __construct(Node $parent=null, $children=array()){
+        $this->parent = $parent;
+        $this->children = $children;
+    }
+
+    protected function split_children(){
+        return array($this->children[0], array_slice($this->children, 1));
+    }
+
+    public function add_child(Node $child){
+        $this->children[] = $child;
+    }
+
+    public function compile(){
+        list($func_name, $args) = $this->split_children();
+        while(list($key) = each($args)){
+            $args[$key] = $args[$key]->compile();
+        }
+        $args_string = implode(", ", $args);
+        return "$func_name($args_string)";
+    }
+}
+
 class Parser{
     private $tokens;
     private $state;
