@@ -95,6 +95,29 @@ class Lexer{
     }
 }
 
+class Parser{
+    private $tokens;
+    private $state;
+    private $curnode;
+    private $parent;
+
+    public function __construct($tokens){
+        $this->tokens = $tokens;
+    }
+
+    public function parse(){
+        foreach($this->tokens as $tok){
+            $this->parse_token($tok);
+        }
+    }
+
+    public function parse_token($tok){
+    }
+}
+
+$a = new NameToken;
+$b = new NameToken;
+
 $code = file_get_contents("simple.phn");
 $code = trim($code);
 $lexer = new Lexer($code);
