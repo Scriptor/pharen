@@ -28,17 +28,17 @@ class NameToken extends Token{
 }
 
 class Lexer{
-	private $code;
+    private $code;
     private $char;
     private $tok;
-	private $state = "new-expression";
+    private $state = "new-expression";
     private $toks = array();
     private $escaping = false;
     private $i=0;
 	
-	public function __construct($code){
-		$this->code = $code;
-	}
+    public function __construct($code){
+        $this->code = $code;
+    }
 
     public function lex(){
         for($this->i=0;$this->i<strlen($this->code);$this->i++){
@@ -323,6 +323,5 @@ $tokens = $lexer->lex();
 
 $parser = new Parser($tokens);
 $node_tree = $parser->parse();
-$code = nl2br($node_tree->compile());
-$code = str_replace("\t", str_repeat("&nbsp;", 4), $code);
-echo $code;
+$code = $node_tree->compile();
+echo "<pre>".$code."</pre>";
