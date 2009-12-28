@@ -149,7 +149,7 @@ class InfixNode extends Node{
 
     public function compile(){
         list($func_name, $args) = $this->get_compiled_func_args();
-        $code = implode($func_name, $args);
+        $code = implode(' '.$func_name.' ', $args);
         return "(".$code.")";
     }
 
@@ -177,7 +177,6 @@ class RootNode extends Node{
 
 class LeafNode extends Node{
     private $value;
-    public $infix;
 
     public function __construct(Node $parent, $value){
         $this->parent = $parent;
@@ -186,6 +185,13 @@ class LeafNode extends Node{
 
     public function compile(){
         return $this->value;
+    }
+}
+
+class VariableNode extends LeafNode{
+    
+    public function compile(){
+        return '$'.parent::compile();
     }
 }
 
@@ -198,7 +204,7 @@ class StringNode extends LeafNode{
 
 class Parser{
     static $NODE_TOK_MAP = array(
-        "NameToken" => "LeafNode",
+        "NameToken" => "VariableNode",
         "StringToken" => "StringNode",
         "NumberToken" => "LeafNode"
     );
@@ -230,6 +236,7 @@ class Parser{
             }else{
                 $newnode = new Node($this->curnode);
             }
+            $this->state = "function-call";
             $this->curnode->add_child($newnode);
             $this->curnode = $newnode;
         }else if($tok instanceof CloseParenToken){
@@ -237,7 +244,12 @@ class Parser{
                 $this->curnode = $this->curnode->parent;
             }
         }else{
-            $newnode = new self::$NODE_TOK_MAP[get_class($tok)]($this->curnode, $tok->value);
+            if($this->state == "function-call"){
+                $newnode = new LeafNode($this->curnode, $tok->value);
+                $this->state = "";
+            }else{
+                $newnode = new self::$NODE_TOK_MAP[get_class($tok)]($this->curnode, $tok->value);
+            }
             $this->curnode->add_child($newnode);
         }
     }
