@@ -1,2 +1,3 @@
 (f1 foo "hello" (f2 "world"))
 (f3 foo)
+(+ 2 2)

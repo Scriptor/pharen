@@ -103,7 +103,6 @@ class Node{
 
     public $parent;
     protected $children;
-    private $infix = False;
 
     public function __construct(Node $parent=null, $children=array()){
         $this->parent = $parent;
@@ -118,14 +117,24 @@ class Node{
         $this->children[] = $child;
     }
 
-    public function compile(){
-        list($func_name, $args) = $this->split_children();
-        $func_name = $func_name->compile();
+    public function compile_args($args){
         while(list($key) = each($args)){
             $args[$key] = $args[$key]->compile();
         }
-        $args_string = implode(", ", $args);
-        return "$func_name($args_string)";
+        return $args;
+    }
+
+    public function compile(){
+        list($func_name_node, $args) = $this->split_children();
+        $args = $this->compile_args($args);
+        $func_name = $func_name_node->compile();
+        
+        if($func_name_node->infix){
+            return "(".implode(' '.$func_name.' ', $args).")";
+        }else{
+            $args_string = implode(", ", $args);
+            return "$func_name($args_string)";
+        }
     }
 
     public function compile_statement(){
@@ -148,10 +157,14 @@ class RootNode extends Node{
 
 class LeafNode extends Node{
     private $value;
+    public $infix;
 
     public function __construct(Node $parent, $value){
         $this->parent = $parent;
         $this->value = $value;
+        if(in_array($value, Node::$INFIX_OPERATORS)){
+            $this->infix = true;
+        }
     }
 
     public function compile(){
