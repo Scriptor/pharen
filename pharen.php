@@ -80,6 +80,9 @@ class Lexer{
             }else if($this->char == ")"){
                 $this->tok = new CloseParenToken;
                 $this->state = "new-expression";
+            }else if($this->char == "]"){
+                $this->tok = new CloseBracketToken;
+                $this->state = "new-expression";
             }else{
                 $this->tok->append($this->char);
             }
@@ -152,6 +155,14 @@ class Node{
     public function compile_statement(){
         $code = $this->compile();
         return $code.";\n";
+    }
+}
+
+class LiteralNode extends Node{
+
+    public function compile(){
+        $els = $this->compile_args($this->children);
+        return "(".implode(", ", $els).")";
     }
 }
 
@@ -289,7 +300,11 @@ class Parser{
             }
             $this->curnode->add_child($newnode);
             $this->curnode = $newnode;
-        }else if($tok instanceof CloseParenToken){
+        }else if($tok instanceof OpenBracketToken){
+            $newnode = new LiteralNode($this->curnode);
+            $this->curnode->add_child($newnode);
+            $this->curnode = $newnode;
+        }else if($tok instanceof CloseParenToken or $tok instanceof CloseBracketToken){
             if($this->curnode->parent !== null){
                 $this->curnode = $this->curnode->parent;
             }
