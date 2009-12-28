@@ -18,6 +18,12 @@ class OpenParenToken extends Token{
 class CloseParenToken extends Token{
 }
 
+class OpenBracketToken extends Token{
+}
+
+class CloseBracketToken extends Token{
+}
+
 class NumberToken extends Token{
 }
 
@@ -84,6 +90,10 @@ class Lexer{
             }else if($this->char == ")"){
                 // Allow for empty set of parens
                 $this->tok = new CloseParenToken;
+            }else if($this->char == "["){
+                $this->tok = new OpenBracketToken;
+            }else if($this->char == "]"){
+                $this->tok = new CloseBracketToken;
             }else if($this->char == '"'){
                 $this->tok = new StringToken;
                 $this->state = "string";
@@ -323,5 +333,5 @@ $tokens = $lexer->lex();
 
 $parser = new Parser($tokens);
 $node_tree = $parser->parse();
-$code = $node_tree->compile();
-echo "<pre>".$code."</pre>";
+$phpcode = $node_tree->compile();
+echo "<pre>".$phpcode."</pre>";
