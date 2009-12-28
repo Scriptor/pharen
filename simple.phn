@@ -8,3 +8,6 @@
 (if (== 2 2)
     (= foo 3)
     (= bar 4))
+
+(fn foo [abc]
+    (print abc))
