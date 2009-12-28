@@ -129,7 +129,7 @@ class Node{
     }
 }
 
-class NameNode extends Node{
+class LeafNode extends Node{
     private $value;
 
     public function __construct(Node $parent, $value){
@@ -142,9 +142,18 @@ class NameNode extends Node{
     }
 }
 
+class StringNode extends LeafNode{
+
+    public function compile(){
+        return '"'.parent::compile().'"';
+    }
+}
+
 class Parser{
     static $NODE_TOK_MAP = array(
-        "NameToken" => "NameNode"
+        "NameToken" => "LeafNode",
+        "StringToken" => "StrongNode",
+        "NumberToken" => "LeafNode"
     );
 
     private $tokens;
