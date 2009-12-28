@@ -124,23 +124,17 @@ class Node{
         return $args;
     }
 
-    public function compile(){
+    public function get_compiled_func_args(){
+        // Returns the compiled code for the function name and the arguments
+        // in a function call.
         list($func_name_node, $args) = $this->split_children();
-        $args = $this->compile_args($args);
         $func_name = $func_name_node->compile();
-        
-        if($func_name_node->infix){
-            return $this->compile_infix($func_name, $args);
-        }else{
-            return $this->compile_normal($func_name, $args);
-        }
+        $args = $this->compile_args($args);
+        return array($func_name, $args);
     }
 
-    public function compile_infix($func_name, $args){
-        return "(".implode(' '.$func_name.' ', $args).")";
-    }
-
-    public function compile_normal($func_name, $args){
+    public function compile(){
+        list($func_name, $args) = $this->get_compiled_func_args();
         $args_string = implode(", ", $args);
         return "$func_name($args_string)";
     }
@@ -151,8 +145,25 @@ class Node{
     }
 }
 
+class InfixNode extends Node{
+
+    public function compile(){
+        list($func_name, $args) = $this->get_compiled_func_args();
+        $code = implode($func_name, $args);
+        return "(".$code.")";
+    }
+
+    public function compile_statement(){
+        $code = $this->compile();
+        // Remove parentheses added by regular compile() since they're not
+        // needed for statements. Makes pretty.
+        return substr($code, 1, strlen($code)-2).";\n";
+    }
+}
+
 class RootNode extends Node{
     public function __construct(){
+        // No parent to be passed to the constructor. It's Root all the way down.
     }
 
     public function compile(){
@@ -171,9 +182,6 @@ class LeafNode extends Node{
     public function __construct(Node $parent, $value){
         $this->parent = $parent;
         $this->value = $value;
-        if(in_array($value, Node::$INFIX_OPERATORS)){
-            $this->infix = true;
-        }
     }
 
     public function compile(){
@@ -217,7 +225,11 @@ class Parser{
 
     public function parse_token($tok){
         if($tok instanceof OpenParenToken){
-            $newnode = new Node($this->curnode);
+            if($this->isinfix()){
+                $newnode = new InfixNode($this->curnode);
+            }else{
+                $newnode = new Node($this->curnode);
+            }
             $this->curnode->add_child($newnode);
             $this->curnode = $newnode;
         }else if($tok instanceof CloseParenToken){
@@ -229,6 +241,16 @@ class Parser{
             $this->curnode->add_child($newnode);
         }
     }
+
+    public function lookahead(){
+        return $this->tokens[$this->i+1];
+    }
+
+    public function isinfix(){
+        $nextval = $this->lookahead()->value;
+        return in_array($nextval, Node::$INFIX_OPERATORS);
+    }
+        
 }
 
 $code = file_get_contents("simple.phn");
