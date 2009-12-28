@@ -223,32 +223,45 @@ class StringNode extends LeafNode{
     }
 }
 
-class FuncDefNode extends Node{
-    
-    public function compile(){
-        $name = $this->children[1]->compile();
-        $args = $this->children[2]->compile_list();
-        $body = $this->children[3]->compile();
-
-        
-    }
-}
-
 class SpecialForm extends Node{
+    protected $body_index;
 
     public function compile_statement(){
         return $this->compile();
     }
+
+    public function compile_body(){
+        // Compile the body expressions of the special form according to
+        // the start index of the first body expression.
+        $body = "";
+        foreach(array_slice($this->children, $this->body_index) as $child){
+            $body .= "\t".$child->compile_statement();
+        }
+        return $body;
+    }
+}
+
+class FuncDefNode extends SpecialForm{
+    protected $body_index = 3;
+    
+    public function compile(){
+        $name = $this->children[1]->compile();
+        $args = $this->children[2]->compile();
+        $body = $this->compile_body();
+
+        $code = "function ".$name.$args."{\n".
+                    $body.
+                "}";
+        return $code;
+    }
 }
 
 class IfNode extends SpecialForm{
+    protected $body_index = 2;
 
     public function compile(){
         $cond = $this->children[1]->compile();
-        $body = "";
-        foreach(array_slice($this->children, 2) as $child){
-            $body .= "\t".$child->compile_statement();
-        }
+        $body = $this->compile_body();
 
         return "if".$cond."{\n".
                     $body.
@@ -264,7 +277,7 @@ class Parser{
     );
 
     static $SPECIAL_FORMS = array(
-        "function" => "FuncDefNode",
+        "fn" => "FuncDefNode",
         "if" => "IfNode"
     );
 
