@@ -202,11 +202,49 @@ class StringNode extends LeafNode{
     }
 }
 
+class FuncDefNode extends Node{
+    
+    public function compile(){
+        $name = $this->children[1]->compile();
+        $args = $this->children[2]->compile_list();
+        $body = $this->children[3]->compile();
+
+        
+    }
+}
+
+class SpecialForm extends Node{
+
+    public function compile_statement(){
+        return $this->compile();
+    }
+}
+
+class IfNode extends SpecialForm{
+
+    public function compile(){
+        $cond = $this->children[1]->compile();
+        $body = "";
+        foreach(array_slice($this->children, 2) as $child){
+            $body .= "\t".$child->compile_statement();
+        }
+
+        return "if".$cond."{\n".
+                    $body.
+                "}";
+    }
+}
+
 class Parser{
     static $NODE_TOK_MAP = array(
         "NameToken" => "VariableNode",
         "StringToken" => "StringNode",
         "NumberToken" => "LeafNode"
+    );
+
+    static $SPECIAL_FORMS = array(
+        "function" => "FuncDefNode",
+        "if" => "IfNode"
     );
 
     private $tokens;
@@ -231,12 +269,14 @@ class Parser{
 
     public function parse_token($tok){
         if($tok instanceof OpenParenToken){
+            $this->state = "function-call";
             if($this->isinfix()){
                 $newnode = new InfixNode($this->curnode);
+            }else if(($class = $this->is_special()) !== False){
+                $newnode = new $class($this->curnode);
             }else{
                 $newnode = new Node($this->curnode);
             }
-            $this->state = "function-call";
             $this->curnode->add_child($newnode);
             $this->curnode = $newnode;
         }else if($tok instanceof CloseParenToken){
@@ -248,7 +288,8 @@ class Parser{
                 $newnode = new LeafNode($this->curnode, $tok->value);
                 $this->state = "";
             }else{
-                $newnode = new self::$NODE_TOK_MAP[get_class($tok)]($this->curnode, $tok->value);
+                $class = get_class($tok);
+                $newnode = new self::$NODE_TOK_MAP[$class]($this->curnode, $tok->value);
             }
             $this->curnode->add_child($newnode);
         }
@@ -262,7 +303,17 @@ class Parser{
         $nextval = $this->lookahead()->value;
         return in_array($nextval, Node::$INFIX_OPERATORS);
     }
-        
+
+    public function is_special(){
+        // Also returns the class name corresponding to the special form
+        // if one exists, otherwise returns False.
+        $nextval = $this->lookahead()->value;
+        if(isset(self::$SPECIAL_FORMS[$nextval])){
+            return self::$SPECIAL_FORMS[$nextval];
+        }else{
+            return False;
+        }
+    }        
 }
 
 $code = file_get_contents("simple.phn");
@@ -272,4 +323,6 @@ $tokens = $lexer->lex();
 
 $parser = new Parser($tokens);
 $node_tree = $parser->parse();
-echo nl2br($node_tree->compile());
+$code = nl2br($node_tree->compile());
+$code = str_replace("\t", str_repeat("&nbsp;", 4), $code);
+echo $code;
