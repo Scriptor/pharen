@@ -227,7 +227,7 @@ class SpecialForm extends Node{
     protected $body_index;
 
     public function compile_statement(){
-        return $this->compile();
+        return $this->compile()."\n";
     }
 
     public function compile_body(){
