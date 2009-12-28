@@ -102,7 +102,7 @@ class Node{
     static $INFIX_OPERATORS = array("+", "-", "*", "/", "and", "or", "==", '=');
 
     public $parent;
-    private $children;
+    protected $children;
     private $infix = False;
 
     public function __construct(Node $parent=null, $children=array()){
@@ -125,9 +125,22 @@ class Node{
             $args[$key] = $args[$key]->compile();
         }
         $args_string = implode(", ", $args);
-        $code = "$func_name($args_string)";
-        if(!$this->parent){
-            $code .= ";";
+        return "$func_name($args_string)";
+    }
+
+    public function compile_statement(){
+        return $this->compile().";\n";
+    }
+}
+
+class RootNode extends Node{
+    public function __construct(){
+    }
+
+    public function compile(){
+        $code = "";
+        foreach($this->children as $child){
+            $code .= $child->compile_statement();
         }
         return $code;
     }
@@ -163,20 +176,21 @@ class Parser{
     private $tokens;
     private $state;
     private $curnode;
+    private $rootnode;
 
     public function __construct($tokens){
         $this->tokens = $tokens;
-        // Warning: assumed that first token is an opening parenthesis
-        $this->curnode = new Node;
+        $this->curnode = new RootNode;
+        $this->rootnode = $this->curnode;
     }
 
     public function parse(){
-        foreach(array_slice($this->tokens, 1) as $tok){
+        foreach($this->tokens as $tok){
             $this->parse_token($tok);
         }
 
         // Since all parentheses have been closed, curnode should now point to root node
-        return $this->curnode;
+        return $this->rootnode;
     }
 
     public function parse_token($tok){
@@ -202,4 +216,4 @@ $tokens = $lexer->lex();
 
 $parser = new Parser($tokens);
 $node_tree = $parser->parse();
-echo $node_tree->compile();
+echo nl2br($node_tree->compile());
