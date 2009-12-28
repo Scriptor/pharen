@@ -125,7 +125,11 @@ class Node{
             $args[$key] = $args[$key]->compile();
         }
         $args_string = implode(", ", $args);
-        return "$func_name($args_string)";
+        $code = "$func_name($args_string)";
+        if(!$this->parent){
+            $code .= ";";
+        }
+        return $code;
     }
 }
 
@@ -152,7 +156,7 @@ class StringNode extends LeafNode{
 class Parser{
     static $NODE_TOK_MAP = array(
         "NameToken" => "LeafNode",
-        "StringToken" => "StrongNode",
+        "StringToken" => "StringNode",
         "NumberToken" => "LeafNode"
     );
 
