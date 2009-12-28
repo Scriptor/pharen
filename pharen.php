@@ -1,6 +1,7 @@
 <?php
+error_reporting(E_ALL);
 class Token{
-    private $value;
+    public $value;
 
     public function __construct($value=null){
         $this->value = $value;
@@ -43,7 +44,9 @@ class Lexer{
         for($this->i=0;$this->i<strlen($this->code);$this->i++){
             $this->get_char();
             $this->lex_char();
-            if($this->tok !== $this->toks[sizeof($this->toks)-1]){
+
+            $toks_size = sizeof($this->toks);
+            if($toks_size == 0 or $this->tok !== $this->toks[$toks_size-1]){
                 $this->toks[] = $this->tok;
             }
         }
@@ -117,6 +120,7 @@ class Node{
 
     public function compile(){
         list($func_name, $args) = $this->split_children();
+        $func_name = $func_name->compile();
         while(list($key) = each($args)){
             $args[$key] = $args[$key]->compile();
         }
@@ -125,30 +129,64 @@ class Node{
     }
 }
 
-class Parser{
-    private $tokens;
-    private $state;
-    private $curnode;
-    private $parent;
+class NameNode extends Node{
+    private $value;
 
-    public function __construct($tokens){
-        $this->tokens = $tokens;
+    public function __construct(Node $parent, $value){
+        $this->parent = $parent;
+        $this->value = $value;
     }
 
-    public function parse(){
-        foreach($this->tokens as $tok){
-            $this->parse_token($tok);
-        }
-    }
-
-    public function parse_token($tok){
+    public function compile(){
+        return $this->value;
     }
 }
 
-$a = new NameToken;
-$b = new NameToken;
+class Parser{
+    static $NODE_TOK_MAP = array(
+        "NameToken" => "NameNode"
+    );
+
+    private $tokens;
+    private $state;
+    private $curnode;
+
+    public function __construct($tokens){
+        $this->tokens = $tokens;
+        // Warning: assumed that first token is an opening parenthesis
+        $this->curnode = new Node;
+    }
+
+    public function parse(){
+        foreach(array_slice($this->tokens, 1) as $tok){
+            $this->parse_token($tok);
+        }
+
+        // Since all parentheses have been closed, curnode should now point to root node
+        return $this->curnode;
+    }
+
+    public function parse_token($tok){
+        if($tok instanceof OpenParenToken){
+            $newnode = new Node($this->curnode);
+            $this->curnode->add_child($newnode);
+            $this->curnode = $newnode;
+        }else if($tok instanceof CloseParenToken){
+            if($this->curnode->parent !== null){
+                $this->curnode = $this->curnode->parent;
+            }
+        }else{
+            $newnode = new self::$NODE_TOK_MAP[get_class($tok)]($this->curnode, $tok->value);
+            $this->curnode->add_child($newnode);
+        }
+    }
+}
 
 $code = file_get_contents("simple.phn");
 $code = trim($code);
 $lexer = new Lexer($code);
-print_r($lexer->lex());
+$tokens = $lexer->lex();
+
+$parser = new Parser($tokens);
+$node_tree = $parser->parse();
+echo $node_tree->compile();
