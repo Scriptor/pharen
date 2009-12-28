@@ -147,7 +147,7 @@ class Node{
 
     public function compile_statement(){
         $code = $this->compile();
-        return $this->compile().";\n";
+        return $code.";\n";
     }
 }
 
@@ -199,6 +199,7 @@ class Parser{
     private $state;
     private $curnode;
     private $rootnode;
+    private $i=0;
 
     public function __construct($tokens){
         $this->tokens = $tokens;
@@ -207,11 +208,10 @@ class Parser{
     }
 
     public function parse(){
-        foreach($this->tokens as $tok){
-            $this->parse_token($tok);
+        $len = sizeof($this->tokens);
+        for($this->i=0; $this->i<$len; $this->i++){
+            $this->parse_token($this->tokens[$this->i]);
         }
-
-        // Since all parentheses have been closed, curnode should now point to root node
         return $this->rootnode;
     }
 
