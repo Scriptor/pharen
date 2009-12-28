@@ -130,14 +130,23 @@ class Node{
         $func_name = $func_name_node->compile();
         
         if($func_name_node->infix){
-            return "(".implode(' '.$func_name.' ', $args).")";
+            return $this->compile_infix($func_name, $args);
         }else{
-            $args_string = implode(", ", $args);
-            return "$func_name($args_string)";
+            return $this->compile_normal($func_name, $args);
         }
     }
 
+    public function compile_infix($func_name, $args){
+        return "(".implode(' '.$func_name.' ', $args).")";
+    }
+
+    public function compile_normal($func_name, $args){
+        $args_string = implode(", ", $args);
+        return "$func_name($args_string)";
+    }
+
     public function compile_statement(){
+        $code = $this->compile();
         return $this->compile().";\n";
     }
 }
