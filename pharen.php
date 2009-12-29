@@ -1,5 +1,7 @@
 <?php
 error_reporting(E_ALL);
+define("EXTENSION", ".phn");
+
 class Token{
     public $value;
 
@@ -112,7 +114,7 @@ class Lexer{
 }
 
 class Node{
-    static $INFIX_OPERATORS = array("+", "-", "*", "/", "and", "or", "==", '=');
+    static $INFIX_OPERATORS = array("+", "-", "*", ".", "/", "and", "or", "==", '=');
 
     public $parent;
     protected $children;
@@ -354,7 +356,16 @@ class Parser{
     }        
 }
 
-$code = file_get_contents("simple.phn");
+$fname = "simple.phn";
+$output = "simple.php";
+if(isset($argv) && isset($argv[1])){
+    $fname = $argv[1];
+    if(isset($argv[2])){
+        $output = basename($argv[2], EXTENSION).".php";
+    }
+}
+
+$code = file_get_contents($fname);
 $code = trim($code);
 $lexer = new Lexer($code);
 $tokens = $lexer->lex();
