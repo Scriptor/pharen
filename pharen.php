@@ -2,6 +2,19 @@
 error_reporting(E_ALL);
 define("EXTENSION", ".phn");
 
+// Some utility functions for use in Pharen
+function first($xs){
+    return $xs[0];
+}
+
+function rest($xs){
+    return array_slice($xs, 1);
+}
+
+function at($xs, $i){
+    return $xs[$i];
+}
+
 class Token{
     public $value;
 
@@ -374,3 +387,4 @@ $parser = new Parser($tokens);
 $node_tree = $parser->parse();
 $phpcode = $node_tree->compile();
 echo "<pre>".$phpcode."</pre>";
+file_put_contents($output, $phpcode);
