@@ -315,6 +315,15 @@ class ElseNode extends IfNode{
     protected $type = "else";
 }
 
+class AtArrayNode extends Node{
+
+    public function compile(){
+        $varname = $this->children[1]->compile();
+        $index = $this->children[2]->compile();
+        return $varname."[$index]";
+    }
+}
+
 class Parser{
     static $INFIX_OPERATORS = array("+", "-", "*", ".", "/", "and", "or", "==", '=');
 
@@ -353,7 +362,8 @@ class Parser{
             "fn" => array("FuncDefNode", "LeafNode", "LeafNode", "LiteralNode", self::$NODES),
             "if" => array("IfNode", "LiteralNode", self::$NODES),
             "elseif" => array("ElseIfNode", "LiteralNode", self::$NODES),
-            "else" => array("ElseNode", "LiteralNode", self::$NODES)
+            "else" => array("ElseNode", "LiteralNode", self::$NODES),
+            "at" => array("AtArrayNode", "LeafNode", "VariableNode", "LeafNode")
         );
     }
 
@@ -410,6 +420,9 @@ class Parser{
             return null;
         }
         $state = last($this->state_stack);
+        if(sizeof($state) === 0){
+            return null;
+        }
         return $state[0];
     }
 
