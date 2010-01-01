@@ -3,11 +3,12 @@
 (+ 2 2)
 (= abc (* 4 (+ 3 4)))
 
-[abc def]
-
 (if (== 2 2)
     (= foo 3)
     (= bar 4))
+(elseif (== 3 3)
+    (print "3 equals 3!"))
 
-(fn foo [abc]
-    (print abc))
+(fn foo (abc)
+    (print abc)
+    "hello!")
