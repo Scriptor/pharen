@@ -464,4 +464,4 @@ $parser = new Parser($tokens);
 $node_tree = $parser->parse();
 $phpcode = $node_tree->compile();
 echo "<pre>".$phpcode."</pre>";
-file_put_contents($output, $phpcode);
+file_put_contents($output, "<?php\n".$phpcode."\n?>");
