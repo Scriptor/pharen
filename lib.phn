@@ -1,0 +1,22 @@
+(fn first (xs)
+    (return (at xs 0)))
+
+(fn rest (xs)
+    (return (array_slice xs 1)))
+
+(fn cons (x xs)
+    (return (array_merge (array x) xs)))
+
+(fn map (xs f)
+    (if (== (sizeof xs) 0)
+        (return (array)))
+    (return (cons ($f (first xs))
+                  (map (rest xs) f))))
+
+(fn double (x)
+    (return (* 2 x)))
+
+(= result (map (array 1 2 3 4)
+               "double"))
+
+(print_r result)
