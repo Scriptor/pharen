@@ -324,6 +324,15 @@ class AtArrayNode extends Node{
     }
 }
 
+class SuperGlobalNode extends Node{
+
+    public function compile(){
+        $varname = strToUpper($this->children[1]->compile());
+        $key = $this->children[2]->compile();
+        return '$_'.$varname.'['.$key.']';
+    }
+}
+
 class Parser{
     static $INFIX_OPERATORS = array("+", "-", "*", ".", "/", "and", "or", "==", '=');
 
@@ -363,7 +372,8 @@ class Parser{
             "if" => array("IfNode", "LiteralNode", self::$NODES),
             "elseif" => array("ElseIfNode", "LiteralNode", self::$NODES),
             "else" => array("ElseNode", "LiteralNode", self::$NODES),
-            "at" => array("AtArrayNode", "LeafNode", "VariableNode", "LeafNode")
+            "at" => array("AtArrayNode", "LeafNode", "VariableNode", "LeafNode"),
+            "$" => array("SuperGlobalNode", "LeafNode", "LeafNode", self::$NODE_TOK_MAP)
         );
     }
 
@@ -402,7 +412,9 @@ class Parser{
         $next = $this->get_next_state_node();
         $class = "";
         if(is_array($next)){
-            if(is_array($next[0]) && is_assoc($next[0])){
+            if(is_assoc($next)){
+                $class = $next[get_class($this->tok)];
+            }else if(is_array($next[0]) && is_assoc($next[0])){
                 $class = $next[0][get_class($this->tok)];
             }else{
                 $class = $next[0];
