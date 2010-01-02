@@ -262,8 +262,10 @@ class StringNode extends LeafNode{
 
 class SpecialForm extends Node{
     protected $body_index;
+    protected $indent;
 
-    public function compile_statement(){
+    public function compile_statement($indent=""){
+        $this->indent = $indent;
         return $this->compile()."\n";
     }
 
@@ -272,7 +274,7 @@ class SpecialForm extends Node{
         // the start index of the first body expression.
         $body = "";
         foreach(array_slice($this->children, $this->body_index) as $child){
-            $body .= "\t".$child->compile_statement();
+            $body .= $this->indent."\t".$child->compile_statement($this->indent."\t");
         }
         return $body;
     }
@@ -288,7 +290,7 @@ class FuncDefNode extends SpecialForm{
 
         $code = "function ".$name.$args."{\n".
                     $body.
-                "}";
+                $this->indent."}";
         return $code;
     }
 }
@@ -297,13 +299,13 @@ class IfNode extends SpecialForm{
     protected $body_index = 2;
     protected $type = "if";
 
-    public function compile(){
+    public function compile($indent=0){
         $cond = $this->children[1]->compile();
         $body = $this->compile_body();
 
         return $this->type.$cond."{\n".
                     $body.
-                "}";
+                $this->indent."}";
     }
 }
 
