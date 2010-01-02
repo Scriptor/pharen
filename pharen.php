@@ -449,7 +449,9 @@ $output = "simple.php";
 if(isset($argv) && isset($argv[1])){
     $fname = $argv[1];
     if(isset($argv[2])){
-        $output = basename($argv[2], EXTENSION).".php";
+        $output = $argv[2];
+    }else{
+        $output = basename($argv[1], EXTENSION).".php";
     }
 }
 
