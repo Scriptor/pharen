@@ -335,6 +335,21 @@ class SuperGlobalNode extends Node{
     }
 }
 
+class DictNode extends Node{
+
+    public function compile(){
+        $pairs = array_slice($this->children, 1);
+        $mappings = array();
+        $code = "";
+        foreach($pairs as $pair){
+            $key = $pair->children[0]->compile();
+            $value = $pair->children[1]->compile();
+            $mappings[] = "$key => $value";
+        }
+        return "array(".implode(", ", $mappings).")";
+    }
+}
+
 class Parser{
     static $INFIX_OPERATORS = array("+", "-", "*", ".", "/", "and", "or", "==", '=');
 
@@ -343,6 +358,8 @@ class Parser{
         "StringToken" => "StringNode",
         "NumberToken" => "LeafNode"
     );
+
+    static $PAIR;
     
     static $NODES;
     static $SPECIAL_FORMS;
@@ -375,7 +392,8 @@ class Parser{
             "elseif" => array("ElseIfNode", "LiteralNode", self::$NODES),
             "else" => array("ElseNode", "LiteralNode", self::$NODES),
             "at" => array("AtArrayNode", "LeafNode", "VariableNode", "LeafNode"),
-            "$" => array("SuperGlobalNode", "LeafNode", "LeafNode", self::$NODE_TOK_MAP)
+            "$" => array("SuperGlobalNode", "LeafNode", "LeafNode", self::$NODE_TOK_MAP),
+            "dict" => array("DictNode", "LeafNode", array(self::$LITERAL_FORM))
         );
     }
 
@@ -390,7 +408,10 @@ class Parser{
 
     public function parse_tok(){
         if($this->tok instanceof OpenParenToken){
-            if($this->get_next_state_node() == "LiteralNode"){
+            $next_state = $this->get_next_state_node();
+            if($next_state == "LiteralNode" or 
+                    // Really bad hack ensues
+                    (isset($next_state[0]) && isset($next_state[0][0]) && $next_state[0][0] == "LiteralNode")){
                 array_shift($this->state_stack[sizeof($this->state_stack)-1]);
                 array_push($this->state_stack, self::$LITERAL_FORM);
             }else if($this->is_special()){
