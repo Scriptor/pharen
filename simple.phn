@@ -10,6 +10,7 @@
         (print "here")
         (if (== 2 2)
             (print "More indented!"))))
+
 (elseif (== 3 3)
     (print "3 equals 3!"))
 
@@ -19,3 +20,6 @@
 
 (at xs 1)
 ($ post "abc")
+(dict
+    ("a" "apple")
+    ("b" "banana"))
