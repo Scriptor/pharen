@@ -20,6 +20,7 @@
 
 (at xs 1)
 ($ post "abc")
-(dict
+
+(dict alphabet
     ("a" "apple")
     ("b" "banana"))
