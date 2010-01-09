@@ -245,6 +245,10 @@ class LeafNode extends Node{
     public function compile(){
         return $this->value;
     }
+
+    public function compile_statement(){
+        return $this->compile().";\n";
+    }
 }
 
 class VariableNode extends LeafNode{
@@ -270,11 +274,12 @@ class SpecialForm extends Node{
         return $this->compile()."\n";
     }
 
-    public function compile_body(){
+    public function compile_body($lines=false){
         // Compile the body expressions of the special form according to
         // the start index of the first body expression.
         $body = "";
-        foreach(array_slice($this->children, $this->body_index) as $child){
+        $lines = $lines === false ? $this->children : $lines;
+        foreach(array_slice($lines, $this->body_index) as $child){
             $body .= $this->indent."\t".$child->compile_statement($this->indent."\t");
         }
         return $body;
@@ -293,6 +298,16 @@ class FuncDefNode extends SpecialForm{
                     $body.
                 $this->indent."}";
         return $code;
+    }
+
+    public function compile_body(){
+        $body = "";
+        $lines = array_slice($this->children, 0, count($this->children) - 1);
+        $last = $this->children[count($this->children)-1];
+
+        $body = parent::compile_body($lines);
+        $body .= "\treturn ".$last->compile_statement();
+        return $body;
     }
 }
 
@@ -408,6 +423,7 @@ class Parser{
             if($tok instanceof OpenParenToken){
                 $expected_state = $this->get_expected($state);
                 if($this->is_literal($expected_state)){
+                    array_shift($state[count($state)-1]);
                     array_push($state, self::$literal_form);
                 }else if($this->is_special($lookahead)){
                     array_push($state, self::$special_forms[$lookahead->value]);
@@ -473,7 +489,7 @@ class Parser{
 
     public function get_expected($state){
         $cur = last($state);
-        $expected = $cur[0];
+        $expected = count($cur) > 0 ? $cur[0] : null;
         if(is_array($expected) && !is_assoc($expected)){
             $expected = $expected[0];
         }
