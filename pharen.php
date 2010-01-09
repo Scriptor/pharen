@@ -12,7 +12,7 @@ function rest($xs){
 }
 
 function last($xs){
-    return $xs[sizeof($xs)-1];
+    return end($xs);
 }
 
 function at($xs, $i){
@@ -219,6 +219,7 @@ class InfixNode extends Node{
 class RootNode extends Node{
     public function __construct(){
         // No parent to be passed to the constructor. It's Root all the way down.
+        $this->parent = $this;
     }
 
     public function compile(){
@@ -338,9 +339,10 @@ class SuperGlobalNode extends Node{
 class DictNode extends Node{
 
     public function compile(){
-        $pairs = array_slice($this->children, 1);
+        $pairs = array_slice($this->children, 2);
         $mappings = array();
         $code = "";
+
         foreach($pairs as $pair){
             $key = $pair->children[0]->compile();
             $value = $pair->children[1]->compile();
@@ -350,7 +352,7 @@ class DictNode extends Node{
     }
 }
 
-class Parser{
+class OldParser{
     static $INFIX_OPERATORS = array("+", "-", "*", ".", "/", "and", "or", "==", '=');
 
     static $NODE_TOK_MAP = array(
@@ -373,6 +375,7 @@ class Parser{
     private $tok;
     private $i=0;
     private $root;
+    private $literals=False;
 
     public function __construct($tokens){
         $this->tokens = $tokens;
@@ -380,17 +383,17 @@ class Parser{
         $this->root = $this->curnode;
         $this->state_stack = array();
 
-        self::$NODES = array(self::$NODE_TOK_MAP);
+        self::$values = array(self::$NODE_TOK_MAP);
 
-        self::$LITERAL_FORM = array("LiteralNode", self::$NODES);
-        self::$INFIX_FORM = array("InfixNode", "LeafNode", self::$NODES);
-        self::$NORMAL_FORM = array("Node", "LeafNode", self::$NODES);
+        self::$LITERAL_FORM = array("LiteralNode", self::$values);
+        self::$INFIX_FORM = array("InfixNode", "LeafNode", self::$values);
+        self::$NORMAL_FORM = array("Node", "LeafNode", self::$values);
 
         self::$SPECIAL_FORMS = array(
-            "fn" => array("FuncDefNode", "LeafNode", "LeafNode", "LiteralNode", self::$NODES),
-            "if" => array("IfNode", "LiteralNode", self::$NODES),
-            "elseif" => array("ElseIfNode", "LiteralNode", self::$NODES),
-            "else" => array("ElseNode", "LiteralNode", self::$NODES),
+            "fn" => array("FuncDefNode", "LeafNode", "LeafNode", "LiteralNode", self::$values),
+            "if" => array("IfNode", "LiteralNode", self::$values),
+            "elseif" => array("ElseIfNode", "LiteralNode", self::$values),
+            "else" => array("ElseNode", "LiteralNode", self::$values),
             "at" => array("AtArrayNode", "LeafNode", "VariableNode", "LeafNode"),
             "$" => array("SuperGlobalNode", "LeafNode", "LeafNode", self::$NODE_TOK_MAP),
             "dict" => array("DictNode", "LeafNode", array(self::$LITERAL_FORM))
@@ -410,8 +413,17 @@ class Parser{
         if($this->tok instanceof OpenParenToken){
             $next_state = $this->get_next_state_node();
             if($next_state == "LiteralNode" or 
-                    // Really bad hack ensues
-                    (isset($next_state[0]) && isset($next_state[0][0]) && $next_state[0][0] == "LiteralNode")){
+                    // Really bad hack ensues to allow for a series of LiteralNodes
+                (isset($next_state[0]) && $next_state[0] == "LiteralNode") or
+                (isset($next_state[0][0]) && $next_state[0][0] == "LiteralNode")){
+                
+                if(is_array($next_state) or is_array($next_state[0])){
+                    if($this->literals === False){
+                        $this->literals = 1;
+                    }else{
+                        $this->literals++;
+                    }
+                }
                 array_shift($this->state_stack[sizeof($this->state_stack)-1]);
                 array_push($this->state_stack, self::$LITERAL_FORM);
             }else if($this->is_special()){
@@ -424,7 +436,14 @@ class Parser{
             $newnode = $this->add_node();
             $this->curnode = $newnode;
         }else if($this->tok instanceof CloseParenToken){
-            array_pop($this->state_stack);
+            if($this->literals === False){
+                array_pop($this->state_stack);
+            }elseif($this->literals < 0){
+                $this->literals = False;
+                array_pop($this->state_stack);
+            }else{
+                $this->literals--;
+            }
             $this->curnode = $this->curnode->parent;
         }else{
             $this->add_node();
@@ -478,8 +497,136 @@ class Parser{
     }
 }
 
+class Parser{
+    static $INFIX_OPERATORS; 
 
-$fname = "simple.phn";
+    static $value;
+    static $values;
+    static $func_call;
+    static $infix_call;
+
+    static $literal_form;
+    static $special_forms;
+
+    private $tokens;
+
+    public function __construct($tokens){
+        self::$INFIX_OPERATORS = array("+", "-", "*", ".", "/", "and", "or", "==", '=');
+
+        self::$value = array(
+            "NameToken" => "VariableNode",
+            "StringToken" => "StringNode",
+            "NumberToken" => "LeafNode"
+        );
+        self::$values = array(self::$value);
+        self::$func_call = array("Node", "LeafNode", array(self::$value));
+        self::$infix_call = array("InfixNode", "LeafNode", array(self::$value));
+
+        self::$literal_form = array("LiteralNode", self::$values);
+        self::$special_forms = array(
+            "fn" => array("FuncDefNode", "LeafNode", "LeafNode", "LiteralNode", self::$values),
+            "if" => array("IfNode", "LiteralNode", self::$values),
+            "elseif" => array("ElseIfNode", "LiteralNode", self::$values),
+            "else" => array("ElseNode", "LiteralNode", self::$values),
+            "at" => array("AtArrayNode", "LeafNode", "VariableNode", "LeafNode"),
+            "$" => array("SuperGlobalNode", "LeafNode", "LeafNode", self::$value),
+            "dict" => array("DictNode", "LeafNode", array(self::$literal_form))
+        );
+        
+        $this->tokens = $tokens;
+
+    }
+    
+    public function parse(){
+        $curnode = new RootNode;
+        $rootnode = $curnode;
+        $state = array();
+        $len = count($this->tokens);
+
+        for($i=0;$i<$len;$i++){
+            $tok = $this->tokens[$i];
+            if($i+1 < $len){
+                $lookahead = $this->tokens[$i+1];
+            }
+            $node;
+
+            if($tok instanceof OpenParenToken){
+                $expected_state = $this->get_expected($state);
+                if($this->is_literal($expected_state)){
+                    array_push($state, self::$literal_form);
+                }else if($this->is_special($lookahead)){
+                    array_push($state, self::$special_forms[$lookahead->value]);
+                }else if($this->is_infix($lookahead)){
+                    array_push($state, self::$infix_call);
+                }else{
+                    array_push($state, self::$func_call);
+                }
+                list($node, $state) = $this->parse_tok($tok, $state, $curnode);
+                $curnode->add_child($node);
+                $curnode = $node;
+            }else if($tok instanceof CloseParenToken){
+                $curnode = $curnode->parent;
+                array_pop($state);
+                if(count($state) === 0){
+                    array_push($state, self::$func_call);
+                }
+            }else{
+                list($node, $state) = $this->parse_tok($tok, $state, $curnode);
+                $curnode->add_child($node);
+            }
+        }
+        return $rootnode;
+    }
+
+    public function parse_tok($tok, $state, $parent){
+        $cur_state = &$state[count($state)-1];
+        $expected = $cur_state[0];
+        if(is_array($expected) && !is_assoc($expected)){
+            array_push($cur_state, $expected);
+            $expected = $this->reduce_state($expected);
+        }
+
+        if(is_array($expected) && is_assoc($expected)){
+            $class = $expected[get_class($tok)];
+        }else{
+            $class = $expected;
+            array_shift($cur_state);
+        }
+        $node = new $class($parent, null, $tok->value);
+        return array($node, $state);
+    }
+
+    public function reduce_state($expected){
+        if(is_array($expected) && !is_assoc($expected)){
+            return $this->reduce_state($expected[0]);
+        }
+        return $expected;
+    }
+
+    public function is_special($tok){
+        return isset(self::$special_forms[$tok->value]);
+    }
+
+    public function is_infix($tok){
+        return in_array($tok->value, self::$INFIX_OPERATORS);
+    }
+
+    public function is_literal($expected){
+        $result = ($expected == "LiteralNode") || (isset($expected[0]) && $expected[0] == "LiteralNode");
+        return $result;
+    }
+
+    public function get_expected($state){
+        $cur = last($state);
+        $expected = $cur[0];
+        if(is_array($expected) && !is_assoc($expected)){
+            $expected = $expected[0];
+        }
+        return $expected;
+    }
+}
+
+$fname = "tmp.phn";
 $output = "simple.php";
 if(isset($argv) && isset($argv[1])){
     $fname = $argv[1];
