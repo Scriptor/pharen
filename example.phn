@@ -21,6 +21,6 @@
 (at xs 1)
 ($ post "abc")
 
-(dict alphabet
+(dict
     ("a" "apple")
     ("b" "banana"))
