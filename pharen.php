@@ -339,7 +339,7 @@ class SuperGlobalNode extends Node{
 class DictNode extends Node{
 
     public function compile(){
-        $pairs = array_slice($this->children, 2);
+        $pairs = array_slice($this->children, 1);
         $mappings = array();
         $code = "";
 
@@ -530,7 +530,7 @@ class Parser{
             "else" => array("ElseNode", "LiteralNode", self::$values),
             "at" => array("AtArrayNode", "LeafNode", "VariableNode", "LeafNode"),
             "$" => array("SuperGlobalNode", "LeafNode", "LeafNode", self::$value),
-            "dict" => array("DictNode", "LeafNode", array(self::$literal_form))
+            "dict" => array("DictNode", array(self::$literal_form))
         );
         
         $this->tokens = $tokens;
