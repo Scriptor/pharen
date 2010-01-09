@@ -151,9 +151,9 @@ class Node{
     public $parent;
     public $children;
 
-    public function __construct(Node $parent=null, $children=array()){
+    public function __construct(Node $parent=null){
         $this->parent = $parent;
-        $this->children = $children;
+        $this->children = array();
     }
 
     protected function split_children(){
@@ -626,8 +626,8 @@ class Parser{
     }
 }
 
-$fname = "tmp.phn";
-$output = "simple.php";
+$fname = "example.phn";
+$output = "example.php";
 if(isset($argv) && isset($argv[1])){
     $fname = $argv[1];
     if(isset($argv[2])){
