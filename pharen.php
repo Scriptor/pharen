@@ -411,7 +411,7 @@ class Parser{
             "if" => array("IfNode", "LiteralNode", self::$values),
             "elseif" => array("ElseIfNode", "LiteralNode", self::$values),
             "else" => array("ElseNode", self::$values),
-            "at" => array("AtArrayNode", "LeafNode", "VariableNode", "LeafNode"),
+            "at" => array("AtArrayNode", "LeafNode", "VariableNode", self::$value),
             "$" => array("SuperGlobalNode", "LeafNode", "LeafNode", self::$value),
             "dict" => array("DictNode", array(self::$literal_form))
         );
@@ -510,7 +510,7 @@ class Parser{
     }
 }
 
-$fname = "lib.phn";
+$fname = "html.phn";
 $output = "example.php";
 if(isset($argv) && isset($argv[1])){
     $fname = $argv[1];
