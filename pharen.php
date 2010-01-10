@@ -306,7 +306,11 @@ class FuncDefNode extends SpecialForm{
         $last = $this->children[count($this->children)-1];
 
         $body = parent::compile_body($lines);
-        $body .= "\treturn ".$last->compile_statement();
+        if($last instanceof IfNode){
+            $body .= "\t".$last->compile_statement($this->indent."\t");
+        }else{
+            $body .= "\treturn ".$last->compile_statement();
+        }
         return $body;
     }
 }
@@ -331,6 +335,15 @@ class ElseIfNode extends IfNode{
 
 class ElseNode extends IfNode{
     protected $type = "else";
+    protected $body_index = 1;
+
+    public function compile($indent=0){
+        $body = $this->compile_body();
+
+        return $this->type."{\n".
+                $body.
+            $this->indent."}";
+    }
 }
 
 class AtArrayNode extends Node{
@@ -381,7 +394,7 @@ class Parser{
     private $tokens;
 
     public function __construct($tokens){
-        self::$INFIX_OPERATORS = array("+", "-", "*", ".", "/", "and", "or", "==", '=');
+        self::$INFIX_OPERATORS = array("+", "-", "*", ".", "/", "and", "or", "<", ">", "==", '=');
 
         self::$value = array(
             "NameToken" => "VariableNode",
@@ -397,7 +410,7 @@ class Parser{
             "fn" => array("FuncDefNode", "LeafNode", "LeafNode", "LiteralNode", self::$values),
             "if" => array("IfNode", "LiteralNode", self::$values),
             "elseif" => array("ElseIfNode", "LiteralNode", self::$values),
-            "else" => array("ElseNode", "LiteralNode", self::$values),
+            "else" => array("ElseNode", self::$values),
             "at" => array("AtArrayNode", "LeafNode", "VariableNode", "LeafNode"),
             "$" => array("SuperGlobalNode", "LeafNode", "LeafNode", self::$value),
             "dict" => array("DictNode", array(self::$literal_form))
@@ -497,7 +510,7 @@ class Parser{
     }
 }
 
-$fname = "example.phn";
+$fname = "lib.phn";
 $output = "example.php";
 if(isset($argv) && isset($argv[1])){
     $fname = $argv[1];
