@@ -1,22 +1,37 @@
 (fn first (xs)
-    (return (at xs 0)))
+    (at xs 0))
 
 (fn rest (xs)
-    (return (array_slice xs 1)))
+    (array_slice xs 1))
 
 (fn cons (x xs)
-    (return (array_merge (array x) xs)))
+    (array_merge (array x) xs))
 
 (fn map (xs f)
     (if (== (sizeof xs) 0)
         (return (array)))
-    (return (cons ($f (first xs))
-                  (map (rest xs) f))))
+    (cons ($f (first xs))
+                  (map (rest xs) f)))
+
+(fn filter_less (x xs)
+    (if (== 0 (count xs))
+        (return (array)))
+    (elseif (< (first xs) x)
+        (return (cons (first xs) (filter_less x (rest xs)))))
+    (else
+        (return (filter_less x (rest xs)))))
+
+(fn lt (x y)
+    (< x y))
+
+(fn gt (x y)
+    (> x y))
 
 (fn double (x)
-    (return (* 2 x)))
+    (* 2 x)))
 
 (= result (map (array 1 2 3 4)
                "double"))
 
-(print_r result)
+(= sorted (filter_less 3 (array 2 5 3 1)))
+(print_r sorted)
