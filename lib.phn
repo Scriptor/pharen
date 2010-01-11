@@ -21,17 +21,9 @@
     (else
         (return (filter_less x (rest xs)))))
 
-(fn lt (x y)
-    (< x y))
-
-(fn gt (x y)
-    (> x y))
-
-(fn double (x)
-    (* 2 x)))
 
 (= result (map (array 1 2 3 4)
                "double"))
 
-(= sorted (filter_less 3 (array 2 5 3 1)))
-(print_r sorted)
+(= less_than_three (filter_less 3 (array 2 5 3 1)))
+(print_r less_than_three)

@@ -181,6 +181,12 @@ class Node{
 
     public function compile(){
         list($func_name, $args) = $this->get_compiled_func_args();
+
+        if(MicroNode::is_micro($func_name)){
+            $micro = MicroNode::get_micro($func_name);
+            return $micro->body;
+        }
+
         $args_string = implode(", ", $args);
 
 
@@ -238,6 +244,7 @@ class RootNode extends Node{
     public function __construct(){
         // No parent to be passed to the constructor. It's Root all the way down.
         $this->parent = $this;
+        $this->children = array();
     }
 
     public function compile(){
@@ -398,6 +405,35 @@ class DictNode extends Node{
     }
 }
 
+class MicroNode extends SpecialForm{
+    static $micros = array();
+
+    protected $body_index = 2;
+    protected $name;
+    public $body;
+
+    static function is_micro($name){
+        return isset(self::$micros[$name]);
+    }
+
+    static function get_micro($name){
+        return self::$micros[$name];
+    }
+
+    public function compile(){
+        $this->name = $this->children[1]->compile();
+        $this->body = $this->compile_body();
+        
+        self::$micros[$this->name] = $this;
+        return "";
+    }
+
+    public function compile_body(){
+        $body = parent::compile_body();
+        return substr($body, 0, strlen($body) - 2);
+    }
+}
+
 class Parser{
     static $INFIX_OPERATORS; 
 
@@ -433,7 +469,8 @@ class Parser{
             "else" => array("ElseNode", self::$values),
             "at" => array("AtArrayNode", "LeafNode", "VariableNode", self::$value),
             "$" => array("SuperGlobalNode", "LeafNode", "LeafNode", self::$value),
-            "dict" => array("DictNode", array(self::$literal_form))
+            "dict" => array("DictNode", array(self::$literal_form)),
+            "micro" => array("MicroNode", "LeafNode", "LeafNode", self::$values)
         );
         
         $this->tokens = $tokens;
@@ -492,7 +529,11 @@ class Parser{
             $expected = $this->reduce_state($expected);
         }
 
-        if(is_array($expected) && is_assoc($expected)){
+        if($tok instanceof NameToken and strToUpper($tok->value) == $tok->value){
+            // Check if the token is all upper case, which means it's a constant
+            $class = "LeafNode";
+            array_shift($cur_state);
+        }else if(is_array($expected) && is_assoc($expected)){
             $class = $expected[get_class($tok)];
         }else{
             $class = $expected;
@@ -551,8 +592,11 @@ function compile($code){
     return $phpcode;
 }
 
-$fname = "lib.phn";
-$output = "lib.php";
+<<<<<<< HEAD
+=======
+$fname = "app.phn";
+$output = "example.php";
+>>>>>>> macros
 if(isset($argv) && isset($argv[1])){
     $fname = $argv[1];
     if(isset($argv[2])){
@@ -562,5 +606,10 @@ if(isset($argv) && isset($argv[1])){
     }
 }
 
+<<<<<<< HEAD
+=======
+compile_file("lang.phn");
+require("lang.php");
 $phpcode = compile_file($fname);
-echo "<pre>".$phpcode."</pre>";
+echo "<pre>$phpcode</pre>";
+>>>>>>> macros
