@@ -594,7 +594,7 @@ function compile($code){
 
 $fname = "app.phn";
 $output = "example.php";
->>>>>>> macros
+
 if(isset($argv) && isset($argv[1])){
     $fname = $argv[1];
     if(isset($argv[2])){
