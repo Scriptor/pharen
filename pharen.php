@@ -550,6 +550,25 @@ class Parser{
     }
 }
 
+function compile_file($fname){
+    $code = file_get_contents($fname);
+    $phpcode = compile($code);
+
+    $output = basename($fname, EXTENSION).".php";
+    file_put_contents($output, $phpcode);
+    return $phpcode;
+}
+
+function compile($code){
+    $lexer = new Lexer($code);
+    $tokens = $lexer->lex();
+
+    $parser = new Parser($tokens);
+    $node_tree = $parser->parse();
+    $phpcode = $node_tree->compile();
+    return $phpcode;
+}
+
 $fname = "lib.phn";
 $output = "example.php";
 if(isset($argv) && isset($argv[1])){
@@ -561,13 +580,5 @@ if(isset($argv) && isset($argv[1])){
     }
 }
 
-$code = file_get_contents($fname);
-$code = trim($code);
-$lexer = new Lexer($code);
-$tokens = $lexer->lex();
-
-$parser = new Parser($tokens);
-$node_tree = $parser->parse();
-$phpcode = $node_tree->compile();
-echo "<pre>".$phpcode."</pre>";
-file_put_contents($output, "<?php\n".$phpcode."\n?>");
+$phpcode = compile_file($fname);
+echo "<pre>$phpcode</pre>";
