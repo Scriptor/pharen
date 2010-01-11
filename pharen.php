@@ -34,7 +34,6 @@ function print_tree($node){
     }
 }
             
-
 class Token{
     public $value;
 
@@ -183,6 +182,8 @@ class Node{
     public function compile(){
         list($func_name, $args) = $this->get_compiled_func_args();
         $args_string = implode(", ", $args);
+
+
         return "$func_name($args_string)";
     }
 
@@ -192,11 +193,28 @@ class Node{
     }
 }
 
+// Empty parentheses are still going to be part of the tree, in case they
+// are needed later
+class EmptyNode extends Node{
+
+    public function compile(){
+        return null;
+    }
+}
+
 class LiteralNode extends Node{
 
     public function compile(){
         $els = $this->compile_args($this->children);
         return "(".implode(", ", $els).")";
+    }
+
+    public function compile_as_code(){
+        $code = "";
+        foreach($this->children as $c){
+            $code .= $c->compile_statement();
+        }
+        return $code;
     }
 }
 
@@ -387,6 +405,7 @@ class Parser{
     static $values;
     static $func_call;
     static $infix_call;
+    static $empty_node;
 
     static $literal_form;
     static $special_forms;
@@ -404,6 +423,7 @@ class Parser{
         self::$values = array(self::$value);
         self::$func_call = array("Node", "LeafNode", array(self::$value));
         self::$infix_call = array("InfixNode", "LeafNode", array(self::$value));
+        self::$empty_node = array("EmptyNode");
 
         self::$literal_form = array("LiteralNode", self::$values);
         self::$special_forms = array(
@@ -442,6 +462,8 @@ class Parser{
                     array_push($state, self::$special_forms[$lookahead->value]);
                 }else if($this->is_infix($lookahead)){
                     array_push($state, self::$infix_call);
+                }else if($lookahead instanceof CloseParenToken){
+                    array_push($state, self::$empty_node);
                 }else{
                     array_push($state, self::$func_call);
                 }
@@ -510,8 +532,27 @@ class Parser{
     }
 }
 
-$fname = "html.phn";
-$output = "example.php";
+function compile_file($fname){
+    $code = file_get_contents($fname);
+    $phpcode = compile($code);
+
+    $output = basename($fname, EXTENSION).".php";
+    file_put_contents($output, $phpcode);
+    return $phpcode;
+}
+
+function compile($code){
+    $lexer = new Lexer($code);
+    $tokens = $lexer->lex();
+
+    $parser = new Parser($tokens);
+    $node_tree = $parser->parse();
+    $phpcode = $node_tree->compile();
+    return $phpcode;
+}
+
+$fname = "lib.phn";
+$output = "lib.php";
 if(isset($argv) && isset($argv[1])){
     $fname = $argv[1];
     if(isset($argv[2])){
@@ -521,13 +562,5 @@ if(isset($argv) && isset($argv[1])){
     }
 }
 
-$code = file_get_contents($fname);
-$code = trim($code);
-$lexer = new Lexer($code);
-$tokens = $lexer->lex();
-
-$parser = new Parser($tokens);
-$node_tree = $parser->parse();
-$phpcode = $node_tree->compile();
+$phpcode = compile_file($fname);
 echo "<pre>".$phpcode."</pre>";
-file_put_contents($output, "<?php\n".$phpcode."\n?>");
