@@ -592,8 +592,6 @@ function compile($code){
     return $phpcode;
 }
 
-<<<<<<< HEAD
-=======
 $fname = "app.phn";
 $output = "example.php";
 >>>>>>> macros
@@ -606,10 +604,7 @@ if(isset($argv) && isset($argv[1])){
     }
 }
 
-<<<<<<< HEAD
-=======
 compile_file("lang.phn");
 require("lang.php");
 $phpcode = compile_file($fname);
 echo "<pre>$phpcode</pre>";
->>>>>>> macros
