@@ -226,6 +226,7 @@ class RootNode extends Node{
     public function __construct(){
         // No parent to be passed to the constructor. It's Root all the way down.
         $this->parent = $this;
+        $this->children = array();
     }
 
     public function compile(){
@@ -569,7 +570,7 @@ function compile($code){
     return $phpcode;
 }
 
-$fname = "lib.phn";
+$fname = "app.phn";
 $output = "example.php";
 if(isset($argv) && isset($argv[1])){
     $fname = $argv[1];
@@ -580,5 +581,7 @@ if(isset($argv) && isset($argv[1])){
     }
 }
 
+compile_file("lang.phn");
+require("lang.php");
 $phpcode = compile_file($fname);
 echo "<pre>$phpcode</pre>";
