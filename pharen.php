@@ -219,7 +219,7 @@ class Node{
         $func = new FuncInfo($func_name, $args);
         if(MicroNode::is_micro($func_name)){
             $micro = MicroNode::get_micro($func_name);
-            return $micro->body;
+            return $micro->get_body($args);
         }else if($func->is_partial()){
             list($tmp_func,$tmp_name) = $func->get_tmp_func();
             Node::$tmp .= $tmp_func;
@@ -475,8 +475,17 @@ class MicroNode extends SpecialForm{
         return self::$micros[$name];
     }
 
+    public function get_params(){
+        $params = array();
+        foreach($this->children[2]->children as $c){
+            $params[] = $c->compile();
+        }
+        return $params;
+    }
+
     public function compile(){
-        list($this->name, $this->params) = $this->get_compiled_func_args();
+        $this->name= $this->children[1]->compile();
+        $this->params = $this->get_params();
         $this->body = $this->compile_body();
         
         self::$micros[$this->name] = $this;
@@ -487,14 +496,14 @@ class MicroNode extends SpecialForm{
         $params = $this->params;
         foreach($args as $arg){
             $param = array_shift($params);
-            str_replace('$'.$param, '$'.$arg, $this->body);
+            $this->body = str_replace($param, $arg, $this->body);
         }
         return $this->body;
     }
             
     public function compile_body(){
         $body = parent::compile_body();
-        return substr($body, 0, strlen($body) - 2);
+        return trim(substr($body, 0, strlen($body) - 2));
     }
 }
 
