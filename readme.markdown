@@ -3,6 +3,13 @@ The language is also called Pharen.
 
 It is _very_ alpha and still under heavy development.
 
+Language Overview
+=================
+
+Function Calls
+--------------
+
+
 The first goal will be to create a language that more or less covers enough of PHP
 to write basic apps.
 
