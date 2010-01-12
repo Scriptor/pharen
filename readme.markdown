@@ -51,6 +51,14 @@ This breaks up the code and makes it more readable.
 
 The full list of infix operators is: "+", "-", "*", ".", "/", "and", "or", "<", ">", "===", "==", '='.
 
+PHP allows variables to be used in place of the function's name. To do that in Pharen,
+you will need to use the dollar sign. For example:
+	(= myfunc "sqrt")
+	($myfunc 9)
+becomes:
+	$myfunc = "sqrt";
+	$myfunc(9);
+
 ### Special Forms:
 Some things that look like function calls in Pharen are completely different things in PHP.
 They are implemented as special forms.
