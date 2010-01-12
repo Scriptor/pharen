@@ -111,14 +111,53 @@ becomes:
 #### Function definitions
 Starts with `fn`, the function's name, parameter list (also implemented as a literal), and the function's body.
 	(fn greet (name)
-		(print (. "hello " name "!")))
+		(print (. "Hello " name "!")))
 becomes:
 	function greet($name){
-		print "hello " . $name . "!";
+		return (print "Hello " . $name . "!");
 	}
+Pharen functions automatically return the last expression. However, it won't automatically return expressions inside
+the bodies of if-statements. You will have to explicitly do that in those cases:
+	(fn greet (name)
+		(if (== name "Scriptor")
+			(return "You  made Pharen!"))
+		(else
+			(return (. "Hi " name "!")))
+			
 Note that PHP's string concatenation operator . (dot), is used as a function when you want to
 put a bunch of strings and variables together.
 
+### Experimental
+Pharen has two tricks up its sleeve. Micros and partial application. They are both highly
+experimental and might probably definitely have bugs.
+
+#### Micros
+Basically functions that when called, result in their own code instead of . This can prevent the overhead
+of function calls. Redoing the function definition example from before:
+	(micro greet (name)
+		(print (. "Hello " name "!")))
+	(greet "Arthur Dent")
+becomes
+	print("Hello " . "Arthur Dent" . "!");
+	
+#### Partials
+Whenever a Pharen function is called without all the necessary parameters, pharen makes a temporary function
+to act as an intermediary. It's similar to how you'd use currying in Haskell.
+
+For example, say you have the following function (that normally takes two numbers) and array:
+	(fn add (x y)
+		(+ x y))
+	(= nums (array 1 2 3))
+If you want to add 10 to each of those numbers, do the following (using the map function written in Pharen):
+	(map nums (add 10))
+which becomes:
+	function __partial0($arg0){
+		return add_three_nums(10, $arg0);
+	}
+	map(array(1, 2, 3), "__partial0");
+	
+Milestones to Reach
+===================
 The first goal will be to create a language that more or less covers enough of PHP
 to write basic apps.
 
