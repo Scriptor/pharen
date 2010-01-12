@@ -3,13 +3,6 @@ error_reporting(E_ALL | E_STRICT | E_NOTICE);
 define("EXTENSION", ".phn");
 
 // Some utility functions for use in Pharen
-function first($xs){
-    return $xs[0];
-}
-
-function rest($xs){
-    return array_slice($xs, 1);
-}
 
 function last($xs){
     return end($xs);
@@ -640,7 +633,7 @@ function compile_file($fname){
     $phpcode = compile($code);
 
     $output = basename($fname, EXTENSION).".php";
-    file_put_contents($output, $phpcode);
+    file_put_contents($output, "<?php ".$phpcode."?>");
     return $phpcode;
 }
 
