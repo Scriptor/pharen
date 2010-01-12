@@ -5,11 +5,6 @@ It is _very_ alpha and still under heavy development.
 
 Language Tutorial/Overview
 =================
-### Terms
-pharen - The actual compiler
-Pharen - The language or the project in general
-dictionary - Associative array in PHP.
-
 ### Basics
 Everything is surrounded by parentheses. No semicolons are needed to end lines.
 
@@ -17,7 +12,7 @@ Strings are always wrapped in double-quotes:
 	"This is a valid string."
 	'This is not.'
 
-Variables do not have $'s in front of them, as in PHP, just use them as is.
+Variables do not have $'s in front of them, as in PHP. Just use the name by itself.
 However, if you want to use a variable as a function name, you will need to
 use the dollar sign. This will be explained later.
 
