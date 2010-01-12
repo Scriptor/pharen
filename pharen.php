@@ -145,7 +145,48 @@ class Lexer{
     }
 }
 
+class FuncInfo{
+    static $tmp_counter=0;
+
+    private $name;
+    private $func;
+    private $args_given;
+
+    static function get_next_name(){
+        return "__partial".self::$tmp_counter++;
+    }
+
+    public function __construct($name, $args){
+        $this->name = $name;
+        $this->args_given = $args;
+
+        if(FuncDefNode::is_pharen_func($name)){
+            $this->func = FuncDefNode::get_pharen_func($name);
+        }
+    }
+
+    public function is_partial(){
+        return $this->func && count($this->args_given) < count($this->func->params);
+    }
+
+    public function get_tmp_func(){
+        $name = self::get_next_name();
+        $params_diff = count($this->func->params) - count($this->args_given);
+
+        $params = "";
+        for($x=0;$x<$params_diff;$x++){
+            $params .= "arg$x ";
+        }
+
+        $args_given = implode(" ", $this->args_given);
+        $code = "(fn $name ($params)".
+            "\t($this->name $args_given $params))\n";
+        return array(compile($code), $name);
+    }
+
+}
 class Node{
+    static $tmp;
 
     public $parent;
     public $children;
@@ -182,9 +223,14 @@ class Node{
     public function compile(){
         list($func_name, $args) = $this->get_compiled_func_args();
 
+        $func = new FuncInfo($func_name, $args);
         if(MicroNode::is_micro($func_name)){
             $micro = MicroNode::get_micro($func_name);
             return $micro->body;
+        }else if($func->is_partial()){
+            list($tmp_func,$tmp_name) = $func->get_tmp_func();
+            Node::$tmp .= $tmp_func;
+            return '"'.$tmp_name.'"';
         }
 
         $args_string = implode(", ", $args);
@@ -194,7 +240,8 @@ class Node{
     }
 
     public function compile_statement(){
-        $code = $this->compile();
+        $code = Node::$tmp.$this->compile();
+        Node::$tmp = ""; 
         return $code.";\n";
     }
 }
@@ -312,10 +359,25 @@ class SpecialForm extends Node{
 }
 
 class FuncDefNode extends SpecialForm{
+    static $functions;
+
     protected $body_index = 3;
+    public $params = array();
     
+    static function is_pharen_func($func_name){
+        return isset(self::$functions[$func_name]);
+    }
+
+    static function get_pharen_func($func_name){
+        return self::$functions[$func_name];
+    }
+
     public function compile(){
         $name = $this->children[1]->compile();
+        self::$functions[$name] = $this;
+
+        $this->params = $this->children[2]->children;
+
         $args = $this->children[2]->compile();
         $body = $this->compile_body();
 
