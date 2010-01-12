@@ -463,7 +463,7 @@ class DictNode extends Node{
 class MicroNode extends SpecialForm{
     static $micros = array();
 
-    protected $body_index = 2;
+    protected $body_index = 3;
     protected $name;
     public $body;
 
@@ -476,13 +476,22 @@ class MicroNode extends SpecialForm{
     }
 
     public function compile(){
-        $this->name = $this->children[1]->compile();
+        list($this->name, $this->params) = $this->get_compiled_func_args();
         $this->body = $this->compile_body();
         
         self::$micros[$this->name] = $this;
         return "";
     }
 
+    public function get_body($args){
+        $params = $this->params;
+        foreach($args as $arg){
+            $param = array_shift($params);
+            str_replace('$'.$param, '$'.$arg, $this->body);
+        }
+        return $this->body;
+    }
+            
     public function compile_body(){
         $body = parent::compile_body();
         return substr($body, 0, strlen($body) - 2);
@@ -525,7 +534,7 @@ class Parser{
             "at" => array("AtArrayNode", "LeafNode", "VariableNode", self::$value),
             "$" => array("SuperGlobalNode", "LeafNode", "LeafNode", self::$value),
             "dict" => array("DictNode", array(self::$literal_form)),
-            "micro" => array("MicroNode", "LeafNode", "LeafNode", self::$values)
+            "micro" => array("MicroNode", "LeafNode", "LeafNode", "LiteralNode", self::$values)
         );
         
         $this->tokens = $tokens;
