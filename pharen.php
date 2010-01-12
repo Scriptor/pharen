@@ -605,6 +605,8 @@ if(isset($argv) && isset($argv[1])){
 }
 
 compile_file("lang.phn");
+echo "<pre>";
 require("lang.php");
+echo "</pre>";
 $phpcode = compile_file($fname);
 echo "<pre>$phpcode</pre>";
