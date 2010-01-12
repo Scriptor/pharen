@@ -21,9 +21,3 @@
     (else
         (return (filter_less x (rest xs)))))
 
-
-(= result (map (array 1 2 3 4)
-               "double"))
-
-(= less_than_three (filter_less 3 (array 2 5 3 1)))
-(print_r less_than_three)
