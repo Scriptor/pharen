@@ -665,7 +665,7 @@ function compile($code){
     return $phpcode;
 }
 
-$fname = "app.phn";
+$fname = "example.phn";
 $output = "example.php";
 
 if(isset($argv) && isset($argv[1])){
