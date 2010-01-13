@@ -1,10 +1,16 @@
 Pharen is compiler project that compiles a Lisp-inspired language to PHP.
-The language is also called Pharen.
 
 It is _very_ alpha and still under heavy development.
 
 Language Tutorial/Overview
 =================
+### Usage
+	$ php pharen.php your_pharen_file.phn <your_pharen_file.php>
+
+By convention Pharen files have the .phn extension. If you don't specify an output
+file, the compiler extracts it from the input file. Not specifying an input file will
+result in example.phn to be used.
+
 ### Basics
 Everything is surrounded by parentheses. No semicolons are needed to end lines.
 
@@ -90,11 +96,12 @@ becomes:
 	$_SERVER["PHP_SELF"];
 
 #### If statements
-Mostly self-explanatory. 
+Mostly self-explanatory. `if`, `elseif`, or `else` followed by the condition(except for `else`,
+followed by any number of expressions to be executed.
 	(if (== myvar "some value")
 		(print "myvar equals 'some value'.")
 		(print "Another line because I can."))
-	(else if (== myvar "other value")
+	(elseif (== myvar "other value")
 		(print "myvar equals 'other value'."))
 	(else
 		(print "I don't know what's in myvar."))
