@@ -35,12 +35,11 @@ Since PHP's array creation operator looks like a function call, it fits in nicel
 	(array 1 2 3)
 becomes
 	array(1, 2, 3);
-This only works for arrays. Creating dictionaries is explained later.
+This only works for arrays. Creating dictionaries (associative arrays) is explained later.
 
 Special operators in PHP, like + (plus), - (minus), and = (assignment) are also treated like regular
 function calls in Pharen by being treated as infix operators. To add a bunch of numbers, write:
 	(+ 1 2 3 4)
-Note that the function's name, +, is simply interspersed among the arguments.
 To assign that to a variable, just write:
 	(= sum
 		(+ 1 2 3 4))
@@ -135,14 +134,17 @@ Pharen has two tricks up its sleeve. Micros and partial application. They are bo
 experimental and might probably definitely have bugs.
 
 #### Micros
-Basically functions that when called, result in their own code instead of . This can prevent the overhead
-of function calls. Redoing the function definition example from before:
+Basically functions that when called, output their own code instead of the call itself. This can prevent the overhead
+of calling a function. Redoing the function definition example from before:
 	(micro greet (name)
 		(print (. "Hello " name "!")))
 	(greet "Arthur Dent")
 becomes
 	print("Hello " . "Arthur Dent" . "!");
-	
+
+The micro definition itself doesn't output any PHP code. In the future, micros will likely be useful
+in loop constructs, which I have yet to implement.
+
 #### Partials
 Whenever a Pharen function is called without all the necessary parameters, pharen makes a temporary function
 to act as an intermediary. It's similar to how you'd use currying in Haskell.
@@ -157,8 +159,12 @@ which becomes:
 	function __partial0($arg0){
 		return add_three_nums(10, $arg0);
 	}
-	map(array(1, 2, 3), "__partial0");
+	map($nums, "__partial0");
 	
+### lang.phn
+lang.phn is a file containing a few basic functions geared towards functional programming
+(first, rest, cons, apply, and map). In the future, this file will contain all default functions.
+
 Milestones to Reach
 ===================
 The first goal will be to create a language that more or less covers enough of PHP
