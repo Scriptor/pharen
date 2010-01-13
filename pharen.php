@@ -96,9 +96,10 @@ class Lexer{
                 $this->state = "new-expression";
             }else if($this->char == "\\" && !$this->escaping){
                 $this->escaping = True;
-            }else if($this->escaping){
-                $this->escaping = False;
             }else{
+                if($this->escaping){
+                    $this->escaping = False;
+                }
                 $this->tok->append($this->char);
             }
         }else if($this->state == "append"){
