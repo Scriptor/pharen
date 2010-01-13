@@ -96,7 +96,7 @@ becomes:
 	$_SERVER["PHP_SELF"];
 
 #### If statements
-Mostly self-explanatory. `if`, `elseif`, or `else` followed by the condition(except for `else`,
+Mostly self-explanatory. `if`, `elseif`, or `else` followed by the condition(except for `else`),
 followed by any number of expressions to be executed.
 	(if (== myvar "some value")
 		(print "myvar equals 'some value'.")
@@ -118,7 +118,7 @@ becomes:
 	}
 	
 #### Function definitions
-Starts with `fn`, the function's name, parameter list (also implemented as a literal), and the function's body.
+Starts with `fn`, followed by the function's name, parameter list (also implemented as a literal), and the function's body.
 	(fn greet (name)
 		(print (. "Hello " name "!")))
 becomes:
