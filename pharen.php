@@ -523,7 +523,7 @@ class Parser{
     private $tokens;
 
     public function __construct($tokens){
-        self::$INFIX_OPERATORS = array("+", "-", "*", ".", "/", "and", "or", "<", ">", "===", "==", '=');
+        self::$INFIX_OPERATORS = array("+", "-", "*", ".", "/", "and", "or", "<", ">", "===", "==", "!=", "!==", '=');
 
         self::$value = array(
             "NameToken" => "VariableNode",
