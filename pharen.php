@@ -404,7 +404,7 @@ class IfNode extends SpecialForm{
         $cond = $this->children[1]->compile();
         $body = $this->compile_body();
 
-        return $this->type.$cond."{\n".
+        return $this->type."(".$cond."){\n".
                     $body.
                 $this->indent."}";
     }
