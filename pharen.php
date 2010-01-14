@@ -508,6 +508,13 @@ class MicroNode extends SpecialForm{
     }
 }
 
+class ListNode extends LiteralNode{
+
+    public function compile(){
+        return "array".parent::compile();
+    }
+}
+
 class Parser{
     static $INFIX_OPERATORS; 
 
@@ -518,6 +525,7 @@ class Parser{
     static $empty_node;
 
     static $literal_form;
+    static $list_form;
     static $special_forms;
 
     private $tokens;
@@ -536,6 +544,7 @@ class Parser{
         self::$empty_node = array("EmptyNode");
 
         self::$literal_form = array("LiteralNode", self::$values);
+        self::$list_form = array("ListNode", self::$values);
         self::$special_forms = array(
             "fn" => array("FuncDefNode", "LeafNode", "LeafNode", "LiteralNode", self::$values),
             "if" => array("IfNode", "LiteralNode", self::$values),
@@ -564,11 +573,13 @@ class Parser{
             }
             $node;
 
-            if($tok instanceof OpenParenToken){
+            if($tok instanceof OpenParenToken or $tok instanceof OpenBracketToken){
                 $expected_state = $this->get_expected($state);
                 if($this->is_literal($expected_state)){
                     array_shift($state[count($state)-1]);
                     array_push($state, self::$literal_form);
+                }else if($tok instanceof OpenBracketToken){
+                    array_push($state, self::$list_form);
                 }else if($this->is_special($lookahead)){
                     array_push($state, self::$special_forms[$lookahead->value]);
                 }else if($this->is_infix($lookahead)){
@@ -581,7 +592,7 @@ class Parser{
                 list($node, $state) = $this->parse_tok($tok, $state, $curnode);
                 $curnode->add_child($node);
                 $curnode = $node;
-            }else if($tok instanceof CloseParenToken){
+            }else if($tok instanceof CloseParenToken or $tok instanceof CloseBracketToken){
                 $curnode = $curnode->parent;
                 array_pop($state);
                 if(count($state) === 0){
@@ -675,6 +686,8 @@ if(isset($argv) && isset($argv[1])){
     foreach($argv as $arg){
         $input_files[] = $arg;
     }
+}else{
+    $input_files[] = "example.phn";
 }
 
 compile_file("lang.phn");
