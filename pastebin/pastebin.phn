@@ -35,4 +35,5 @@
 (else
     (tpl
         (form "pastebin.php"
-            (textarea "contents"))))
+            (. "Enter your text here: <br/>"
+                (textarea "contents")))))
