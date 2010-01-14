@@ -1,0 +1,38 @@
+(require "html.php")
+(fn get_paste (id)
+    (= sql (. "SELECT * FROM pastes WHERE id="
+              (mysql_real_escape_string id)
+              ";"))
+    (= result (mysql_query sql))
+    (= paste (mysql_fetch_assoc result))
+    (at paste "contents"))
+
+(fn add_paste (contents)
+    (= sql (. "INSERT INTO pastes (contents) VALUES('"
+              (mysql_real_escape_string contents)
+              "');"))
+    (mysql_query sql)
+    (mysql_insert_id))
+
+(fn tpl (page_contents)
+    (echo "<html>
+                <head><title>Pastebin in Pharen</title></head>
+                <body>")
+    (echo page_contents)
+    (echo "     </body>
+            </html>")
+    NULL)
+
+(mysql_connect "localhost" "root")
+(mysql_select_db "Pastebin")
+
+(if (isset ($ get "id"))
+    (= contents (get_paste ($ get "id")))
+    (tpl (. "<pre>" contents "</pre>")))
+(elseif (isset ($ post "submit"))
+    (= insert_id (add_paste ($ post "contents")))
+    (tpl (. "<a href='pastebin.php?id=" insert_id "'>Click to go to your paste</a>")))
+(else
+    (tpl
+        (form "pastebin.php"
+            (textarea "contents"))))

@@ -1,0 +1,11 @@
+(fn form (action code)
+    (. "<form action='" action "' method='POST'>"
+        code
+        (br)
+        "<input type='submit' value='submit' name='submit'/></form>"))
+
+(fn textarea (id)
+    (. "<textarea id='" id "' name='" id "'></textarea>"))
+
+(fn br ()
+    "<br/>")
