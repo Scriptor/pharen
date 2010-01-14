@@ -669,12 +669,11 @@ function compile($code){
 $fname = "example.phn";
 $output = "example.php";
 
+$input_files = array();
 if(isset($argv) && isset($argv[1])){
-    $fname = $argv[1];
-    if(isset($argv[2])){
-        $output = $argv[2];
-    }else{
-        $output = basename($argv[1], EXTENSION).".php";
+    array_shift($argv);
+    foreach($argv as $arg){
+        $input_files[] = $arg;
     }
 }
 
@@ -682,5 +681,8 @@ compile_file("lang.phn");
 echo "<pre>";
 require("lang.php");
 echo "</pre>";
-$phpcode = compile_file($fname);
-echo "<pre>$phpcode</pre>";
+$php_code = "";
+foreach($input_files as $file){
+    $php_code .= compile_file($file);
+}
+echo "<pre>$php_code</pre>";
