@@ -651,7 +651,7 @@ function compile_file($fname){
     $code = file_get_contents($fname);
     $phpcode = compile($code);
 
-    $output = basename($fname, EXTENSION).".php";
+    $output = dirname($fname).DIRECTORY_SEPARATOR.basename($fname, EXTENSION).".php";
     file_put_contents($output, "<?php ".$phpcode."?>");
     return $phpcode;
 }
