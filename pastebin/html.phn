@@ -1,11 +1,11 @@
-(fn form (action code)
+(micro form (action code)
     (. "<form action='" action "' method='POST'>"
         code
-        (br)
+        "<br/>"
         "<input type='submit' value='submit' name='submit'/></form>"))
 
-(fn textarea (id)
+(micro textarea (id)
     (. "<textarea id='" id "' name='" id "'></textarea>"))
 
-(fn br ()
+(micro br ()
     "<br/>")
