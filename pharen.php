@@ -145,6 +145,10 @@ class Lexer{
     }
 }
 
+class InfixFunc{
+    public $params = array('x', 'y');
+}
+
 class FuncInfo{
     static $tmp_counter=0;
 
@@ -162,6 +166,8 @@ class FuncInfo{
 
         if(FuncDefNode::is_pharen_func($name)){
             $this->func = FuncDefNode::get_pharen_func($name);
+        }else if(in_array($name, Parser::$INFIX_OPERATORS)){
+            $this->func = new InfixFunc;
         }
     }
 
@@ -185,6 +191,7 @@ class FuncInfo{
     }
 
 }
+
 class Node{
     static $prev_tmp;
     static $tmp;
@@ -221,6 +228,12 @@ class Node{
         return array($func_name, $args);
     }
 
+    public function create_partial($func){
+        list($tmp_func, $tmp_name) = $func->get_tmp_func();
+        Node::$tmp .= $tmp_func;
+        return '"'.$tmp_name.'"';
+    }
+
     public function compile(){
         list($func_name, $args) = $this->get_compiled_func_args();
 
@@ -229,9 +242,7 @@ class Node{
             $micro = MicroNode::get_micro($func_name);
             return $micro->get_body($args);
         }else if($func->is_partial()){
-            list($tmp_func,$tmp_name) = $func->get_tmp_func();
-            Node::$tmp .= $tmp_func;
-            return '"'.$tmp_name.'"';
+            return $this->create_partial($func);
         }
 
         $args_string = implode(", ", $args);
@@ -276,6 +287,10 @@ class InfixNode extends Node{
 
     public function compile(){
         list($func_name, $args) = $this->get_compiled_func_args();
+        $func = new FuncInfo($func_name, $args);
+        if($func->is_partial()){
+            return $this->create_partial($func);
+        }
         $code = implode(' '.$func_name.' ', $args);
         return "(".$code.")";
     }
