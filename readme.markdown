@@ -5,11 +5,13 @@ It is _very_ alpha and still under heavy development.
 Language Tutorial/Overview
 =================
 ### Usage
-	$ php pharen.php your_pharen_file.phn <your_pharen_file.php>
+	$ php pharen.php pharen_file1.phn pharen_file2.phn ... pharen_fileN.phn
 
-By convention Pharen files have the .phn extension. If you don't specify an output
-file, the compiler extracts it from the input file. Not specifying an input file will
-result in example.phn to be used.
+Each file will be compiled in the order given. Order is important when your code
+uses micros, which are stored in the compiler's memory.
+
+By convention Pharen files have the .phn extension. The names of the output files
+are extracted from the names of the input files.
 
 ### Basics
 Everything is surrounded by parentheses. No semicolons are needed to end lines.
@@ -19,6 +21,7 @@ Strings are always wrapped in double-quotes:
 	'This is not.'
 
 Variables do not have $'s in front of them, as in PHP. Just use the name by itself.
+
 However, if you want to use a variable as a function name, you will need to
 use the dollar sign. This will be explained later.
 
@@ -68,7 +71,16 @@ becomes:
 Some things that look like function calls in Pharen are completely different things in PHP.
 They are implemented as special forms.
 
-#### Creating dictionaries.
+#### Creating lists
+Pharen lists are unassociative PHP arrays, when you just have a series of elements. In Pharen,
+you can use either vector literals or use the `array` construct as a function.
+	[1 2 3 4]
+	(array 1 2 3 4)
+Are both the same in the end:
+	array(1, 2, 3, 4);
+	array(1, 2, 3, 4);
+
+#### Creating dictionaries
 Dictionaries start with `dict`, then are followed by key-value pairs enclosed in parentheses.
 The key-value pairs are one of the instances where Pharen does not follow the typical function call form.
 This is because dict takes in *literals*, which are treated by pharen as collections of elements.
@@ -80,10 +92,15 @@ Becomes:
 	$fruits = array("a"=>"apple", "b"=>"banana");
 	
 #### Accessing array/dictionary elements
-Here we use `at`, followed by the variable's name and the index/key:
+Two syntaxes are available, both compiling to equivalent code. You can use either the `at` function
+or use the `:` prefix for the array's name:
 	(at foo_array 1)
 	(at fruits "a")
-becomes:
+
+	(:foo_array 1)
+	(:fruits "a")
+	
+will both compile to:
 	$foo_array[1];
 	$fruits["a"];
 	
