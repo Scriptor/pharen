@@ -595,7 +595,34 @@ class MicroNode extends SpecialForm{
 class ListNode extends LiteralNode{
 
     public function compile(){
+        if(($x = $this->is_range()) !== False){
+            $step = $x > 1 ? $this->get_range_step() : 1;
+            $first = intval($this->children[0]->compile());
+            $end = intval(last($this->children)->compile());
+            $vals = array();
+            for($x=$first; $x<=$end; $x+=$step){
+                $vals[] = $x;
+            }
+            return "array(".implode(', ', $vals).")";
+
+        }
         return "array".parent::compile();
+    }
+
+    public function is_range(){
+        for($x=0; $x<count($this->children); $x++){
+            $el = $this->children[$x];
+            if($el->compile() == '..'){
+                return $x;
+            }
+        }
+        return False;
+    }
+
+    public function get_range_step(){
+        $el1 = $this->children[0]->compile();
+        $el2 = $this->children[1]->compile();
+        return intval($el2) - intval($el1);
     }
 }
 
