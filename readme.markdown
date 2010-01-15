@@ -79,6 +79,21 @@ you can use either vector literals or use the `array` construct as a function.
 Are both the same in the end:
 	array(1, 2, 3, 4);
 	array(1, 2, 3, 4);
+	
+#### List ranges
+To quickly make a range of integers, you can use the range syntax built into list literals. For example,
+to quickly make a list containing all integers from 1 to 5 inclusive:
+	[1 .. 5]
+which becomes
+	array(1, 2, 3, 4, 5);
+You can also specify the step to be used between each integer in a range by having at least 2 elements before the ..:
+	[1 3 .. 7]
+becomes:
+	array(1, 3, 5, 7);
+Note that with steps, the last element you put in may not be in the final array. For example:
+	[1 3 .. 6]
+will lose the 6 because mathematically, you can't reach it by add 2's to 1:
+	array(1, 3, 5);
 
 #### Creating dictionaries
 Dictionaries start with `dict`, then are followed by key-value pairs enclosed in parentheses.
@@ -96,7 +111,7 @@ Two syntaxes are available, both compiling to equivalent code. You can use eithe
 or use the `:` prefix for the array's name:
 	(at foo_array 1)
 	(at fruits "a")
-
+	
 	(:foo_array 1)
 	(:fruits "a")
 	
