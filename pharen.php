@@ -186,6 +186,7 @@ class FuncInfo{
 
 }
 class Node{
+    static $prev_tmp;
     static $tmp;
 
     public $parent;
@@ -283,7 +284,10 @@ class InfixNode extends Node{
         $code = $this->compile();
         // Remove parentheses added by regular compile() since they're not
         // needed for statements. Makes pretty.
-        return substr($code, 1, strlen($code)-2).";\n";
+        $code = substr($code, 1, strlen($code)-2).";\n";
+        $code = Node::$prev_tmp.$code;
+        Node::$prev_tmp = '';
+        return $code;
     }
 }
 
@@ -346,13 +350,13 @@ class SpecialForm extends Node{
         return $this->compile()."\n";
     }
 
-    public function compile_body($lines=false){
+    public function compile_body($lines=false, $prefix=""){
         // Compile the body expressions of the special form according to
         // the start index of the first body expression.
         $body = "";
         $lines = $lines === false ? $this->children : $lines;
         foreach(array_slice($lines, $this->body_index) as $child){
-            $body .= $this->indent."\t".$child->compile_statement($this->indent."\t");
+            $body .= $this->indent."\t".$prefix.$child->compile_statement($this->indent."\t");
         }
         return $body;
     }
@@ -403,30 +407,47 @@ class FuncDefNode extends SpecialForm{
 }
 
 class CondNode extends SpecialForm{
+    static $tmp_num = 0;
+
+    static function get_tmp_name(){
+        return "__condtmpvar".self::$tmp_num++;
+    }
+
+    static function get_prev_tmp_name(){
+        return "__condtmpvar".(self::$tmp_num-1);
+    }
 
     public function compile(){
+        Node::$prev_tmp.= "\n".$this->compile_statement(True);
+        return '$'.self::get_prev_tmp_name();
+    }
+
+    public function compile_statement($use_tmp=False){
         $pairs = array_slice($this->children, 1);
         $if_pair = array_shift($pairs);
         $elseif_pairs = $pairs;
 
-        $code = $this->compile_if($if_pair);
+        $tmp_name = self::get_tmp_name();
+        $tmp_var = $use_tmp ? '$'.$tmp_name.' = ' : '';
+        $code = '$'.$tmp_name.";\n";
+        $code .= $this->compile_if($if_pair, $tmp_var);
         foreach($elseif_pairs as $elseif_pair){
-            $code .= $this->compile_elseif($elseif_pair);
+            $code .= $this->compile_elseif($elseif_pair, $tmp_var);
         }
         return $code;
     }
 
-    public function compile_if($pair){
+    public function compile_if($pair, $tmp_var){
         $condition = $pair->children[0]->compile();
-        $body = $this->compile_body(array($pair->children[1]));
+        $body = $this->compile_body(array($pair->children[1]), $tmp_var);
 
         return "if(".$condition."){\n"
             .$body
         ."}\n";
     }
 
-    public function compile_elseif($pair){
-        return "else ".$this->compile_if($pair);
+    public function compile_elseif($pair, $tmp_var){
+        return "else ".$this->compile_if($pair, $tmp_var);
     }
 }
 
