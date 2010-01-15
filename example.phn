@@ -1,5 +1,5 @@
 (f1 foo "hello" (f2 "world"))
-(f3 foo)
+(f3 foo ["a" "b" (test "ab")])
 (+ 2 2)
 (= abc (* 4 (+ 3 4)))
 
@@ -10,9 +10,12 @@
         (print "here")
         (if (== 2 2)
             (print "More indented!"))))
-
 (elseif (== 3 3)
     (print "3 equals 3!"))
+
+(cond
+    ((== 2 2) "abc")
+    ((== 3 3) "foo"))
 
 (fn foo (abc)
     (print abc)
