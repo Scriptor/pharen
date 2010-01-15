@@ -57,6 +57,9 @@ class NumberToken extends Token{
 class StringToken extends Token{
 }
 
+class ListAccessToken extends Token{
+}
+
 class NameToken extends Token{
 }
 
@@ -128,6 +131,9 @@ class Lexer{
             }else if($this->char == '"'){
                 $this->tok = new StringToken;
                 $this->state = "string";
+            }else if($this->char == ':' and $this->code[$this->i-1] == "("){
+                $this->tok = new ListAccessToken;
+                $this->state = "append";
             }else if(is_numeric($this->char)){
                 $this->tok = new NumberToken($this->char);
                 $this->state = "append";
@@ -464,6 +470,15 @@ class AtArrayNode extends Node{
     }
 }
 
+class ListAccessNode extends Node{
+
+    public function compile(){
+        $varname = $this->children[0]->compile();
+        $index = $this->children[1]->compile();
+        return '$'.$varname."[$index]";
+    }
+}
+
 class SuperGlobalNode extends Node{
 
     public function compile(){
@@ -555,6 +570,7 @@ class Parser{
     static $literal_form;
     static $cond_pair;
     static $list_form;
+    static $list_access_form;
     static $special_forms;
 
     private $tokens;
@@ -565,7 +581,7 @@ class Parser{
         self::$value = array(
             "NameToken" => "VariableNode",
             "StringToken" => "StringNode",
-            "NumberToken" => "LeafNode"
+            "NumberToken" => "LeafNode",
         );
         self::$values = array(self::$value);
         self::$func_call = array("Node", "LeafNode", array(self::$value));
@@ -575,6 +591,7 @@ class Parser{
         self::$literal_form = array("LiteralNode", self::$values);
         self::$cond_pair = array("LiteralNode", self::$value, self::$value);
         self::$list_form = array("ListNode", self::$values);
+        self::$list_access_form = array("ListAccessNode", "LeafNode", self::$value);
 
         self::$special_forms = array(
             "fn" => array("FuncDefNode", "LeafNode", "LeafNode", "LiteralNode", self::$values),
@@ -615,6 +632,8 @@ class Parser{
                     array_push($state, self::$literal_form);
                 }else if($tok instanceof OpenBracketToken){
                     array_push($state, self::$list_form);
+                }else if($lookahead instanceof ListAccessToken){
+                    array_push($state, self::$list_access_form);
                 }else if($this->is_special($lookahead)){
                     array_push($state, self::$special_forms[$lookahead->value]);
                 }else if($this->is_infix($lookahead)){
