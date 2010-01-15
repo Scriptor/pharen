@@ -199,6 +199,13 @@ class Node{
     public $parent;
     public $children;
 
+    static function add_tmp($code){
+        $code = Node::$prev_tmp.Node::$tmp.$code;
+        Node::$prev_tmp = '';
+        Node::$tmp = '';
+        return $code;
+    }
+
     public function __construct(Node $parent=null){
         $this->parent = $parent;
         $this->children = array();
@@ -252,8 +259,7 @@ class Node{
     }
 
     public function compile_statement(){
-        $code = Node::$tmp.$this->compile();
-        Node::$tmp = ""; 
+        $code = Node::add_tmp($this->compile());
         return $code.";\n";
     }
 }
@@ -300,8 +306,7 @@ class InfixNode extends Node{
         // Remove parentheses added by regular compile() since they're not
         // needed for statements. Makes pretty.
         $code = substr($code, 1, strlen($code)-2).";\n";
-        $code = Node::$prev_tmp.$code;
-        Node::$prev_tmp = '';
+        $code = Node::add_tmp($code);
         return $code;
     }
 }
