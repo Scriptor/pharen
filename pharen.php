@@ -396,6 +396,34 @@ class FuncDefNode extends SpecialForm{
     }
 }
 
+class CondNode extends SpecialForm{
+
+    public function compile(){
+        $pairs = array_slice($this->children, 1);
+        $if_pair = array_shift($pairs);
+        $elseif_pairs = $pairs;
+
+        $code = $this->compile_if($if_pair);
+        foreach($elseif_pairs as $elseif_pair){
+            $code .= $this->compile_elseif($elseif_pair);
+        }
+        return $code;
+    }
+
+    public function compile_if($pair){
+        $condition = $pair->children[0]->compile();
+        $body = $this->compile_body(array($pair->children[1]));
+
+        return "if(".$condition."){\n"
+            .$body
+        ."}\n";
+    }
+
+    public function compile_elseif($pair){
+        return "else ".$this->compile_if($pair);
+    }
+}
+
 class IfNode extends SpecialForm{
     protected $body_index = 2;
     protected $type = "if";
@@ -525,6 +553,7 @@ class Parser{
     static $empty_node;
 
     static $literal_form;
+    static $cond_pair;
     static $list_form;
     static $special_forms;
 
@@ -544,9 +573,12 @@ class Parser{
         self::$empty_node = array("EmptyNode");
 
         self::$literal_form = array("LiteralNode", self::$values);
+        self::$cond_pair = array("LiteralNode", self::$value, self::$value);
         self::$list_form = array("ListNode", self::$values);
+
         self::$special_forms = array(
             "fn" => array("FuncDefNode", "LeafNode", "LeafNode", "LiteralNode", self::$values),
+            "cond" => array("CondNode", "LeafNode", array(self::$literal_form)),
             "if" => array("IfNode", "LiteralNode", self::$values),
             "elseif" => array("ElseIfNode", "LiteralNode", self::$values),
             "else" => array("ElseNode", self::$values),
@@ -566,17 +598,20 @@ class Parser{
         $state = array();
         $len = count($this->tokens);
 
+        $count=0;
         for($i=0;$i<$len;$i++){
             $tok = $this->tokens[$i];
             if($i+1 < $len){
                 $lookahead = $this->tokens[$i+1];
             }
             $node;
-
+            
             if($tok instanceof OpenParenToken or $tok instanceof OpenBracketToken){
                 $expected_state = $this->get_expected($state);
                 if($this->is_literal($expected_state)){
-                    array_shift($state[count($state)-1]);
+                    if(!is_array($state[count($state)-1][0])){
+                        array_shift($state[count($state)-1]);
+                    }
                     array_push($state, self::$literal_form);
                 }else if($tok instanceof OpenBracketToken){
                     array_push($state, self::$list_form);
@@ -624,6 +659,7 @@ class Parser{
             $class = $expected;
             array_shift($cur_state);
         }
+
         $node = new $class($parent, null, $tok->value);
         return array($node, $state);
     }
@@ -677,9 +713,6 @@ function compile($code){
     return $phpcode;
 }
 
-$fname = "example.phn";
-$output = "example.php";
-
 $input_files = array();
 if(isset($argv) && isset($argv[1])){
     array_shift($argv);
@@ -687,12 +720,12 @@ if(isset($argv) && isset($argv[1])){
         $input_files[] = $arg;
     }
 }else{
-    $input_files[] = "example.phn";
+    $input_files[] = "lib.phn";
 }
 
-compile_file("lang.phn");
+//compile_file("lang.phn");
 echo "<pre>";
-require("lang.php");
+//require("lang.php");
 echo "</pre>";
 $php_code = "";
 foreach($input_files as $file){
