@@ -763,9 +763,9 @@ if(isset($argv) && isset($argv[1])){
     $input_files[] = "lib.phn";
 }
 
-//compile_file("lang.phn");
+compile_file("lang.phn");
 echo "<pre>";
-//require("lang.php");
+require("lang.php");
 echo "</pre>";
 $php_code = "";
 foreach($input_files as $file){
