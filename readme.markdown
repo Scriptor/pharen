@@ -127,8 +127,36 @@ becomes:
 	$_POST["some_key"];
 	$_SERVER["PHP_SELF"];
 
+#### Cond expressions
+Similar to `cond` in other lisps, this special form takes in a series of condition-expression pairs.
+If a condition evaluates to true, the expression that comes with it is executed.
+(cond
+	((test1) (print "Test1 returns true."))
+	((test2) (print "Test2" returns true.")))
+becomes
+	if(test1()){
+		print("Test 1 returns true.");
+	}
+	else if(test2()){
+		print("Test 2 returns true.");
+	}
+A cond expression can also be embedded in other expressions, this is done by using temporary variables
+in the resulting PHP code:
+	(= result (cond
+		((test1) "test1 works.")
+		((test2) "test2 works.")))
+becomes
+	$__condtmpvar0;
+	if(test1()){
+		$__condtmpvar0 = "test1 works.";
+	}else if(test2()){
+		$__condtmpvar0 = "test2 works.";
+	}
+	$result = $__condtmpvar0;
+
 #### If statements
-Mostly self-explanatory. `if`, `elseif`, or `else` followed by the condition(except for `else`),
+Parellel the equivalent PHP constructs.
+The syntax is `if`, `elseif`, or `else` followed by the condition(except for `else`),
 followed by any number of expressions to be executed.
 	(if (== myvar "some value")
 		(print "myvar equals 'some value'.")
