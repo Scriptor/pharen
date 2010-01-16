@@ -1,0 +1,17 @@
+(require "../../lang.php")
+
+(micro sql_escape (values)
+    (map "quote_and_escape" values))
+(micro sql_escape_and_quote (values)
+    (map "quote_and_escape" values))
+(fn quote_and_escape (value)
+    (. "'" (mysql_real_escape_string value) "'"))
+
+(fn insert (table columns values)
+    (= values (sql_escape_and_quote values))
+    
+    (= columns_clause (implode ", " columns))
+    (= values_clause (implode ", " values))
+    
+    (= sql (. "INSERT INTO " table " (" columns_clause ") VALUES(" values_clause ");"))
+    (mysql_query sql))
