@@ -1,4 +1,6 @@
 (require "html.php")
+(require "sql.php")
+
 (fn get_paste (id)
     (= sql (. "SELECT * FROM pastes WHERE id="
               (mysql_real_escape_string id)
@@ -8,10 +10,7 @@
     (at paste "contents"))
 
 (fn add_paste (contents)
-    (= sql (. "INSERT INTO pastes (contents) VALUES('"
-              (mysql_real_escape_string contents)
-              "');"))
-    (mysql_query sql)
+    (insert "pastes" ["contents"] [contents])
     (mysql_insert_id))
 
 (fn tpl (page_contents)
