@@ -10,7 +10,7 @@
 (fn apply (f val)
     ($f val))
 
-(fn map (xs f)
+(fn map (f xs)
     (if (== (sizeof xs) 0)
         (return (array)))
     (cons ($f (first xs))
