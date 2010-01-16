@@ -130,9 +130,9 @@ becomes:
 #### Cond expressions
 Similar to `cond` in other lisps, this special form takes in a series of condition-expression pairs.
 If a condition evaluates to true, the expression that comes with it is executed.
-(cond
-	((test1) (print "Test1 returns true."))
-	((test2) (print "Test2" returns true.")))
+	(cond
+		((test1) (print "Test1 returns true."))
+		((test2) (print "Test2" returns true.")))
 becomes
 	if(test1()){
 		print("Test 1 returns true.");
