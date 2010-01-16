@@ -669,7 +669,7 @@ class Parser{
 
         self::$special_forms = array(
             "fn" => array("FuncDefNode", "LeafNode", "LeafNode", "LiteralNode", self::$values),
-            "cond" => array("CondNode", "LeafNode", array(self::$literal_form)),
+            "cond" => array("CondNode", "LeafNode", array(self::$cond_pair)),
             "if" => array("IfNode", "LiteralNode", self::$values),
             "elseif" => array("ElseIfNode", "LiteralNode", self::$values),
             "else" => array("ElseNode", self::$values),
