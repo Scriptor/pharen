@@ -574,6 +574,11 @@ class MicroNode extends SpecialForm{
         $this->body = $this->compile_body();
         
         self::$micros[$this->name] = $this;
+        return '"'.$this->name.'"';
+    }
+
+    public function compile_statement(){
+        $this->compile();
         return "";
     }
 
@@ -599,6 +604,7 @@ class ListNode extends LiteralNode{
             $step = $x > 1 ? $this->get_range_step() : 1;
             $first = intval($this->children[0]->compile());
             $end = intval(last($this->children)->compile());
+
             $vals = array();
             for($x=$first; $x<=$end; $x+=$step){
                 $vals[] = $x;
