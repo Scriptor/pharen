@@ -14,4 +14,4 @@
     (if (== (sizeof xs) 0)
         (return (array)))
     (cons ($f (first xs))
-                  (map (rest xs) f)))
+                  (map f (rest xs))))
