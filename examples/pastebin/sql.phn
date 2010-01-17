@@ -4,8 +4,19 @@
     (map "quote_and_escape" values))
 (micro sql_escape_and_quote (values)
     (map "quote_and_escape" values))
+
 (fn quote_and_escape (value)
     (. "'" (mysql_real_escape_string value) "'"))
+(fn get_where_clause (wheres)
+    (= clause "")
+    (each_pair wheres (col val)
+        (= clause (. clause col "=" (mysql_real_escape_string val) ",")))
+    (trim clause ","))
+
+(fn select (what table wheres)
+    (= where_clause (get_where_clause wheres))
+    (= sql (. "SELECT " what " FROM " table " WHERE " where_clause ";"))
+    (mysql_query sql))
 
 (fn insert (table columns values)
     (= values (sql_escape_and_quote values))

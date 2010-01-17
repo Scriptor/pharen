@@ -2,10 +2,8 @@
 (require "sql.php")
 
 (fn get_paste (id)
-    (= sql (. "SELECT * FROM pastes WHERE id="
-              (mysql_real_escape_string id)
-              ";"))
-    (= result (mysql_query sql))
+    (= result (select "*" "pastes" (dict
+        ("id" id))))
     (= paste (mysql_fetch_assoc result))
     (at paste "contents"))
 
