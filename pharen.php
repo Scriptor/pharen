@@ -632,6 +632,21 @@ class ListNode extends LiteralNode{
     }
 }
 
+class EachPairNode extends SpecialForm{
+    protected $body_index = 3;
+    
+    public function compile_statement($indent){
+        $dict_name = $this->children[1]->compile();
+        $key_name = $this->children[2]->children[0]->compile();
+        $val_name = $this->children[2]->children[1]->compile();
+        $body = $this->compile_body();
+        
+        return "foreach($dict_name as $key_name => $val_name){\n"
+            .$indent.$body
+        .$indent."}\n";
+    }
+}
+
 class Parser{
     static $INFIX_OPERATORS; 
 
@@ -676,7 +691,8 @@ class Parser{
             "at" => array("AtArrayNode", "LeafNode", "VariableNode", self::$value),
             "$" => array("SuperGlobalNode", "LeafNode", "LeafNode", self::$value),
             "dict" => array("DictNode", array(self::$literal_form)),
-            "micro" => array("MicroNode", "LeafNode", "LeafNode", "LiteralNode", self::$values)
+            "micro" => array("MicroNode", "LeafNode", "LeafNode", "LiteralNode", self::$values),
+            "each_pair" => array("EachPairNode", "LeafNode", "VariableNode", "LiteralNode", self::$value)
         );
         
         $this->tokens = $tokens;
@@ -813,7 +829,7 @@ if(isset($argv) && isset($argv[1])){
         $input_files[] = $arg;
     }
 }else{
-    $input_files[] = "lib.phn";
+    $input_files[] = "examples/pastebin/sql.phn";
 }
 
 compile_file("lang.phn");
