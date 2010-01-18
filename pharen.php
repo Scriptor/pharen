@@ -1,5 +1,6 @@
 <?php
 error_reporting(E_ALL | E_STRICT | E_NOTICE);
+define("SYSTEM", dirname(__FILE__));
 define("EXTENSION", ".phn");
 
 // Some utility functions for use in Pharen
@@ -806,16 +807,16 @@ class Parser{
 function compile_file($fname){
     $code = file_get_contents($fname);
     $phpcode = compile($code);
-
+ 
     $output = dirname($fname).DIRECTORY_SEPARATOR.basename($fname, EXTENSION).".php";
     file_put_contents($output, "<?php ".$phpcode."?>");
     return $phpcode;
 }
-
+ 
 function compile($code){
     $lexer = new Lexer($code);
     $tokens = $lexer->lex();
-
+ 
     $parser = new Parser($tokens);
     $node_tree = $parser->parse();
     $phpcode = $node_tree->compile();
@@ -829,15 +830,15 @@ if(isset($argv) && isset($argv[1])){
         $input_files[] = $arg;
     }
 }else{
-    $input_files[] = "examples/pastebin/sql.phn";
+    //$input_files[] = "examples/pastebin/sql.phn";
 }
 
-compile_file("lang.phn");
-echo "<pre>";
-require("lang.php");
-echo "</pre>";
+compile_file(SYSTEM . "/lang.phn");
+require(SYSTEM . "/lang.php");
 $php_code = "";
 foreach($input_files as $file){
     $php_code .= compile_file($file);
 }
-echo "<pre>$php_code</pre>";
+if(isset($_SERVER)){
+    echo "<pre>$php_code</pre>";
+}
