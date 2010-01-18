@@ -1,3 +1,4 @@
+(require "../../lang.php")
 (require "html.php")
 (require "sql.php")
 
