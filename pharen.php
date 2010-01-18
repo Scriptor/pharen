@@ -829,13 +829,10 @@ if(isset($argv) && isset($argv[1])){
     foreach($argv as $arg){
         $input_files[] = $arg;
     }
-}else{
-    //$input_files[] = "examples/pastebin/sql.phn";
 }
 
-compile_file(SYSTEM . "/lang.phn");
+$php_code = compile_file(SYSTEM . "/lang.phn");
 require(SYSTEM . "/lang.php");
-$php_code = "";
 foreach($input_files as $file){
     $php_code .= compile_file($file);
 }
