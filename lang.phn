@@ -1,3 +1,6 @@
+(define "LIB_PATH" "/Applications/MAMP/htdocs/pharen/lib/")
+(set_include_path (. (get_include_path) PATH_SEPARATOR LIB_PATH))
+
 (fn first (xs)
     (at xs 0))
 
