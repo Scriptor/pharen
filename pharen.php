@@ -193,12 +193,23 @@ class FuncInfo{
 
 }
 
+class Scope{
+    public $bindings = array();
+
+    public function bind($var_name, $value_node){
+        // Keep value as just the node to allow for possible implementation of lazy evaluation in the future
+        $this->bindings[$var_name] = $value_node;
+    }
+}
+
 class Node{
     static $prev_tmp;
     static $tmp;
 
     public $parent;
     public $children;
+
+    private $scope = Null;
 
     static function add_tmp($code){
         $code = Node::$prev_tmp.Node::$tmp.$code;
@@ -210,6 +221,17 @@ class Node{
     public function __construct(Node $parent=null){
         $this->parent = $parent;
         $this->children = array();
+    }
+
+    public function get_scope(){
+        if($this->scope === Null){
+            return parent::get_scope();
+        }
+        return $this->scope;
+    }
+
+    public function set_scope(Scope $scope){
+        $this->scope = $scope;
     }
 
     protected function split_children(){
@@ -648,6 +670,18 @@ class EachPairNode extends SpecialForm{
     }
 }
 
+class BindingNode extends Node{
+    
+    public function compile(){
+        $varname = $this->children[1]->compile();
+        $value = $this->children[2]->compile();
+
+        $scope = $this->parent->get_scope();
+        $scope->bind($varname, $this->children[2]);
+        return "$varname = $value";
+    }
+}
+
 class Parser{
     static $INFIX_OPERATORS; 
 
@@ -666,7 +700,7 @@ class Parser{
     private $tokens;
 
     public function __construct($tokens){
-        self::$INFIX_OPERATORS = array("+", "-", "*", ".", "/", "and", "or", "<", ">", "===", "==", "!=", "!==", '=');
+        self::$INFIX_OPERATORS = array("+", "-", "*", ".", "/", "and", "or", "<", ">", "===", "==", "!=", "!==");
 
         self::$value = array(
             "NameToken" => "VariableNode",
@@ -691,6 +725,7 @@ class Parser{
             "else" => array("ElseNode", self::$values),
             "at" => array("AtArrayNode", "LeafNode", "VariableNode", self::$value),
             "$" => array("SuperGlobalNode", "LeafNode", "LeafNode", self::$value),
+            "=" => array("BindingNode", "LeafNode", "VariableNode", self::$value),
             "dict" => array("DictNode", array(self::$literal_form)),
             "micro" => array("MicroNode", "LeafNode", "LeafNode", "LiteralNode", self::$values),
             "each_pair" => array("EachPairNode", "LeafNode", "VariableNode", "LiteralNode", self::$value)
@@ -703,6 +738,7 @@ class Parser{
     public function parse(){
         $curnode = new RootNode;
         $rootnode = $curnode;
+        $rootnode->set_scope(new Scope());
         $state = array();
         $len = count($this->tokens);
 
