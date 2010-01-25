@@ -420,6 +420,8 @@ class FuncDefNode extends SpecialForm{
     }
 
     public function compile(){
+        $this->scope = new Scope();
+
         $name = $this->children[1]->compile();
         self::$functions[$name] = $this;
 
@@ -446,6 +448,23 @@ class FuncDefNode extends SpecialForm{
             $body .= "\treturn ".$last->compile_statement();
         }
         return $body;
+    }
+}
+
+class LambdaNode extends FuncDefNode{
+    static $counter=0;
+
+    static function get_next_name(){
+        return "__lambdafunc".self::$counter++;
+    }
+
+    public function compile(){
+        $name = self::get_next_name();
+        $name_node = new LeafNode($this, array(), $name);
+        array_splice($this->children, 1, 0, array($name_node));
+        $code = parent::compile();
+        Node::$tmp .= $code."\n";
+        return '"'.$name.'"';
     }
 }
 
@@ -719,6 +738,7 @@ class Parser{
 
         self::$special_forms = array(
             "fn" => array("FuncDefNode", "LeafNode", "LeafNode", "LiteralNode", self::$values),
+            "lambda" => array("LambdaNode", "LeafNode", "LiteralNode", self::$values),
             "cond" => array("CondNode", "LeafNode", array(self::$cond_pair)),
             "if" => array("IfNode", "LiteralNode", self::$values),
             "elseif" => array("ElseIfNode", "LiteralNode", self::$values),
