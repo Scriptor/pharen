@@ -517,12 +517,11 @@ class FuncDefNode extends SpecialForm{
         $body = "";
         $lines = array_slice($this->children, 0, count($this->children) - 1);
         $last = $this->children[count($this->children)-1];
-
         $body = parent::compile_body($lines);
         if($last instanceof IfNode){
             $body .= "\t".$last->compile_statement($this->indent."\t");
         }else{
-            $body .= "\treturn ".$last->compile_statement();
+            $body .= "\treturn ".$last->compile()."\n";
         }
         return $body;
     }
@@ -977,7 +976,7 @@ if(isset($argv) && isset($argv[1])){
     }
 }
 
-$php_code = compile_file(SYSTEM . "/lang.phn");
+$php_code = compile_file(SYSTEM . "/simple.phn");
 //require(SYSTEM . "/lang.php");
 foreach($input_files as $file){
     $php_code .= compile_file($file);
