@@ -176,29 +176,90 @@ class FuncInfo{
         return $this->func && count($this->args_given) < count($this->func->params);
     }
 
-    public function get_tmp_func(){
+    public function get_tmp_func($parent){
         $name = self::get_next_name();
         $params_diff = count($this->func->params) - count($this->args_given);
 
-        $params = "";
-        for($x=0;$x<$params_diff;$x++){
-            $params .= "arg$x ";
-        }
+        $function = new FuncDefNode($parent);
+        $fn = $function->add_child(new LeafNode($function, array(), 'fn'));
+        $function->add_child(new LeafNode($function, array(), $name));
 
-        $args_given = implode(" ", $this->args_given);
-        $code = "(fn $name ($params)".
-            "\t($this->name $args_given $params))\n";
-        return array(compile($code), $name);
+        $params = new LiteralNode($function);
+        $function->add_child($params);
+
+        $body = Null;
+        if($this->func instanceof InfixFunc){
+            $body = new InfixNode($function);
+        }else{
+            $body = new Node($function);
+        }
+        $function->add_child($body);
+
+        $body->add_child(new LeafNode($body, array(), $this->name));
+        foreach($this->args_given as $arg){
+            $body->add_child(new VariableNode($body, array(), substr($arg, 1)));
+        }
+        
+        for($x=0;$x<$params_diff;$x++){
+            $var = new VariableNode($params, array(), "arg$x");
+            $params->add_child($var);
+            $var = new VariableNode($body, array(), "arg$x");
+            $body->add_child($var);
+        }
+        return array($function->compile()."\n", $name);
     }
 
 }
 
 class Scope{
+    private $owner;
     public $bindings = array();
+    public $lexical_bindings = array();
 
-    public function bind($var_name, $value_node){
+    public function __construct($owner){
+        $this->owner = $owner;
+    }
+
+    public function bind($var_name, Node $value_node){
         // Keep value as just the node to allow for possible implementation of lazy evaluation in the future
         $this->bindings[$var_name] = $value_node;
+    }
+
+    public function bind_lexical($var_name, Node $value_node){
+        $this->lexical_bindings[$var_name] = $value_node;
+    }
+
+    public function get_binding($var_name){
+        $value = $this->bindings[$var_name]->compile();
+        return "\$$var_name = $value";
+    }
+
+    public function get_lexical_binding($var_name){
+        $value = $this->lexical_bindings[$var_name]->compile();
+        return "\$$var_name = $value";
+    }
+
+    public function get_lexical_bindings($indent){
+        $code = "";
+        foreach($this->lexical_bindings as $var_name=>$val_node){
+            $code .= $indent.$this->get_lexical_binding($var_name).";\n";
+        }
+        return $code;
+    }
+
+    public function find($var_name){
+        if(!array_key_exists($var_name, $this->bindings)){
+            if($this->owner->parent !== Null){
+                return $this->owner->parent->get_scope()->find($var_name);
+            }else{
+                return False;
+            }
+        }
+        return $this->bindings[$var_name];
+    }
+
+    public function find_immediate($var_name){
+        return array_key_exists($var_name, $this->bindings) ? $this->bindings[$var_name] : False;
     }
 }
 
@@ -209,7 +270,7 @@ class Node{
     public $parent;
     public $children;
 
-    private $scope = Null;
+    protected $scope = Null;
 
     static function add_tmp($code){
         $code = Node::$prev_tmp.Node::$tmp.$code;
@@ -225,7 +286,7 @@ class Node{
 
     public function get_scope(){
         if($this->scope === Null){
-            return parent::get_scope();
+            return $this->parent->get_scope();
         }
         return $this->scope;
     }
@@ -259,7 +320,7 @@ class Node{
     }
 
     public function create_partial($func){
-        list($tmp_func, $tmp_name) = $func->get_tmp_func();
+        list($tmp_func, $tmp_name) = $func->get_tmp_func($this->parent);
         Node::$tmp .= $tmp_func;
         return '"'.$tmp_name.'"';
     }
@@ -337,8 +398,9 @@ class InfixNode extends Node{
 class RootNode extends Node{
     public function __construct(){
         // No parent to be passed to the constructor. It's Root all the way down.
-        $this->parent = $this;
+        $this->parent = Null;
         $this->children = array();
+        $this->scope = new Scope($this);
     }
 
     public function compile(){
@@ -348,6 +410,7 @@ class RootNode extends Node{
         }
         return $code;
     }
+
 }
 
 class LeafNode extends Node{
@@ -372,8 +435,18 @@ class LeafNode extends Node{
 
 class VariableNode extends LeafNode{
     
-    public function compile(){
-        return '$'.parent::compile();
+    public function compile($in_binding=False){
+        $scope = $this->get_scope();
+        $varname = '$'.parent::compile();
+        if($in_binding){
+            return substr($varname, 1);
+        }
+        if($in_binding or $scope->find_immediate($this->value) !== False){
+            return $varname;
+        }else if(($val_node = $scope->find($this->value)) !== False){
+            $scope->bind_lexical($this->value, $val_node);
+            return $varname;
+        }
     }
 }
 
@@ -410,6 +483,7 @@ class FuncDefNode extends SpecialForm{
 
     protected $body_index = 3;
     public $params = array();
+    protected $scope;
     
     static function is_pharen_func($func_name){
         return isset(self::$functions[$func_name]);
@@ -420,19 +494,22 @@ class FuncDefNode extends SpecialForm{
     }
 
     public function compile(){
-        $this->scope = new Scope();
+        $this->scope = new Scope($this);
 
         $name = $this->children[1]->compile();
         self::$functions[$name] = $this;
 
         $this->params = $this->children[2]->children;
+        $this->bind_params($this->params);
 
-        $args = $this->children[2]->compile();
+        $params = $this->children[2]->compile();
         $body = $this->compile_body();
+        $body = $this->scope->get_lexical_bindings($this->indent."\t").$body;
 
-        $code = "function ".$name.$args."{\n".
+        $code = "function ".$name.$params."{\n".
                     $body.
                 $this->indent."}";
+        $code = Node::add_tmp($code);
         return $code;
     }
 
@@ -449,22 +526,38 @@ class FuncDefNode extends SpecialForm{
         }
         return $body;
     }
+
+    public function bind_params($params){
+        $scope = $this->get_scope();
+        foreach($params as $param){
+            $scope->bind($param->value, new EmptyNode($this));
+        }
+    }
 }
 
 class LambdaNode extends FuncDefNode{
     static $counter=0;
+
+    protected $scope;
 
     static function get_next_name(){
         return "__lambdafunc".self::$counter++;
     }
 
     public function compile(){
+        $this->scope = new Scope($this);
+
         $name = self::get_next_name();
         $name_node = new LeafNode($this, array(), $name);
         array_splice($this->children, 1, 0, array($name_node));
+
         $code = parent::compile();
         Node::$tmp .= $code."\n";
         return '"'.$name.'"';
+    }
+
+    public function compile_statement(){
+        return $this->compile().";\n";
     }
 }
 
@@ -692,12 +785,10 @@ class EachPairNode extends SpecialForm{
 class BindingNode extends Node{
     
     public function compile(){
-        $varname = $this->children[1]->compile();
-        $value = $this->children[2]->compile();
-
+        $var_name = $this->children[1]->compile(True);
         $scope = $this->parent->get_scope();
-        $scope->bind($varname, $this->children[2]);
-        return "$varname = $value";
+        $scope->bind($var_name, $this->children[2]);
+        return $scope->get_binding($var_name);
     }
 }
 
@@ -755,10 +846,9 @@ class Parser{
 
     }
     
-    public function parse(){
-        $curnode = new RootNode;
+    public function parse($root=Null){
+        $curnode = $root ? $root : new RootNode;
         $rootnode = $curnode;
-        $rootnode->set_scope(new Scope());
         $state = array();
         $len = count($this->tokens);
 
@@ -869,12 +959,12 @@ function compile_file($fname){
     return $phpcode;
 }
  
-function compile($code){
+function compile($code, $root=Null){
     $lexer = new Lexer($code);
     $tokens = $lexer->lex();
  
     $parser = new Parser($tokens);
-    $node_tree = $parser->parse();
+    $node_tree = $parser->parse($root);
     $phpcode = $node_tree->compile();
     return $phpcode;
 }
@@ -888,7 +978,7 @@ if(isset($argv) && isset($argv[1])){
 }
 
 $php_code = compile_file(SYSTEM . "/lang.phn");
-require(SYSTEM . "/lang.php");
+//require(SYSTEM . "/lang.php");
 foreach($input_files as $file){
     $php_code .= compile_file($file);
 }
