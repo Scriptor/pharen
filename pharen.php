@@ -521,7 +521,7 @@ class FuncDefNode extends SpecialForm{
         if($last instanceof IfNode){
             $body .= "\t".$last->compile_statement($this->indent."\t");
         }else{
-            $body .= "\treturn ".$last->compile()."\n";
+            $body .= "\treturn ".$last->compile().";\n";
         }
         return $body;
     }
