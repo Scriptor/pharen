@@ -197,7 +197,7 @@ class FuncInfo{
 
         $body->add_child(new LeafNode($body, array(), $this->name));
         foreach($this->args_given as $arg){
-            $body->add_child(new VariableNode($body, array(), substr($arg, 1)));
+            $body->add_child($arg);
         }
         
         for($x=0;$x<$params_diff;$x++){
@@ -326,9 +326,10 @@ class Node{
     }
 
     public function compile(){
+        $scope = $this->get_scope();
         list($func_name, $args) = $this->get_compiled_func_args();
 
-        $func = new FuncInfo($func_name, $args);
+        $func = new FuncInfo($func_name, array_slice($this->children, 1));
         if(MicroNode::is_micro($func_name)){
             $micro = MicroNode::get_micro($func_name);
             return $micro->get_body($args);
@@ -337,7 +338,6 @@ class Node{
         }
 
         $args_string = implode(", ", $args);
-
 
         return "$func_name($args_string)";
     }
@@ -377,7 +377,7 @@ class InfixNode extends Node{
 
     public function compile(){
         list($func_name, $args) = $this->get_compiled_func_args();
-        $func = new FuncInfo($func_name, $args);
+        $func = new FuncInfo($func_name, array_slice($this->children, 1));
         if($func->is_partial()){
             return $this->create_partial($func);
         }
@@ -496,40 +496,72 @@ class FuncDefNode extends SpecialForm{
     public function compile(){
         $this->scope = new Scope($this);
 
-        $name = $this->children[1]->compile();
-        self::$functions[$name] = $this;
+        $this->name = $this->children[1]->compile();
+        self::$functions[$this->name] = $this;
 
         $this->params = $this->children[2]->children;
-        $this->bind_params($this->params);
-
+        $param_names = $this->get_param_names($this->params);
+        $this->bind_params($param_names);
         $params = $this->children[2]->compile();
-        $body = $this->compile_body();
+
+        list($body_nodes, $last_node) = $this->split_body_last();
+        $body = parent::compile_body($body_nodes, "\t");
         $body = $this->scope->get_lexical_bindings($this->indent."\t").$body;
 
-        $code = "function ".$name.$params."{\n".
+        if($this->is_tail_recursive($last_node)){
+            $new_param_values = array_slice($last_node->children, 1);
+            $bindings = array_combine($param_names, $new_param_values);
+            $bindings_code = "";
+            foreach($bindings as $name=>$val){
+                $bindings_code .= $this->indent."\t\t\$".$name . ' = ' . $val->compile().";\n";
+            }
+            $body = $this->indent."\twhile(1){\n".
                     $body.
-                $this->indent."}";
+                    $bindings_code.
+                $this->indent."\t}\n";
+        }else{
+            $last = $this->compile_last($last_node);
+            $body .= $last;
+        }
+
+        $code = "function ".$this->name.$params."{\n".
+            $body.
+            $this->indent."}";
         $code = Node::add_tmp($code);
         return $code;
     }
 
-    public function compile_body(){
-        $body = "";
-        $lines = array_slice($this->children, 0, count($this->children) - 1);
-        $last = $this->children[count($this->children)-1];
-        $body = parent::compile_body($lines);
-        if($last instanceof IfNode){
-            $body .= "\t".$last->compile_statement($this->indent."\t");
+    public function is_tail_recursive($last_node){
+        return $this->name == $last_node->children[0]->compile();
+    }
+
+    public function split_body_last(){
+        $len = count($this->children);
+        $body = array_slice($this->children, 0, $len - 1);
+        $last = $this->children[$len -1];
+        return array($body, $last);
+    }
+
+    public function compile_last($node){
+        if($node instanceof IfNode){
+            return "\t".$node->compile_statement($this->indent."\t");
         }else{
-            $body .= "\treturn ".$last->compile().";\n";
+            return "\treturn ".$node->compile().";\n";
         }
-        return $body;
+    }
+
+    public function get_param_names($param_nodes){
+        $params = array();
+        foreach($param_nodes as $node){
+            $params[] = $node->value;
+        }
+        return $params;
     }
 
     public function bind_params($params){
         $scope = $this->get_scope();
         foreach($params as $param){
-            $scope->bind($param->value, new EmptyNode($this));
+            $scope->bind($param, new EmptyNode($this));
         }
     }
 }
