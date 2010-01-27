@@ -271,6 +271,8 @@ class Node{
     public $children;
 
     protected $scope = Null;
+    protected $indent;
+    protected $value = "";
 
     static function add_tmp($code){
         $code = Node::$prev_tmp.Node::$tmp.$code;
@@ -342,9 +344,9 @@ class Node{
         return "$func_name($args_string)";
     }
 
-    public function compile_statement(){
-        $code = Node::add_tmp($this->compile());
-        return $code.";\n";
+    public function compile_statement($indent=""){
+        $this->indent = $indent;
+        return Node::add_tmp($indent.$this->compile()).";\n";
     }
 }
 
@@ -459,7 +461,6 @@ class StringNode extends LeafNode{
 
 class SpecialForm extends Node{
     protected $body_index;
-    protected $indent;
 
     public function compile_statement($indent=""){
         $this->indent = $indent;
@@ -470,9 +471,11 @@ class SpecialForm extends Node{
         // Compile the body expressions of the special form according to
         // the start index of the first body expression.
         $body = "";
+        // If there is a prefix then it should be indented as if it were an expression.
+        $indent = $prefix === "" ? $this->indent."\t" : "";
         $lines = $lines === false ? $this->children : $lines;
         foreach(array_slice($lines, $this->body_index) as $child){
-            $body .= $this->indent."\t".$prefix.$child->compile_statement($this->indent."\t");
+            $body .= $this->indent."\t".$prefix.$child->compile_statement($indent);
         }
         return $body;
     }
@@ -505,10 +508,11 @@ class FuncDefNode extends SpecialForm{
         $params = $this->children[2]->compile();
 
         list($body_nodes, $last_node) = $this->split_body_last();
-        $body = parent::compile_body($body_nodes, "\t");
-        $body = $this->scope->get_lexical_bindings($this->indent."\t").$body;
 
         if($this->is_tail_recursive($last_node)){
+            $this->indent = $this->indent."\t";
+            $body = parent::compile_body($body_nodes);
+            $this->indent = substr($this->indent, 2);
             $new_param_values = array_slice($last_node->children, 1);
             $bindings = array_combine($param_names, $new_param_values);
             $bindings_code = "";
@@ -520,9 +524,11 @@ class FuncDefNode extends SpecialForm{
                     $bindings_code.
                 $this->indent."\t}\n";
         }else{
+            $body = parent::compile_body($body_nodes);
             $last = $this->compile_last($last_node);
             $body .= $last;
         }
+        $body = $this->scope->get_lexical_bindings($this->indent."\t").$body;
 
         $code = "function ".$this->name.$params."{\n".
             $body.
@@ -546,7 +552,11 @@ class FuncDefNode extends SpecialForm{
         if($node instanceof IfNode){
             return "\t".$node->compile_statement($this->indent."\t");
         }else{
-            return "\treturn ".$node->compile().";\n";
+            $ret = new Node($this);
+            $ret->add_child(new LeafNode($ret, array(), "return"));
+            $node->parent = $ret;
+            $ret->add_child($node);
+            return $ret->compile_statement($this->indent."\t");
         }
     }
 
@@ -609,13 +619,14 @@ class CondNode extends SpecialForm{
     }
 
     public function compile_statement($use_tmp=False){
+        $this->indent = $this->parent->indent;
         $pairs = array_slice($this->children, 1);
         $if_pair = array_shift($pairs);
         $elseif_pairs = $pairs;
 
         $tmp_name = self::get_tmp_name();
         $tmp_var = $use_tmp ? '$'.$tmp_name.' = ' : '';
-        $code = '$'.$tmp_name.";\n";
+        $code = $this->indent.'$'.$tmp_name.";\n";
         $code .= $this->compile_if($if_pair, $tmp_var);
         foreach($elseif_pairs as $elseif_pair){
             $code .= $this->compile_elseif($elseif_pair, $tmp_var);
@@ -623,17 +634,17 @@ class CondNode extends SpecialForm{
         return $code;
     }
 
-    public function compile_if($pair, $tmp_var){
+    public function compile_if($pair, $tmp_var, $stmt_type="if"){
         $condition = $pair->children[0]->compile();
         $body = $this->compile_body(array($pair->children[1]), $tmp_var);
 
-        return "if(".$condition."){\n"
+        return $this->indent."$stmt_type(".$condition."){\n"
             .$body
-        ."}\n";
+        .$this->indent."}\n";
     }
 
     public function compile_elseif($pair, $tmp_var){
-        return "else ".$this->compile_if($pair, $tmp_var);
+        return $this->compile_if($pair, $tmp_var, "else if");
     }
 }
 
