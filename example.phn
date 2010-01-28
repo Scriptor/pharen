@@ -27,3 +27,8 @@
 (dict
     ("a" "apple")
     ("b" "banana"))
+
+(fn fac (x acc)
+    (cond
+        ((== x 1) acc)
+        (TRUE (fac (- x 1) (* acc x)))))
