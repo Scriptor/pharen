@@ -269,6 +269,7 @@ class Node{
 
     public $parent;
     public $children;
+    public $return_flag = False;
 
     protected $scope = Null;
     protected $indent;
@@ -305,6 +306,13 @@ class Node{
         $this->children[] = $child;
     }
 
+    public function add_children($children){
+        foreach($children as $c){
+            $this->children[] = $c;
+            $c->parent = $this;
+        }
+    }
+
     public function compile_args($args){
         while(list($key) = each($args)){
             $args[$key] = $args[$key]->compile();
@@ -312,6 +320,18 @@ class Node{
         return $args;
     }
 
+    public function get_last_func_call(){
+        return $this->children[0];
+    }
+
+    public function get_body_nodes(){
+        return array();
+    }
+
+    public function get_last_expr(){
+        return $this;
+    }
+    
     public function get_compiled_func_args(){
         // Returns the compiled code for the function name and the arguments
         // in a function call.
@@ -345,8 +365,9 @@ class Node{
     }
 
     public function compile_statement($indent=""){
+        $bt = debug_backtrace();
         $this->indent = $indent;
-        return Node::add_tmp($indent.$this->compile()).";\n";
+        return Node::add_tmp($this->compile()).";\n";
     }
 }
 
@@ -464,18 +485,21 @@ class SpecialForm extends Node{
 
     public function compile_statement($indent=""){
         $this->indent = $indent;
-        return $this->compile()."\n";
+        return $this->compile($indent)."\n";
     }
 
     public function compile_body($lines=false, $prefix=""){
         // Compile the body expressions of the special form according to
         // the start index of the first body expression.
         $body = "";
+
         // If there is a prefix then it should be indented as if it were an expression.
-        $indent = $prefix === "" ? $this->indent."\t" : "";
+        //$indent = $prefix === "" ? $this->indent."\t" : $this->ind$this->indentt;
+        $indent = $this->indent."\t";
+        $body_index = $lines === false ? $this->body_index : 0;
         $lines = $lines === false ? $this->children : $lines;
-        foreach(array_slice($lines, $this->body_index) as $child){
-            $body .= $this->indent."\t".$prefix.$child->compile_statement($indent);
+        foreach(array_slice($lines, $body_index) as $child){
+            $body .= $indent.$prefix.$child->compile_statement($indent);
         }
         return $body;
     }
@@ -510,19 +534,31 @@ class FuncDefNode extends SpecialForm{
         list($body_nodes, $last_node) = $this->split_body_last();
 
         if($this->is_tail_recursive($last_node)){
-            $this->indent = $this->indent."\t";
-            $body = parent::compile_body($body_nodes);
-            $this->indent = substr($this->indent, 2);
+            $while_node = new WhileNode($this);
+            $while_node->add_child(new EmptyNode);
+            $while_node->add_child(new LeafNode($while_node, array(), "1"));
+
+            $body_nodes[count($body_nodes)-1]->return_flag = True;
+            $while_node->add_children($body_nodes);
+
             $new_param_values = array_slice($last_node->children, 1);
             $bindings = array_combine($param_names, $new_param_values);
-            $bindings_code = "";
-            foreach($bindings as $name=>$val){
-                $bindings_code .= $this->indent."\t\t\$".$name . ' = ' . $val->compile().";\n";
+            $params_len = count($new_param_values);
+            for($x=0; $x<$params_len; $x++){
+                $var_node = $this->params[$x];
+                $val_node = $new_param_values[$x];
+
+                $binding = new BindingNode($while_node);
+                $binding->add_child(new LeafNode($binding, array(), "="));
+
+                $var_node->parent = $binding;
+                $val_node->parent = $binding;
+
+                $binding->add_child($var_node);
+                $binding->add_child($val_node);
+                $while_node->add_child($binding);
             }
-            $body = $this->indent."\twhile(1){\n".
-                    $body.
-                    $bindings_code.
-                $this->indent."\t}\n";
+            $body = $while_node->compile_statement($this->indent."\t");
         }else{
             $body = parent::compile_body($body_nodes);
             $last = $this->compile_last($last_node);
@@ -538,13 +574,15 @@ class FuncDefNode extends SpecialForm{
     }
 
     public function is_tail_recursive($last_node){
-        return $this->name == $last_node->children[0]->compile();
+        return $this->name == $last_node->get_last_func_call()->compile();
     }
 
     public function split_body_last(){
         $len = count($this->children);
-        $body = array_slice($this->children, 0, $len - 1);
+        $body = array_slice($this->children, 3, $len - 4);
         $last = $this->children[$len -1];
+        $body = array_merge($body, $last->get_body_nodes());
+        $last = $last->get_last_expr();
         return array($body, $last);
     }
 
@@ -613,23 +651,46 @@ class CondNode extends SpecialForm{
         return "__condtmpvar".(self::$tmp_num-1);
     }
 
+    public function get_last_func_call(){
+        $len = count($this->children);
+        return $this->children[$len-1]->children[1]->get_last_func_call();
+    }
+
+    public function get_body_nodes(){
+        $body = clone $this;
+        array_pop($body->children);
+        return array($body);
+    }
+
+    public function get_last_expr(){
+        return $this->children[count($this->children)-1]->children[1];
+    }
+
     public function compile(){
         Node::$prev_tmp.= "\n".$this->compile_statement(True);
         return '$'.self::get_prev_tmp_name();
     }
 
     public function compile_statement($use_tmp=False){
-        $this->indent = $this->parent->indent;
+        $this->indent = $this->parent->indent."\t";
         $pairs = array_slice($this->children, 1);
         $if_pair = array_shift($pairs);
         $elseif_pairs = $pairs;
 
-        $tmp_name = self::get_tmp_name();
-        $tmp_var = $use_tmp ? '$'.$tmp_name.' = ' : '';
-        $code = $this->indent.'$'.$tmp_name.";\n";
-        $code .= $this->compile_if($if_pair, $tmp_var);
+        $prefix = Null;
+        $code = "\n";   // Start with newline because current line already has tabs in it.
+        if($use_tmp){
+            if($this->return_flag){
+                $prefix = "return ";
+            }else{
+                $prefix = '$'.self::get_tmp_name(). " = ";
+                $code .= "$prefix NULL;\n";
+            }
+        }
+
+        $code .= $this->compile_if($if_pair, $prefix);
         foreach($elseif_pairs as $elseif_pair){
-            $code .= $this->compile_elseif($elseif_pair, $tmp_var);
+            $code .= $this->compile_elseif($elseif_pair, $prefix);
         }
         return $code;
     }
@@ -652,11 +713,12 @@ class IfNode extends SpecialForm{
     protected $body_index = 2;
     protected $type = "if";
 
-    public function compile($indent=0){
+    public function compile($indent){
+        $this->indent = $indent;
         $cond = $this->children[1]->compile();
         $body = $this->compile_body();
 
-        return $this->type."(".$cond."){\n".
+        return $this->indent.$this->type."(".$cond."){\n".
                     $body.
                 $this->indent."}";
     }
@@ -673,11 +735,16 @@ class ElseNode extends IfNode{
     public function compile($indent=0){
         $body = $this->compile_body();
 
-        return $this->type."{\n".
+        return $this->indent.$this->type."{\n".
                 $body.
             $this->indent."}";
     }
 }
+
+class WhileNode extends IfNode{
+    protected $type = "while";
+}
+
 
 class AtArrayNode extends Node{
 
@@ -721,6 +788,7 @@ class DictNode extends Node{
         return "array(".implode(", ", $mappings).")";
     }
 }
+
 
 class MicroNode extends SpecialForm{
     static $micros = array();
