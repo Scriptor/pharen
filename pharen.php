@@ -181,6 +181,7 @@ class FuncInfo{
         $params_diff = count($this->func->params) - count($this->args_given);
 
         $function = new FuncDefNode($parent);
+        $function->indent = $parent->indent."\t";
         $fn = $function->add_child(new LeafNode($function, array(), 'fn'));
         $function->add_child(new LeafNode($function, array(), $name));
 
@@ -270,9 +271,9 @@ class Node{
     public $parent;
     public $children;
     public $return_flag = False;
+    public $indent;
 
     protected $scope = Null;
-    protected $indent;
     protected $value = "";
 
     static function add_tmp($code){
@@ -366,8 +367,13 @@ class Node{
 
     public function compile_statement($indent=""){
         $bt = debug_backtrace();
-        $this->indent = $indent;
-        return Node::add_tmp($this->compile()).";\n";
+        if($this->parent instanceof RootNode){
+            $this->indent = "";
+        }else{
+            $this->indent = $this->parent->indent."\t";
+        }
+        $line = $this->indent.$this->compile();
+        return Node::add_tmp($line).";\n";
     }
 }
 
@@ -447,12 +453,17 @@ class LeafNode extends Node{
         $this->value = $value;
     }
 
+    public function get_last_func_call(){
+        return $this;
+    }
+
     public function compile(){
         return $this->value;
     }
 
     public function compile_statement(){
-        return $this->compile().";\n";
+        $indent = $this->parent instanceof RootNode ? "" : $this->indent."\t";
+        return $indent.$this->compile().";\n";
     }
 }
 
@@ -496,10 +507,11 @@ class SpecialForm extends Node{
         // If there is a prefix then it should be indented as if it were an expression.
         //$indent = $prefix === "" ? $this->indent."\t" : $this->ind$this->indentt;
         $indent = $this->indent."\t";
+        echo " #".get_class($this)."$this->indent# ";
         $body_index = $lines === false ? $this->body_index : 0;
         $lines = $lines === false ? $this->children : $lines;
         foreach(array_slice($lines, $body_index) as $child){
-            $body .= $indent.$prefix.$child->compile_statement($indent);
+            $body .= $prefix.$child->compile_statement($indent);
         }
         return $body;
     }
@@ -527,8 +539,7 @@ class FuncDefNode extends SpecialForm{
         self::$functions[$this->name] = $this;
 
         $this->params = $this->children[2]->children;
-        $param_names = $this->get_param_names($this->params);
-        $this->bind_params($param_names);
+        $this->bind_params($this->params);
         $params = $this->children[2]->compile();
 
         list($body_nodes, $last_node) = $this->split_body_last();
@@ -542,7 +553,6 @@ class FuncDefNode extends SpecialForm{
             $while_node->add_children($body_nodes);
 
             $new_param_values = array_slice($last_node->children, 1);
-            $bindings = array_combine($param_names, $new_param_values);
             $params_len = count($new_param_values);
             for($x=0; $x<$params_len; $x++){
                 $var_node = $this->params[$x];
@@ -558,7 +568,7 @@ class FuncDefNode extends SpecialForm{
                 $binding->add_child($val_node);
                 $while_node->add_child($binding);
             }
-            $body = $while_node->compile_statement($this->indent."\t");
+            $body = "\t".$while_node->compile_statement($this->indent."\t");
         }else{
             $body = parent::compile_body($body_nodes);
             $last = $this->compile_last($last_node);
@@ -566,9 +576,9 @@ class FuncDefNode extends SpecialForm{
         }
         $body = $this->scope->get_lexical_bindings($this->indent."\t").$body;
 
-        $code = "function ".$this->name.$params."{\n".
+        $code = $this->indent."function ".$this->name.$params."{\n".
             $body.
-            $this->indent."}";
+            $this->indent."}\n";
         $code = Node::add_tmp($code);
         return $code;
     }
@@ -588,7 +598,7 @@ class FuncDefNode extends SpecialForm{
 
     public function compile_last($node){
         if($node instanceof IfNode){
-            return "\t".$node->compile_statement($this->indent."\t");
+            return $this->indent."\t".$node->compile_statement($this->indent."\t");
         }else{
             $ret = new Node($this);
             $ret->add_child(new LeafNode($ret, array(), "return"));
@@ -609,7 +619,7 @@ class FuncDefNode extends SpecialForm{
     public function bind_params($params){
         $scope = $this->get_scope();
         foreach($params as $param){
-            $scope->bind($param, new EmptyNode($this));
+            $scope->bind($param->value, new EmptyNode($this));
         }
     }
 }
@@ -630,7 +640,9 @@ class LambdaNode extends FuncDefNode{
         $name_node = new LeafNode($this, array(), $name);
         array_splice($this->children, 1, 0, array($name_node));
 
+        $this->indent .= "\t";
         $code = parent::compile();
+        $this->indent = substr($this->indent, 1);
         Node::$tmp .= $code."\n";
         return '"'.$name.'"';
     }
@@ -672,7 +684,7 @@ class CondNode extends SpecialForm{
     }
 
     public function compile_statement($use_tmp=False){
-        $this->indent = $this->parent->indent."\t";
+        $this->indent = $this->parent instanceof RootNode ? "" : $this->parent->indent."\t";
         $pairs = array_slice($this->children, 1);
         $if_pair = array_shift($pairs);
         $elseif_pairs = $pairs;
@@ -681,7 +693,7 @@ class CondNode extends SpecialForm{
         $code = "\n";   // Start with newline because current line already has tabs in it.
         if($use_tmp){
             if($this->return_flag){
-                $prefix = "return ";
+                $prefix = $this->indent."\t"."return ";
             }else{
                 $prefix = '$'.self::get_tmp_name(). " = ";
                 $code .= "$prefix NULL;\n";
@@ -721,6 +733,10 @@ class IfNode extends SpecialForm{
         return $this->indent.$this->type."(".$cond."){\n".
                     $body.
                 $this->indent."}";
+    }
+
+    public function compile_statement($indent=""){
+        return $this->compile($indent)."\n";
     }
 }
 
@@ -1087,7 +1103,7 @@ if(isset($argv) && isset($argv[1])){
     }
 }
 
-$php_code = compile_file(SYSTEM . "/simple.phn");
+$php_code = compile_file(SYSTEM . "/example.phn");
 //require(SYSTEM . "/lang.php");
 foreach($input_files as $file){
     $php_code .= compile_file($file);
