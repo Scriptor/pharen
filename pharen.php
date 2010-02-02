@@ -422,10 +422,11 @@ class InfixNode extends Node{
     }
 
     public function compile_statement(){
+        $indent = $this->parent instanceof RootNode ? "" : $this->parent->indent."\t";
         $code = $this->compile();
         // Remove parentheses added by regular compile() since they're not
         // needed for statements. Makes pretty.
-        $code = substr($code, 1, strlen($code)-2).";\n";
+        $code = $indent.substr($code, 1, strlen($code)-2).";\n";
         $code = Node::add_tmp($code);
         return $code;
     }
@@ -496,6 +497,11 @@ class StringNode extends LeafNode{
     public function compile(){
         return '"'.parent::compile().'"';
     }
+
+    public function compile_statement(){
+        $indent = $this->parent instanceof RootNode ? "" : $this->indent."\t";
+        return $indent.$this->compile().";\n";
+    }
 }
 
 class SpecialForm extends Node{
@@ -516,6 +522,7 @@ class SpecialForm extends Node{
         $indent = $this->indent."\t";
         $body_index = $lines === false ? $this->body_index : 0;
         $lines = $lines === false ? $this->children : $lines;
+        $bt = debug_backtrace();
         foreach(array_slice($lines, $body_index) as $child){
             $body .= $prefix.$child->compile_statement($indent);
         }
@@ -555,11 +562,12 @@ class FuncDefNode extends SpecialForm{
         $this->bind_params($this->params);
         $params = $this->children[2]->compile();
 
-        list($body_nodes, $last_node) = $this->split_body_last();
-
+        list($body_nodes, $last_node) = parent::split_body_last();
         if($this->is_tail_recursive($last_node)){
+            list($body_nodes, $last_node) = $this->split_body_last();
             $this->indent .= "\t";
             $body = $this->indent."while(1){";
+
             list($while_body_nodes, $while_last_node) = split_body_last($body_nodes);
             $body .= $this->compile_body($while_body_nodes);
             $body .= $while_last_node->compile_return($this->indent."\t");
@@ -719,17 +727,20 @@ class CondNode extends SpecialForm{
 class LispyIfNode extends CondNode{
 
     public function compile(){
-        return $this->compile(True);
+        $bt = debug_backtrace();
+        return $this->compile_statement(True);
     }
 
     public function compile_statement($use_prefix=False){
+        $this->indent .= "\t";
         $cond = $this->children[1]->compile();
         $true_line = $this->children[2]->compile_statement($this->indent."\t");
         $false_line = $this->children[3]->compile_statement($this->indent."\t");
-        return "if($cond){\n".
+        return $this->indent."if($cond){\n".
                 $true_line.
-            "}else{\n".
-                $false_line."\n}";
+            $this->indent."}else{\n".
+                $false_line.
+            $this->indent."}\n";
     }
 }
 
@@ -1116,7 +1127,7 @@ if(isset($argv) && isset($argv[1])){
     }
 }
 
-$php_code = compile_file(SYSTEM . "/example.phn");
+$php_code = compile_file(SYSTEM . "/simple.phn");
 //require(SYSTEM . "/lang.php");
 foreach($input_files as $file){
     $php_code .= compile_file($file);
