@@ -518,9 +518,9 @@ class SpecialForm extends Node{
         return $body;
     }
 
-    public function split_body_last(){
+    public function split_body_last($start){
         $len = count($this->children);
-        $body = array_slice($this->children, 3, $len - 4);
+        $body = array_slice($this->children, $this->body_index, $len - 4);
         $last = $this->children[$len -1];
         $body = array_merge($body, $last->get_body_nodes());
         $last = $last->get_last_expr();
@@ -553,34 +553,22 @@ class FuncDefNode extends SpecialForm{
         $this->bind_params($this->params);
         $params = $this->children[2]->compile();
 
-        list($body_nodes, $last_node) = $this->split_body_last();
+        list($body_nodes, $last_node) = $this->get_body_and_last();
 
         if($this->is_tail_recursive($last_node)){
-            $body = "while(1){\n";
-            $while_node = new WhileNode($this);
-            $while_node->add_child(new EmptyNode);
-            $while_node->add_child(new LeafNode($while_node, array(), "1"));
-
-            $body_nodes[count($body_nodes)-1]->return_flag = True;
-            $while_node->add_children($body_nodes);
+            $this->indent .= "\t";
+            $body = $this->indent."while(1){";
+            $body .= $this->compile_body($body_nodes);
 
             $new_param_values = array_slice($last_node->children, 1);
             $params_len = count($new_param_values);
             for($x=0; $x<$params_len; $x++){
                 $var_node = $this->params[$x];
                 $val_node = $new_param_values[$x];
-
-                $binding = new BindingNode($while_node);
-                $binding->add_child(new LeafNode($binding, array(), "="));
-
-                $var_node->parent = $binding;
-                $val_node->parent = $binding;
-
-                $binding->add_child($var_node);
-                $binding->add_child($val_node);
-                $while_node->add_child($binding);
+                $body .= $this->indent."\t".$var_node->compile() . " = " . $val_node->compile().";\n";
             }
-            $body = $while_node->compile_return($this->indent."\t");
+            $body .= $this->indent."}\n";
+            $this->indent = substr($this->indent, 1);
         }else{
             $body = parent::compile_body($body_nodes);
             $last = $this->compile_last($last_node);
