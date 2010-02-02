@@ -727,20 +727,25 @@ class CondNode extends SpecialForm{
 class LispyIfNode extends CondNode{
 
     public function compile(){
-        $bt = debug_backtrace();
         return $this->compile_statement(True);
     }
 
-    public function compile_statement($use_prefix=False){
+    public function compile_statement($prefix=False, $return=False){
         $this->indent .= "\t";
+        $compile_func = $return ? "compile_return" : "compile_statement";
+
         $cond = $this->children[1]->compile();
-        $true_line = $this->children[2]->compile_statement($this->indent."\t");
-        $false_line = $this->children[3]->compile_statement($this->indent."\t");
+        $true_line = $this->children[2]->$compile_func($this->indent."\t");
+        $false_line = $this->children[3]->$compile_func($this->indent."\t");
         return $this->indent."if($cond){\n".
                 $true_line.
             $this->indent."}else{\n".
                 $false_line.
             $this->indent."}\n";
+    }
+
+    public function compile_return(){
+        return $this->compile_statement(False, True);
     }
 }
 
