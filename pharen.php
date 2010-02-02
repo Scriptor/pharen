@@ -366,7 +366,6 @@ class Node{
     }
 
     public function compile_statement($indent=""){
-        $bt = debug_backtrace();
         if($this->parent instanceof RootNode){
             $this->indent = "";
         }else{
@@ -374,6 +373,10 @@ class Node{
         }
         $line = $this->indent.$this->compile();
         return Node::add_tmp($line).";\n";
+    }
+
+    public function compile_return($indent){
+        return $this->compile_statement($this->indent."\treturn ");
     }
 }
 
@@ -514,6 +517,15 @@ class SpecialForm extends Node{
         }
         return $body;
     }
+
+    public function split_body_last(){
+        $len = count($this->children);
+        $body = array_slice($this->children, 3, $len - 4);
+        $last = $this->children[$len -1];
+        $body = array_merge($body, $last->get_body_nodes());
+        $last = $last->get_last_expr();
+        return array($body, $last);
+    }
 }
 
 class FuncDefNode extends SpecialForm{
@@ -544,6 +556,7 @@ class FuncDefNode extends SpecialForm{
         list($body_nodes, $last_node) = $this->split_body_last();
 
         if($this->is_tail_recursive($last_node)){
+            $body = "while(1){\n";
             $while_node = new WhileNode($this);
             $while_node->add_child(new EmptyNode);
             $while_node->add_child(new LeafNode($while_node, array(), "1"));
@@ -567,7 +580,7 @@ class FuncDefNode extends SpecialForm{
                 $binding->add_child($val_node);
                 $while_node->add_child($binding);
             }
-            $body = $while_node->compile_statement($this->indent."\t");
+            $body = $while_node->compile_return($this->indent."\t");
         }else{
             $body = parent::compile_body($body_nodes);
             $last = $this->compile_last($last_node);
@@ -586,25 +599,8 @@ class FuncDefNode extends SpecialForm{
         return $this->name == $last_node->get_last_func_call()->compile();
     }
 
-    public function split_body_last(){
-        $len = count($this->children);
-        $body = array_slice($this->children, 3, $len - 4);
-        $last = $this->children[$len -1];
-        $body = array_merge($body, $last->get_body_nodes());
-        $last = $last->get_last_expr();
-        return array($body, $last);
-    }
-
     public function compile_last($node){
-        if($node instanceof IfNode){
-            return $this->indent."\t".$node->compile_statement($this->indent."\t");
-        }else{
-            $ret = new Node($this);
-            $ret->add_child(new LeafNode($ret, array(), "return"));
-            $node->parent = $ret;
-            $ret->add_child($node);
-            return $ret->compile_statement($this->indent."\t");
-        }
+        return $node->compile_return($this->indent."\t");
     }
 
     public function get_param_names($param_nodes){
@@ -718,7 +714,7 @@ class CondNode extends SpecialForm{
     }
 }
 
-class LispyIfNode extends SpecialForm{
+class LispyIfNode extends CondNode{
 
     public function compile(){
         return $this->compile(True);
@@ -728,7 +724,6 @@ class LispyIfNode extends SpecialForm{
         $cond = $this->children[1]->compile();
         $true_line = $this->children[2]->compile_statement($this->indent."\t");
         $false_line = $this->children[3]->compile_statement($this->indent."\t");
-        $false_line = "";
         return "if($cond){\n".
                 $true_line.
             "}else{\n".
@@ -753,6 +748,7 @@ class IfNode extends SpecialForm{
     public function compile_statement($indent=""){
         return $this->compile($indent)."\n";
     }
+
 }
 
 class ElseIfNode extends IfNode{
@@ -1119,7 +1115,7 @@ if(isset($argv) && isset($argv[1])){
     }
 }
 
-$php_code = compile_file(SYSTEM . "/examples/test/test.phn");
+$php_code = compile_file(SYSTEM . "/example.phn");
 //require(SYSTEM . "/lang.php");
 foreach($input_files as $file){
     $php_code .= compile_file($file);
