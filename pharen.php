@@ -181,7 +181,7 @@ class FuncInfo{
         $params_diff = count($this->func->params) - count($this->args_given);
 
         $function = new FuncDefNode($parent);
-        $function->indent = $parent->indent."\t";
+        $function->indent = $parent instanceof RootNode ? "" : $parent->indent."\t";
         $fn = $function->add_child(new LeafNode($function, array(), 'fn'));
         $function->add_child(new LeafNode($function, array(), $name));
 
@@ -507,7 +507,6 @@ class SpecialForm extends Node{
         // If there is a prefix then it should be indented as if it were an expression.
         //$indent = $prefix === "" ? $this->indent."\t" : $this->ind$this->indentt;
         $indent = $this->indent."\t";
-        echo " #".get_class($this)."$this->indent# ";
         $body_index = $lines === false ? $this->body_index : 0;
         $lines = $lines === false ? $this->children : $lines;
         foreach(array_slice($lines, $body_index) as $child){
@@ -568,7 +567,7 @@ class FuncDefNode extends SpecialForm{
                 $binding->add_child($val_node);
                 $while_node->add_child($binding);
             }
-            $body = "\t".$while_node->compile_statement($this->indent."\t");
+            $body = $while_node->compile_statement($this->indent."\t");
         }else{
             $body = parent::compile_body($body_nodes);
             $last = $this->compile_last($last_node);
@@ -640,9 +639,7 @@ class LambdaNode extends FuncDefNode{
         $name_node = new LeafNode($this, array(), $name);
         array_splice($this->children, 1, 0, array($name_node));
 
-        $this->indent .= "\t";
         $code = parent::compile();
-        $this->indent = substr($this->indent, 1);
         Node::$tmp .= $code."\n";
         return '"'.$name.'"';
     }
@@ -718,6 +715,24 @@ class CondNode extends SpecialForm{
 
     public function compile_elseif($pair, $tmp_var){
         return $this->compile_if($pair, $tmp_var, "else if");
+    }
+}
+
+class LispyIfNode extends SpecialForm{
+
+    public function compile(){
+        return $this->compile(True);
+    }
+
+    public function compile_statement($use_prefix=False){
+        $cond = $this->children[1]->compile();
+        $true_line = $this->children[2]->compile_statement($this->indent."\t");
+        $false_line = $this->children[3]->compile_statement($this->indent."\t");
+        $false_line = "";
+        return "if($cond){\n".
+                $true_line.
+            "}else{\n".
+                $false_line."\n}";
     }
 }
 
@@ -957,9 +972,10 @@ class Parser{
             "fn" => array("FuncDefNode", "LeafNode", "LeafNode", "LiteralNode", self::$values),
             "lambda" => array("LambdaNode", "LeafNode", "LiteralNode", self::$values),
             "cond" => array("CondNode", "LeafNode", array(self::$cond_pair)),
-            "if" => array("IfNode", "LiteralNode", self::$values),
-            "elseif" => array("ElseIfNode", "LiteralNode", self::$values),
-            "else" => array("ElseNode", self::$values),
+            "if" => array("LispyIfNode", "LeafNode", self::$value, self::$value, self::$value),
+            "php_if" => array("IfNode", "LiteralNode", self::$values),
+            "php_elseif" => array("ElseIfNode", "LiteralNode", self::$values),
+            "php_else" => array("ElseNode", self::$values),
             "at" => array("AtArrayNode", "LeafNode", "VariableNode", self::$value),
             "$" => array("SuperGlobalNode", "LeafNode", "LeafNode", self::$value),
             "=" => array("BindingNode", "LeafNode", "VariableNode", self::$value),
@@ -1103,7 +1119,7 @@ if(isset($argv) && isset($argv[1])){
     }
 }
 
-$php_code = compile_file(SYSTEM . "/example.phn");
+$php_code = compile_file(SYSTEM . "/examples/test/test.phn");
 //require(SYSTEM . "/lang.php");
 foreach($input_files as $file){
     $php_code .= compile_file($file);
