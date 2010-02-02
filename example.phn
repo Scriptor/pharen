@@ -1,17 +1,21 @@
-(f1 foo "hello" (f2 "world"))
-(f3 foo ["a" "b" (test "ab")])
+(f1 "hello" (f2 "world"))
+(f3 ["a" "b" (test "ab")])
 (+ 2 2)
 (= abc (* 4 (+ 3 4)))
 
-(if (== 2 2)
+(php_if (== 2 2)
     (= foo 3)
     (= bar 4)
-    (if (== bar 4)
+    (php_if (== bar 4)
         (print "here")
-        (if (== 2 2)
+        (php_if (== 2 2)
             (print "More indented!"))))
-(elseif (== 3 3)
+(php_elseif (== 3 3)
     (print "3 equals 3!"))
+
+(if (== 2 2)
+    "Math works!"
+    (print "Math no longer works..."))
 
 (cond
     ((== 2 2) "abc")
@@ -21,7 +25,8 @@
     (print abc)
     "hello!")
 
-(at xs 1)
+(= xs [1 2 3 4])
+(:xs 1)
 ($ post "abc")
 
 (dict
@@ -32,3 +37,8 @@
     (cond
         ((== x 1) acc)
         (TRUE (fac (- x 1) (* acc x)))))
+
+(map
+    (lambda (x)
+        (* x 2))
+    [1 2 3])
