@@ -18,11 +18,3 @@
         (return (array)))
     (cons ($f (first xs))
                   (map f (rest xs))))
-
-(fn add_generator ()
-    (= x 3)
-    (lambda (y)
-        (+ x y)))
-
-(= z 2)
-(map (* z) [1 2 3 4])
