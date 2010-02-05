@@ -71,6 +71,22 @@ class ListAccessToken extends Token{
 class NameToken extends Token{
 }
 
+class TreatedToken extends Token{
+    public $value = array("", array());
+
+    public function __construct($treat){
+        $this->value[1][] = $treat;
+    }
+
+    public function append($c){
+        $this->value[0] .= $c;
+    }
+
+    public function append_treat($c){
+        $this->value[1][] = $c;
+    }
+}
+
 class Lexer{
     private $code;
     private $char;
@@ -125,6 +141,13 @@ class Lexer{
             }else{
                 $this->tok->append($this->char);
             }
+        }else if($this->state == "treat"){
+            if($this->char == ',' or $this->char == "'"){
+                $this->tok->append_treat($this->char);
+            }else{
+                $this->tok->append($this->char);
+                $this->state = "append";
+            }
         }else if($this->state == "new-expression"){
             // For function calls, a function name can itself be a sexpr that returns a function name
             if($this->char == "("){
@@ -142,6 +165,9 @@ class Lexer{
             }else if($this->char == ':' and $this->code[$this->i-1] == "("){
                 $this->tok = new ListAccessToken;
                 $this->state = "append";
+            }else if($this->char == ',' or $this->char == "'"){
+                $this->tok = new TreatedToken($this->char);
+                $this->state = "treat";
             }else if(is_numeric($this->char)){
                 $this->tok = new NumberToken($this->char);
                 $this->state = "append";
@@ -188,7 +214,7 @@ class FuncInfo{
         $params_diff = count($this->func->params) - count($this->args_given);
 
         $function = new FuncDefNode($parent);
-        $function->indent = $parent instanceof RootNode ? "" : $parent->indent."\t";
+        $function->indent = $parent->parent instanceof RootNode ? "" : $parent->indent."\t";
         $fn = $function->add_child(new LeafNode($function, array(), 'fn'));
         $function->add_child(new LeafNode($function, array(), $name));
 
@@ -362,7 +388,7 @@ class Node{
         $func = new FuncInfo($func_name, array_slice($this->children, 1));
         if(MicroNode::is_micro($func_name)){
             $micro = MicroNode::get_micro($func_name);
-            return $micro->get_body($args);
+            return $micro->get_body(array_slice($this->children, 1), $this->indent);
         }else if($func->is_partial()){
             return $this->create_partial($func);
         }
@@ -483,12 +509,19 @@ class VariableNode extends LeafNode{
         if($in_binding){
             return substr($varname, 1);
         }
-        if($in_binding or $scope->find_immediate($this->value) !== False){
+        if($varname[1] == '$'){
+            return $varname;
+        }
+        if($scope->find_immediate($this->value) !== False){
             return $varname;
         }else if(($val_node = $scope->find($this->value)) !== False){
             $scope->bind_lexical($this->value, $val_node);
             return $varname;
         }
+    }
+
+    public function compile_nolookup(){
+        return '$'.parent::compile();
     }
 }
 
@@ -501,6 +534,30 @@ class StringNode extends LeafNode{
     public function compile_statement(){
         $indent = $this->parent instanceof RootNode ? "" : $this->indent."\t";
         return $indent.$this->compile().";\n";
+    }
+}
+
+class TreatedNode extends LeafNode{
+
+    public function unquote($value){
+        $scope = $this->parent->get_scope();
+        return $scope->find($value)->compile_nolookup();
+    }
+
+    public function unvar($value){
+        return trim($value, '$');
+    }
+    
+    public function compile(){
+        $value = $this->value[0];
+        foreach(array_reverse($this->value[1]) as $treat){
+            if($treat == ','){
+                $value = $this->unquote($value);
+            }else if($treat == "'"){
+                $value = $this->unvar($value);
+            }
+        }
+        return $value;
     }
 }
 
@@ -519,12 +576,11 @@ class SpecialForm extends Node{
 
         // If there is a prefix then it should be indented as if it were an expression.
         //$indent = $prefix === "" ? $this->indent."\t" : $this->ind$this->indentt;
-        $indent = $this->indent."\t";
         $body_index = $lines === false ? $this->body_index : 0;
         $lines = $lines === false ? $this->children : $lines;
         $bt = debug_backtrace();
         foreach(array_slice($lines, $body_index) as $child){
-            $body .= $prefix.$child->compile_statement($indent);
+            $body .= $prefix.$child->compile_statement();
         }
         return $body;
     }
@@ -731,7 +787,7 @@ class LispyIfNode extends CondNode{
     }
 
     public function compile_statement($prefix=False, $return=False){
-        $this->indent .= "\t";
+        $this->indent .= $this->parent instanceof RootNode ? "" : "\t";
         $compile_func = $return ? "compile_return" : "compile_statement";
 
         $cond = $this->children[1]->compile();
@@ -804,7 +860,7 @@ class ListAccessNode extends Node{
     public function compile(){
         $varname = $this->children[0]->compile();
         $index = $this->children[1]->compile();
-        return '$'.$varname."[$index]";
+        return $varname."[$index]";
     }
 }
 
@@ -852,7 +908,7 @@ class MicroNode extends SpecialForm{
     public function get_params(){
         $params = array();
         foreach($this->children[2]->children as $c){
-            $params[] = $c->compile();
+            $params[] = $c->compile(True);
         }
         return $params;
     }
@@ -860,7 +916,6 @@ class MicroNode extends SpecialForm{
     public function compile(){
         $this->name= $this->children[1]->compile();
         $this->params = $this->get_params();
-        $this->body = $this->compile_body();
         
         self::$micros[$this->name] = $this;
         return '"'.$this->name.'"';
@@ -871,11 +926,17 @@ class MicroNode extends SpecialForm{
         return "";
     }
 
-    public function get_body($args){
+    public function get_body($arg_nodes, $indent=""){
+        $this->indent = $indent;
+        $tmp_args = $arg_nodes;
+        foreach($this->params as $param){
+            $this->get_scope()->bind($param, array_shift($arg_nodes));
+        }
+        $this->body = $this->compile_body();
         $params = $this->params;
-        foreach($args as $arg){
+        foreach($arg_nodes as $arg_node){
             $param = array_shift($params);
-            $this->body = str_replace($param, $arg, $this->body);
+            $this->body = str_replace($param, $arg_node->compile(), $this->body);
         }
         return $this->body;
     }
@@ -924,15 +985,19 @@ class ListNode extends LiteralNode{
 class EachPairNode extends SpecialForm{
     protected $body_index = 3;
     
-    public function compile_statement($indent){
+    public function compile_statement(){
+        $this->indent .= $this->parent instanceof RootNode ? "" : "\t";
         $dict_name = $this->children[1]->compile();
-        $key_name = $this->children[2]->children[0]->compile();
-        $val_name = $this->children[2]->children[1]->compile();
+        $key_name = $this->children[2]->children[0]->compile(True);
+        $val_name = $this->children[2]->children[1]->compile(True);
+
+        $this->get_scope()->bind($key_name, new EmptyNode($this));
+        $this->get_scope()->bind($val_name, new EmptyNode($this));
         $body = $this->compile_body();
         
-        return "foreach($dict_name as $key_name => $val_name){\n"
-            .$indent.$body
-        .$indent."}\n";
+        return $this->indent."foreach($dict_name as \$$key_name => \$$val_name){\n"
+            .$body
+        .$this->indent."}\n";
     }
 }
 
@@ -970,6 +1035,7 @@ class Parser{
             "NameToken" => "VariableNode",
             "StringToken" => "StringNode",
             "NumberToken" => "LeafNode",
+            "UnquoteToken" => "UnquoteNode"
         );
         self::$values = array(self::$value);
         self::$func_call = array("Node", "LeafNode", array(self::$value));
@@ -1064,6 +1130,9 @@ class Parser{
             // Check if the token is all upper case, which means it's a constant
             $class = "LeafNode";
             array_shift($cur_state);
+        }else if($tok instanceof TreatedToken){
+            $class = "TreatedNode";
+            array_shift($cur_state);
         }else if(is_array($expected) && is_assoc($expected)){
             $class = $expected[get_class($tok)];
         }else{
@@ -1083,7 +1152,7 @@ class Parser{
     }
 
     public function is_special($tok){
-        return isset(self::$special_forms[$tok->value]);
+        return !is_array($tok->value) and isset(self::$special_forms[$tok->value]);
     }
 
     public function is_infix($tok){
@@ -1132,7 +1201,7 @@ if(isset($argv) && isset($argv[1])){
     }
 }
 
-$php_code = compile_file(SYSTEM . "/simple.phn");
+$php_code = compile_file(SYSTEM . "/examples/lab/oop.phn");
 //require(SYSTEM . "/lang.php");
 foreach($input_files as $file){
     $php_code .= compile_file($file);
