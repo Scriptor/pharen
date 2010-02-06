@@ -121,7 +121,7 @@ class Lexer{
         if($this->state == "string"){
             if($this->char == '"' && !$this->escaping){
                 $this->state = "new-expression";
-            }else if($this->char == "\\" && !$this->escaping){
+            }else if($this->char == "\\" && !$this->escaping && $this->code[$this->i+1] == '"'){
                 $this->escaping = True;
             }else{
                 if($this->escaping){
@@ -142,7 +142,7 @@ class Lexer{
                 $this->tok->append($this->char);
             }
         }else if($this->state == "treat"){
-            if($this->char == ',' or $this->char == "'"){
+            if($this->char == ',' or $this->char == "'" or $this->char == '@'){
                 $this->tok->append_treat($this->char);
             }else{
                 $this->tok->append($this->char);
@@ -165,7 +165,7 @@ class Lexer{
             }else if($this->char == ':' and $this->code[$this->i-1] == "("){
                 $this->tok = new ListAccessToken;
                 $this->state = "append";
-            }else if($this->char == ',' or $this->char == "'"){
+            }else if($this->char == ',' or $this->char == "'" or $this->char == '@'){
                 $this->tok = new TreatedToken($this->char);
                 $this->state = "treat";
             }else if(is_numeric($this->char)){
@@ -214,7 +214,7 @@ class FuncInfo{
         $params_diff = count($this->func->params) - count($this->args_given);
 
         $function = new FuncDefNode($parent);
-        $function->indent = $parent->parent instanceof RootNode ? "" : $parent->indent."\t";
+        $function->indent = $parent instanceof RootNode ? "" : $parent->indent."\t";
         $fn = $function->add_child(new LeafNode($function, array(), 'fn'));
         $function->add_child(new LeafNode($function, array(), $name));
 
@@ -265,7 +265,7 @@ class Scope{
 
     public function get_binding($var_name){
         $value = $this->bindings[$var_name]->compile();
-        return "\$$var_name = $value";
+        return "$var_name = $value";
     }
 
     public function get_lexical_binding($var_name){
@@ -282,6 +282,9 @@ class Scope{
     }
 
     public function find($var_name){
+        if($var_name[0] != '$'){
+            $var_name = '$'.$var_name;
+        }
         if(!array_key_exists($var_name, $this->bindings)){
             if($this->owner->parent !== Null){
                 return $this->owner->parent->get_scope()->find($var_name);
@@ -293,6 +296,9 @@ class Scope{
     }
 
     public function find_immediate($var_name){
+        if($var_name[0] != '$'){
+            $var_name = '$'.$var_name;
+        }
         return array_key_exists($var_name, $this->bindings) ? $this->bindings[$var_name] : False;
     }
 }
@@ -406,7 +412,7 @@ class Node{
 
     public function compile_return($indent){
         $this->indent = $this->parent instanceof RootNode ? "" : $this->parent->indent."\t";
-        return $this->indent."return ".trim($this->compile_statement())."\n";
+        return Node::add_tmp($this->indent."return ".trim($this->compile()).";\n");
     }
 }
 
@@ -507,7 +513,7 @@ class VariableNode extends LeafNode{
         $scope = $this->get_scope();
         $varname = '$'.parent::compile();
         if($in_binding){
-            return substr($varname, 1);
+            return $varname;
         }
         if($varname[1] == '$'){
             return $varname;
@@ -540,12 +546,20 @@ class StringNode extends LeafNode{
 class TreatedNode extends LeafNode{
 
     public function unquote($value){
-        $scope = $this->parent->get_scope();
+        $scope = $this->get_scope();
         return $scope->find($value)->compile_nolookup();
     }
 
     public function unvar($value){
         return trim($value, '$');
+    }
+
+    public function splice($value){
+        $els = array();
+        foreach($this->get_scope()->find($value)->children as $el){
+            $els[] = $el->compile_nolookup();
+        }
+        return implode(", ", $els);
     }
     
     public function compile(){
@@ -555,6 +569,8 @@ class TreatedNode extends LeafNode{
                 $value = $this->unquote($value);
             }else if($treat == "'"){
                 $value = $this->unvar($value);
+            }else if($treat == '@'){
+                $value = $this->splice($value);
             }
         }
         return $value;
@@ -615,6 +631,7 @@ class FuncDefNode extends SpecialForm{
         self::$functions[$this->name] = $this;
 
         $this->params = $this->children[2]->children;
+
         $this->bind_params($this->params);
         $params = $this->children[2]->compile();
 
@@ -662,7 +679,7 @@ class FuncDefNode extends SpecialForm{
     public function get_param_names($param_nodes){
         $params = array();
         foreach($param_nodes as $node){
-            $params[] = $node->value;
+            $params[] = $node->compile();
         }
         return $params;
     }
@@ -670,7 +687,7 @@ class FuncDefNode extends SpecialForm{
     public function bind_params($params){
         $scope = $this->get_scope();
         foreach($params as $param){
-            $scope->bind($param->value, new EmptyNode($this));
+            $scope->bind($param->compile(True), new EmptyNode($this));
         }
     }
 
@@ -846,6 +863,7 @@ class WhileNode extends IfNode{
 }
 
 
+// Deprecated way to access an array
 class AtArrayNode extends Node{
 
     public function compile(){
@@ -1201,7 +1219,12 @@ if(isset($argv) && isset($argv[1])){
     }
 }
 
-$php_code = compile_file(SYSTEM . "/examples/lab/oop.phn");
+$php_code = "";
+if(isset($_SERVER['REQUEST_METHOD'])){
+    $php_code = compile_file(SYSTEM . "/lang.phn");
+}else{
+    $php_code = "";
+}
 //require(SYSTEM . "/lang.php");
 foreach($input_files as $file){
     $php_code .= compile_file($file);
