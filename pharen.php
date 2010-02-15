@@ -214,7 +214,7 @@ class FuncInfo{
         $params_diff = count($this->func->params) - count($this->args_given);
 
         $function = new FuncDefNode($parent);
-        $function->indent = $parent instanceof RootNode ? "" : $parent->indent."\t";
+        $function->indent = $parent->indent;
         $fn = $function->add_child(new LeafNode($function, array(), 'fn'));
         $function->add_child(new LeafNode($function, array(), $name));
 
@@ -387,7 +387,7 @@ class Node{
         return '"'.$tmp_name.'"';
     }
 
-    public function compile(){
+    private function _compile(){
         $scope = $this->get_scope();
         list($func_name, $args) = $this->get_compiled_func_args();
 
@@ -403,10 +403,15 @@ class Node{
 
         return "$func_name($args_string)";
     }
+    
+    public function compile(){
+        $this->indent = $this->parent instanceof RootNode ? "" : $this->parent->indent."\t";
+        return $this->_compile();
+    }
 
     public function compile_statement(){
         $this->indent = $this->parent instanceof RootNode ? "" : $this->parent->indent."\t";
-        $line = $this->indent.$this->compile();
+        $line = $this->indent.$this->_compile();
         return Node::add_tmp($line).";\n";
     }
 
@@ -518,10 +523,13 @@ class VariableNode extends LeafNode{
         if($varname[1] == '$'){
             return $varname;
         }
+        echo " #$this->value# ";
         if($scope->find_immediate($this->value) !== False){
             return $varname;
         }else if(($val_node = $scope->find($this->value)) !== False){
             $scope->bind_lexical($this->value, $val_node);
+            return $varname;
+        }else{
             return $varname;
         }
     }
@@ -1013,7 +1021,7 @@ class EachPairNode extends SpecialForm{
         $this->get_scope()->bind($val_name, new EmptyNode($this));
         $body = $this->compile_body();
         
-        return $this->indent."foreach($dict_name as \$$key_name => \$$val_name){\n"
+        return $this->indent."foreach($dict_name as $key_name => $val_name){\n"
             .$body
         .$this->indent."}\n";
     }
@@ -1026,6 +1034,10 @@ class BindingNode extends Node{
         $scope = $this->parent->get_scope();
         $scope->bind($var_name, $this->children[2]);
         return $scope->get_binding($var_name);
+    }
+
+    public function compile_statement(){
+        return $this->compile().";\n";
     }
 }
 
@@ -1221,7 +1233,7 @@ if(isset($argv) && isset($argv[1])){
 
 $php_code = "";
 if(isset($_SERVER['REQUEST_METHOD'])){
-    $php_code = compile_file(SYSTEM . "/lang.phn");
+    //$php_code = compile_file(SYSTEM . "/lang.phn");
 }else{
     $php_code = "";
 }
@@ -1229,6 +1241,6 @@ if(isset($_SERVER['REQUEST_METHOD'])){
 foreach($input_files as $file){
     $php_code .= compile_file($file);
 }
-if(isset($_SERVER)){
+if(isset($_SERVER['REQUEST_METHOD'])){
     echo "<pre>$php_code</pre>";
 }

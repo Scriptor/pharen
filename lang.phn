@@ -7,6 +7,9 @@
 (fn rest (xs)
     (array_slice xs 1))
 
+(fn early (xs)
+    (array_slice xs 0 (- (count xs) 2)))
+
 (fn cons (x xs)
     (array_merge (array x) xs))
 
@@ -15,6 +18,6 @@
 
 (fn map (f xs)
     (if (== (sizeof xs) 0)
-        (return (array)))
-    (cons ($f (first xs))
-                  (map f (rest xs))))
+        (array)
+        (cons ($f (first xs))
+              (map f (rest xs)))))
