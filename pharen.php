@@ -249,9 +249,11 @@ class Scope{
     private $owner;
     public $bindings = array();
     public $lexical_bindings = array();
+    public $id;
 
-    public function __construct($owner){
+    public function __construct($owner, $id=0){
         $this->owner = $owner;
+        $this->id = $id;
     }
 
     public function bind($var_name, Node $value_node){
@@ -265,12 +267,21 @@ class Scope{
 
     public function get_binding($var_name){
         $value = $this->bindings[$var_name]->compile();
-        return "$var_name = $value";
+        return "$var_name = $value;";
     }
 
     public function get_lexical_binding($var_name){
         $value = $this->lexical_bindings[$var_name]->compile();
         return "\$$var_name = $value";
+    }
+
+    public function init_lexical_scope(){
+        return 'Scope::$scopes['.$this->id.'] = array();';
+    }
+
+    public function get_lexing($var_name){
+        $value = $this->bindings[$var_name]->compile();
+        return 'Lexical::$scopes['.$this->id.']["'.$var_name.'"] = '.$value.';';
     }
 
     public function get_lexical_bindings($indent){
@@ -1028,17 +1039,22 @@ class EachPairNode extends SpecialForm{
 
 class BindingNode extends Node{
     
+    public static $scope_id = 0;
+
     public function compile_statement(){
+        $scope = $this->scope = new Scope($this, self::$scope_id++);
         $pairs = $this->children[1]->children;
         $code = "";
+        $lexings = $scope->init_lexical_scope();
         foreach($pairs as $pair_node){
             $var_name = $pair_node->children[0]->compile();
 
-            $scope = $this->get_scope();
             $scope->bind($var_name, $pair_node->children[1]);
             $code .= "\n".$scope->get_binding($var_name);
+            $lexings .= "\n".$scope->get_lexing($var_name);
         }
 
+        $code .= "\n\n".$lexings."\n";
         // Remove indentation added because let adds an unneccessary level of indentation
         return $code."\n".substr($this->children[2]->compile_statement(""), 1);
     }
