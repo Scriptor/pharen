@@ -271,8 +271,8 @@ class Scope{
     }
 
     public function get_lexical_binding($var_name){
-        $value = $this->lexical_bindings[$var_name]->compile();
-        return "\$$var_name = $value";
+        $value = 'Scope::$scopes['.$this->id.']["'.$var_name.'"]';
+        return "$var_name = $value";
     }
 
     public function init_lexical_scope(){
@@ -537,7 +537,7 @@ class VariableNode extends LeafNode{
         if($scope->find_immediate($this->value) !== False){
             return $varname;
         }else if(($val_node = $scope->find($this->value)) !== False){
-            $scope->bind_lexical($this->value, $val_node);
+            $scope->bind_lexical('$'.$this->value, $val_node);
             return $varname;
         }else{
             return $varname;
@@ -1055,8 +1055,12 @@ class BindingNode extends Node{
         }
 
         $code .= "\n\n".$lexings."\n";
+        $body = $this->children[2]->compile_statement();
+        if($this->parent instanceof RootNode){
+            $body = ltrim($body);
+        }
         // Remove indentation added because let adds an unneccessary level of indentation
-        return $code."\n".substr($this->children[2]->compile_statement(""), 1);
+        return $code."\n".$body;
     }
 }
 
