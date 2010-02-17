@@ -523,7 +523,6 @@ class VariableNode extends LeafNode{
         if($varname[1] == '$'){
             return $varname;
         }
-        echo " #$this->value# ";
         if($scope->find_immediate($this->value) !== False){
             return $varname;
         }else if(($val_node = $scope->find($this->value)) !== False){
@@ -1029,15 +1028,19 @@ class EachPairNode extends SpecialForm{
 
 class BindingNode extends Node{
     
-    public function compile(){
-        $var_name = $this->children[1]->compile(True);
-        $scope = $this->parent->get_scope();
-        $scope->bind($var_name, $this->children[2]);
-        return $scope->get_binding($var_name);
-    }
-
     public function compile_statement(){
-        return $this->compile().";\n";
+        $pairs = $this->children[1]->children;
+        $code = "";
+        foreach($pairs as $pair_node){
+            $var_name = $pair_node->children[0]->compile();
+
+            $scope = $this->get_scope();
+            $scope->bind($var_name, $pair_node->children[1]);
+            $code .= "\n".$scope->get_binding($var_name);
+        }
+
+        // Remove indentation added because let adds an unneccessary level of indentation
+        return $code."\n".substr($this->children[2]->compile_statement(""), 1);
     }
 }
 
@@ -1087,7 +1090,7 @@ class Parser{
             "php_else" => array("ElseNode", self::$values),
             "at" => array("AtArrayNode", "LeafNode", "VariableNode", self::$value),
             "$" => array("SuperGlobalNode", "LeafNode", "LeafNode", self::$value),
-            "=" => array("BindingNode", "LeafNode", "VariableNode", self::$value),
+            "let" => array("BindingNode", self::$list_form, self::$value),
             "dict" => array("DictNode", array(self::$literal_form)),
             "micro" => array("MicroNode", "LeafNode", "LeafNode", "LiteralNode", self::$values),
             "each_pair" => array("EachPairNode", "LeafNode", "VariableNode", "LiteralNode", self::$value)
@@ -1233,7 +1236,7 @@ if(isset($argv) && isset($argv[1])){
 
 $php_code = "";
 if(isset($_SERVER['REQUEST_METHOD'])){
-    //$php_code = compile_file(SYSTEM . "/lang.phn");
+    $php_code = compile_file(SYSTEM . "/lang.phn");
 }else{
     $php_code = "";
 }
