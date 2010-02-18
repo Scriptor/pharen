@@ -231,6 +231,7 @@ class FuncInfo{
 
         $body->add_child(new LeafNode($body, array(), $this->name));
         foreach($this->args_given as $arg){
+            $arg->parent = $body;
             $body->add_child($arg);
         }
         
@@ -246,14 +247,16 @@ class FuncInfo{
 }
 
 class Scope{
-    private $owner;
+    public static $scope_id = 0;
+
+    public $owner;
     public $bindings = array();
     public $lexical_bindings = array();
     public $id;
 
-    public function __construct($owner, $id=0){
+    public function __construct($owner){
         $this->owner = $owner;
-        $this->id = $id;
+        $this->id = self::$scope_id++;
     }
 
     public function bind($var_name, Node $value_node){
@@ -261,8 +264,8 @@ class Scope{
         $this->bindings[$var_name] = $value_node;
     }
 
-    public function bind_lexical($var_name, Node $value_node){
-        $this->lexical_bindings[$var_name] = $value_node;
+    public function bind_lexical($var_name, $id){
+        $this->lexical_bindings[$var_name] = $id;
     }
 
     public function get_binding($var_name){
@@ -270,8 +273,8 @@ class Scope{
         return "$var_name = $value;";
     }
 
-    public function get_lexical_binding($var_name){
-        $value = 'Lexical::$scopes['.$this->id.']["'.$var_name.'"]';
+    public function get_lexical_binding($var_name, $id){
+        $value = 'Lexical::$scopes['.$id.']["'.$var_name.'"]';
         return "$var_name = $value";
     }
 
@@ -286,8 +289,8 @@ class Scope{
 
     public function get_lexical_bindings($indent){
         $code = "";
-        foreach($this->lexical_bindings as $var_name=>$val_node){
-            $code .= $indent.$this->get_lexical_binding($var_name).";\n";
+        foreach($this->lexical_bindings as $var_name=>$id){
+            $code .= $indent.$this->get_lexical_binding($var_name, $id).";\n";
         }
         return $code;
     }
@@ -303,7 +306,7 @@ class Scope{
                 return False;
             }
         }
-        return $this->bindings[$var_name];
+        return $this->id;
     }
 
     public function find_immediate($var_name){
@@ -534,10 +537,11 @@ class VariableNode extends LeafNode{
         if($varname[1] == '$'){
             return $varname;
         }
+
         if($scope->find_immediate($this->value) !== False){
             return $varname;
-        }else if(($val_node = $scope->find($this->value)) !== False){
-            $scope->bind_lexical('$'.$this->value, $val_node);
+        }else if(($id = $scope->find($this->value)) !== False){
+            $scope->bind_lexical('$'.$this->value, $id);
             return $varname;
         }else{
             return $varname;
@@ -1027,15 +1031,15 @@ class EachPairNode extends SpecialForm{
         $key_name = $this->children[2]->children[0]->compile(True);
         $val_name = $this->children[2]->children[1]->compile(True);
 
-        $scope = $this->get_scope();
+        $scope = $this->scope = new Scope($this);
         $scope->init_lexical_scope();
-        $lexings = "";
 
         $scope->bind($key_name, new EmptyNode($this));
         $scope->bind($val_name, new EmptyNode($this));
 
-        $lexings .= "\n".$scope->get_lexing($key_name);
-        $lexings .= "\n".$scope->get_lexing($val_name);
+        $lexings = "";
+        $lexings .= $this->indent."\t".$scope->get_lexing($key_name);
+        $lexings .= "\n".$this->indent."\t".$scope->get_lexing($val_name)."\n";
 
         $body = $this->compile_body();
         
@@ -1048,10 +1052,9 @@ class EachPairNode extends SpecialForm{
 
 class BindingNode extends Node{
     
-    public static $scope_id = 0;
 
     public function compile_statement(){
-        $scope = $this->scope = new Scope($this, self::$scope_id++);
+        $scope = $this->scope = new Scope($this);
         $pairs = $this->children[1]->children;
         $code = "";
         $lexings = $scope->init_lexical_scope();
@@ -1064,11 +1067,14 @@ class BindingNode extends Node{
         }
 
         $code .= "\n\n".$lexings."\n";
-        $body = $this->children[2]->compile_statement();
-        if($this->parent instanceof RootNode){
-            $body = ltrim($body);
+        $body = "";
+        foreach(array_slice($this->children, 2) as $line){
+            if($this->parent instanceof RootNode){
+                $body .= ltrim($line->compile_statement());
+            }else{
+                $body .= $line->compile_statement();
+            }
         }
-        // Remove indentation added because let adds an unneccessary level of indentation
         return $code."\n".$body;
     }
 }
