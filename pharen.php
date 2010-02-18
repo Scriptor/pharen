@@ -274,7 +274,7 @@ class Scope{
     }
 
     public function get_lexical_binding($var_name, $id){
-        $value = 'Lexical::$scopes['.$id.']["'.$var_name.'"]';
+        $value = 'Lexical::$scopes['.$id.'][\''.$var_name.'\']';
         return "$var_name = $value";
     }
 
@@ -284,7 +284,7 @@ class Scope{
 
     public function get_lexing($var_name){
         $value = $this->bindings[$var_name]->compile();
-        return 'Lexical::$scopes['.$this->id.']["'.$var_name.'"] = '.$var_name.';';
+        return 'Lexical::$scopes['.$this->id.'][\''.$var_name.'\'] = '.$var_name.';';
     }
 
     public function get_lexical_bindings($indent){
@@ -731,8 +731,6 @@ class LambdaNode extends FuncDefNode{
     }
 
     public function compile(){
-        $this->scope = new Scope($this);
-
         $name = self::get_next_name();
         $name_node = new LeafNode($this, array(), $name);
         array_splice($this->children, 1, 0, array($name_node));
