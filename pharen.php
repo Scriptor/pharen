@@ -281,7 +281,7 @@ class Scope{
 
     public function get_lexing($var_name){
         $value = $this->bindings[$var_name]->compile();
-        return 'Lexical::$scopes['.$this->id.']["'.$var_name.'"] = '.$value.';';
+        return 'Lexical::$scopes['.$this->id.']["'.$var_name.'"] = '.$var_name.';';
     }
 
     public function get_lexical_bindings($indent){
