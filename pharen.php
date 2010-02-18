@@ -271,12 +271,12 @@ class Scope{
     }
 
     public function get_lexical_binding($var_name){
-        $value = 'Scope::$scopes['.$this->id.']["'.$var_name.'"]';
+        $value = 'Lexical::$scopes['.$this->id.']["'.$var_name.'"]';
         return "$var_name = $value";
     }
 
     public function init_lexical_scope(){
-        return 'Scope::$scopes['.$this->id.'] = array();';
+        return 'Lexical::$scopes['.$this->id.'] = array();';
     }
 
     public function get_lexing($var_name){
@@ -1027,11 +1027,20 @@ class EachPairNode extends SpecialForm{
         $key_name = $this->children[2]->children[0]->compile(True);
         $val_name = $this->children[2]->children[1]->compile(True);
 
-        $this->get_scope()->bind($key_name, new EmptyNode($this));
-        $this->get_scope()->bind($val_name, new EmptyNode($this));
+        $scope = $this->get_scope();
+        $scope->init_lexical_scope();
+        $lexings = "";
+
+        $scope->bind($key_name, new EmptyNode($this));
+        $scope->bind($val_name, new EmptyNode($this));
+
+        $lexings .= "\n".$scope->get_lexing($key_name);
+        $lexings .= "\n".$scope->get_lexing($val_name);
+
         $body = $this->compile_body();
         
         return $this->indent."foreach($dict_name as $key_name => $val_name){\n"
+            .$lexings
             .$body
         .$this->indent."}\n";
     }
@@ -1110,7 +1119,7 @@ class Parser{
             "php_else" => array("ElseNode", self::$values),
             "at" => array("AtArrayNode", "LeafNode", "VariableNode", self::$value),
             "$" => array("SuperGlobalNode", "LeafNode", "LeafNode", self::$value),
-            "let" => array("BindingNode", self::$list_form, self::$value),
+            "let" => array("BindingNode", self::$list_form, array(self::$value)),
             "dict" => array("DictNode", array(self::$literal_form)),
             "micro" => array("MicroNode", "LeafNode", "LeafNode", "LiteralNode", self::$values),
             "each_pair" => array("EachPairNode", "LeafNode", "VariableNode", "LiteralNode", self::$value)
