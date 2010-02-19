@@ -164,7 +164,9 @@ class Lexer{
                 $this->state = "string";
             }else if($this->char == ':' and $this->code[$this->i-1] == "("){
                 $this->tok = new ListAccessToken;
-                $this->state = "append";
+                if($this->code[$this->i+1] !== '('){
+                    //$this->state = "append";
+                }
             }else if($this->char == ',' or $this->char == "'" or $this->char == '@'){
                 $this->tok = new TreatedToken($this->char);
                 $this->state = "treat";
@@ -318,6 +320,7 @@ class Scope{
 }
 
 class Node{
+    static $delay_tmp = False;
     static $prev_tmp;
     static $tmp;
 
@@ -330,9 +333,11 @@ class Node{
     protected $value = "";
 
     static function add_tmp($code){
-        $code = Node::$prev_tmp.Node::$tmp.$code;
-        Node::$prev_tmp = '';
-        Node::$tmp = '';
+        if(!Node::$delay_tmp){
+            $code = Node::$prev_tmp.Node::$tmp.$code;
+            Node::$prev_tmp = '';
+            Node::$tmp = '';
+        }
         return $code;
     }
 
@@ -561,7 +566,7 @@ class StringNode extends LeafNode{
 
     public function compile_statement(){
         $indent = $this->parent instanceof RootNode ? "" : $this->indent."\t";
-        return $indent.$this->compile().";\n";
+        return "# ".$indent.$this->compile()."\n";
     }
 }
 
@@ -649,7 +654,7 @@ class FuncDefNode extends SpecialForm{
     public function compile(){
         $this->scope = new Scope($this);
 
-        $this->name = $this->children[1]->compile();
+        $this->name = str_replace("-", "_", $this->children[1]->compile());
         self::$functions[$this->name] = $this;
 
         $this->params = $this->children[2]->children;
@@ -900,6 +905,10 @@ class ListAccessNode extends Node{
         $index = $this->children[1]->compile();
         return $varname."[$index]";
     }
+
+    public function compile_statement(){
+        return $this->compile().";\n";
+    }
 }
 
 class SuperGlobalNode extends Node{
@@ -1025,6 +1034,8 @@ class EachPairNode extends SpecialForm{
     
     public function compile_statement(){
         $this->indent .= $this->parent instanceof RootNode ? "" : "\t";
+        Node::$delay_tmp = True;
+
         $dict_name = $this->children[1]->compile();
         $key_name = $this->children[2]->children[0]->compile(True);
         $val_name = $this->children[2]->children[1]->compile(True);
@@ -1040,11 +1051,13 @@ class EachPairNode extends SpecialForm{
         $lexings .= "\n".$this->indent."\t".$scope->get_lexing($val_name)."\n";
 
         $body = $this->compile_body();
+        Node::$delay_tmp = False;
         
-        return $this->indent."foreach($dict_name as $key_name => $val_name){\n"
+        $code =  $this->indent."foreach($dict_name as $key_name => $val_name){\n"
             .$lexings
             .$body
         .$this->indent."}\n";
+        return Node::add_tmp($code);
     }
 }
 
@@ -1111,7 +1124,7 @@ class Parser{
         self::$literal_form = array("LiteralNode", self::$values);
         self::$cond_pair = array("LiteralNode", self::$value, self::$value);
         self::$list_form = array("ListNode", self::$values);
-        self::$list_access_form = array("ListAccessNode", "LeafNode", self::$value);
+        self::$list_access_form = array("ListAccessNode", self::$value, self::$value);
 
         self::$special_forms = array(
             "fn" => array("FuncDefNode", "LeafNode", "LeafNode", "LiteralNode", self::$values),
@@ -1137,12 +1150,11 @@ class Parser{
         $curnode = $root ? $root : new RootNode;
         $rootnode = $curnode;
         $state = array();
-        $len = count($this->tokens);
 
         $count=0;
-        for($i=0;$i<$len;$i++){
+        for($i=0;$i<count($this->tokens);$i++){
             $tok = $this->tokens[$i];
-            if($i+1 < $len){
+            if($i+1 < count($this->tokens)){
                 $lookahead = $this->tokens[$i+1];
             }
             $node;
@@ -1158,6 +1170,7 @@ class Parser{
                     array_push($state, self::$list_form);
                 }else if($lookahead instanceof ListAccessToken){
                     array_push($state, self::$list_access_form);
+                    array_splice($this->tokens, $i+1, 1);
                 }else if($this->is_special($lookahead)){
                     array_push($state, self::$special_forms[$lookahead->value]);
                 }else if($this->is_infix($lookahead)){
@@ -1245,7 +1258,7 @@ function compile_file($fname){
     $phpcode = compile($code);
  
     $output = dirname($fname).DIRECTORY_SEPARATOR.basename($fname, EXTENSION).".php";
-    file_put_contents($output, "<?php ".$phpcode."?>");
+    file_put_contents($output, "<?php\n".$phpcode."?>");
     return $phpcode;
 }
  
