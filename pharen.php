@@ -292,7 +292,7 @@ class Scope{
     public function get_lexical_bindings($indent){
         $code = "";
         foreach($this->lexical_bindings as $var_name=>$id){
-            $code .= $indent.$this->get_lexical_binding($var_name, $id).";\n";
+            $code .= $this->owner->indent.$this->get_lexical_binding($var_name, $id).";\n";
         }
         return $code;
     }
@@ -522,7 +522,7 @@ class LeafNode extends Node{
     }
 
     public function compile(){
-        return $this->value;
+        return str_replace('-', '_', $this->value);
     }
 
     public function compile_statement(){
@@ -654,7 +654,7 @@ class FuncDefNode extends SpecialForm{
     public function compile(){
         $this->scope = new Scope($this);
 
-        $this->name = str_replace("-", "_", $this->children[1]->compile());
+        $this->name = $this->children[1]->compile();
         self::$functions[$this->name] = $this;
 
         $this->params = $this->children[2]->children;
@@ -1068,29 +1068,38 @@ class EachPairNode extends SpecialForm{
 class BindingNode extends Node{
     
 
-    public function compile_statement(){
+    public function compile_statement($return=False){
+        $this->indent = $this->parent instanceof RootNode ? "" : $this->parent->indent."\t";
         $scope = $this->scope = new Scope($this);
         $pairs = $this->children[1]->children;
         $code = "";
-        $lexings = $scope->init_lexical_scope();
+        $lexings = $this->indent.$scope->init_lexical_scope();
         foreach($pairs as $pair_node){
             $var_name = $pair_node->children[0]->compile();
 
             $scope->bind($var_name, $pair_node->children[1]);
-            $code .= "\n".$scope->get_binding($var_name);
-            $lexings .= "\n".$scope->get_lexing($var_name);
+            $code .= "\n".$this->indent.$scope->get_binding($var_name);
+            $lexings .= "\n".$this->indent.$scope->get_lexing($var_name);
         }
+        $code = $this->scope->get_lexical_bindings($this->indent).$code."\n\n".$lexings."\n";
 
-        $code .= "\n\n".$lexings."\n";
         $body = "";
-        foreach(array_slice($this->children, 2) as $line){
-            if($this->parent instanceof RootNode){
-                $body .= ltrim($line->compile_statement());
-            }else{
-                $body .= $line->compile_statement();
-            }
+        $last_line = "";
+        if($return === True){
+            $last_line = $this->indent."return ".array_pop($this->children)->compile_statement();
         }
-        return $code."\n".$body;
+        foreach(array_slice($this->children, 2) as $line){
+            $l = $this->indent.$line->compile_statement();
+            if($this->parent instanceof RootNode){
+                $l = ltrim($l);
+            }
+            $body .= $l;
+        }
+        return $code."\n".$body.$last_line;
+    }
+
+    public function compile_return(){
+        return $this->compile_statement(True);
     }
 }
 
