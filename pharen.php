@@ -903,7 +903,11 @@ class ListAccessNode extends Node{
     public function compile(){
         $varname = $this->children[0]->compile();
         $index = $this->children[1]->compile();
-        return $varname."[$index]";
+        $newval = "";
+        if(isset($this->children[2])){
+            $newval = ' = '.$this->children[2]->compile();
+        }
+        return $varname."[$index]".$newval;
     }
 
     public function compile_statement(){
@@ -1124,7 +1128,7 @@ class Parser{
         self::$literal_form = array("LiteralNode", self::$values);
         self::$cond_pair = array("LiteralNode", self::$value, self::$value);
         self::$list_form = array("ListNode", self::$values);
-        self::$list_access_form = array("ListAccessNode", self::$value, self::$value);
+        self::$list_access_form = array("ListAccessNode", self::$value, self::$value, self::$value);
 
         self::$special_forms = array(
             "fn" => array("FuncDefNode", "LeafNode", "LeafNode", "LiteralNode", self::$values),
