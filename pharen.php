@@ -621,7 +621,6 @@ class SpecialForm extends Node{
         //$indent = $prefix === "" ? $this->indent."\t" : $this->ind$this->indentt;
         $body_index = $lines === false ? $this->body_index : 0;
         $lines = $lines === false ? $this->children : $lines;
-        $bt = debug_backtrace();
         foreach(array_slice($lines, $body_index) as $child){
             $body .= $prefix.$child->compile_statement();
         }
@@ -1081,8 +1080,7 @@ class BindingNode extends Node{
             $code .= "\n".$this->indent.$scope->get_binding($var_name);
             $lexings .= "\n".$this->indent.$scope->get_lexing($var_name);
         }
-        $code = $this->scope->get_lexical_bindings($this->indent).$code."\n\n".$lexings."\n";
-
+        $code .= "\n".$lexings."\n";
         $body = "";
         $last_line = "";
         if($return === True){
@@ -1095,7 +1093,7 @@ class BindingNode extends Node{
             }
             $body .= $l;
         }
-        return $code."\n".$body.$last_line;
+        return $this->scope->get_lexical_bindings($this->indent).$code."\n".$body.$last_line;
     }
 
     public function compile_return(){
