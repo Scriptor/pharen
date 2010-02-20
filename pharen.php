@@ -254,6 +254,7 @@ class Scope{
     public $owner;
     public $bindings = array();
     public $lexical_bindings = array();
+    public $lexically_needed = array();
     public $id;
 
     public function __construct($owner){
@@ -272,7 +273,7 @@ class Scope{
 
     public function get_binding($var_name){
         $value = $this->bindings[$var_name]->compile();
-        return "$var_name = $value;";
+        return $this->owner->indent."$var_name = $value;\n";
     }
 
     public function get_lexical_binding($var_name, $id){
@@ -281,18 +282,23 @@ class Scope{
     }
 
     public function init_lexical_scope(){
-        return 'Lexical::$scopes['.$this->id.'] = array();';
+        $indent = $this->owner->parent instanceof RootNode && $this->owner instanceof BindingNode ? "" : $this->owner->indent."\t";
+        return $indent.'Lexical::$scopes['.$this->id.'] = array();'."\n";
     }
 
     public function get_lexing($var_name){
+        if(!isset($this->lexically_needed[$var_name])){
+            return "";
+        }
+        $indent = $this->owner->parent instanceof RootNode && $this->owner instanceof BindingNode ? "" : $this->owner->indent."\t";
         $value = $this->bindings[$var_name]->compile();
-        return 'Lexical::$scopes['.$this->id.'][\''.$var_name.'\'] =& '.$var_name.';';
+        return $indent.'Lexical::$scopes['.$this->id.'][\''.$var_name.'\'] =& '.$var_name.";\n";
     }
 
-    public function get_lexical_bindings($indent){
+    public function get_lexical_bindings(){
         $code = "";
         foreach($this->lexical_bindings as $var_name=>$id){
-            $code .= $this->owner->indent.$this->get_lexical_binding($var_name, $id).";\n";
+            $code .= $this->owner->indent."\t".$this->get_lexical_binding($var_name, $id).";\n";
         }
         return $code;
     }
@@ -308,6 +314,7 @@ class Scope{
                 return False;
             }
         }
+        $this->lexically_needed[$var_name] = True;
         return $this->id;
     }
 
@@ -434,7 +441,7 @@ class Node{
         return Node::add_tmp($line).";\n";
     }
 
-    public function compile_return($indent){
+    public function compile_return(){
         $this->indent = $this->parent instanceof RootNode ? "" : $this->parent->indent."\t";
         return Node::add_tmp($this->indent."return ".trim($this->compile()).";\n");
     }
@@ -618,11 +625,11 @@ class SpecialForm extends Node{
         $body = "";
 
         // If there is a prefix then it should be indented as if it were an expression.
-        //$indent = $prefix === "" ? $this->indent."\t" : $this->ind$this->indentt;
+        $indent = $prefix === "" ? $this->indent."\t" : $this->indent;
         $body_index = $lines === false ? $this->body_index : 0;
         $lines = $lines === false ? $this->children : $lines;
         foreach(array_slice($lines, $body_index) as $child){
-            $body .= $prefix.$child->compile_statement();
+            $body .= $indent.$prefix.$child->compile_statement();
         }
         return $body;
     }
@@ -651,6 +658,7 @@ class FuncDefNode extends SpecialForm{
     }
 
     public function compile(){
+        $this->indent = $this->parent instanceof RootNode ? "" : $this->parent->indent."\t";
         $this->scope = new Scope($this);
 
         $this->name = $this->children[1]->compile();
@@ -658,7 +666,7 @@ class FuncDefNode extends SpecialForm{
 
         $this->params = $this->children[2]->children;
 
-        $this->bind_params($this->params);
+        $varnames = $this->bind_params($this->params);
         $params = $this->children[2]->compile();
 
         list($body_nodes, $last_node) = parent::split_body_last();
@@ -682,12 +690,14 @@ class FuncDefNode extends SpecialForm{
             $this->indent = substr($this->indent, 1);
         }else{
             $body = parent::compile_body($body_nodes);
-            $last = $last_node->compile_return($this->indent."\t");
+            $last = $last_node->compile_return();
             $body .= $last;
         }
-        $body = $this->scope->get_lexical_bindings($this->indent."\t").$body;
+        $body = $this->scope->get_lexical_bindings().$body;
+        $lexings = $this->get_param_lexings($varnames);
 
         $code = $this->indent."function ".$this->name.$params."{\n".
+            $lexings.
             $body.
             $this->indent."}\n";
         $code = Node::add_tmp($code);
@@ -710,11 +720,23 @@ class FuncDefNode extends SpecialForm{
         return $params;
     }
 
+    public function get_param_lexings($varnames){
+        $lexings = $this->scope->init_lexical_scope();
+        foreach($varnames as $varname){
+            $lexings .= $this->scope->get_lexing($varname);
+        }
+        return $lexings;
+    }
+
     public function bind_params($params){
+        $varnames = array();
         $scope = $this->get_scope();
         foreach($params as $param){
+            $varname = $param->compile(True);
+            $varnames[] = $varname;
             $scope->bind($param->compile(True), new EmptyNode($this));
         }
+        return $varnames;
     }
 
     public function split_body_last(){
@@ -1036,7 +1058,7 @@ class EachPairNode extends SpecialForm{
     protected $body_index = 3;
     
     public function compile_statement(){
-        $this->indent .= $this->parent instanceof RootNode ? "" : "\t";
+        $this->indent = $this->parent instanceof RootNode ? "" : $this->parent->indent."\t";
         Node::$delay_tmp = True;
 
         $dict_name = $this->children[1]->compile();
@@ -1071,29 +1093,35 @@ class BindingNode extends Node{
         $this->indent = $this->parent instanceof RootNode ? "" : $this->parent->indent."\t";
         $scope = $this->scope = new Scope($this);
         $pairs = $this->children[1]->children;
+        $var_names = array();
         $code = "";
         $lexings = $this->indent.$scope->init_lexical_scope();
         foreach($pairs as $pair_node){
             $var_name = $pair_node->children[0]->compile();
+            $var_names[] = $var_name;
 
             $scope->bind($var_name, $pair_node->children[1]);
-            $code .= "\n".$this->indent.$scope->get_binding($var_name);
-            $lexings .= "\n".$this->indent.$scope->get_lexing($var_name);
+            $code .= $scope->get_binding($var_name);
         }
-        $code .= "\n".$lexings."\n";
+
+        $this->indent = substr($this->indent, 1);
         $body = "";
         $last_line = "";
         if($return === True){
             $last_line = $this->indent."return ".array_pop($this->children)->compile_statement();
         }
         foreach(array_slice($this->children, 2) as $line){
-            $l = $this->indent.$line->compile_statement();
+            $l = $this->indent."\t".$line->compile_statement();
             if($this->parent instanceof RootNode){
                 $l = ltrim($l);
             }
             $body .= $l;
         }
-        return $this->scope->get_lexical_bindings($this->indent).$code."\n".$body.$last_line;
+
+        foreach($var_names as $var_name){
+            $lexings .= $scope->get_lexing($var_name);
+        }
+        return $this->scope->get_lexical_bindings($this->indent."\t").$code."\n".$lexings."\n".$body.$last_line;
     }
 
     public function compile_return(){
