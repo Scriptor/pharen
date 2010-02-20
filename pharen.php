@@ -271,6 +271,10 @@ class Scope{
         $this->lexical_bindings[$var_name] = $id;
     }
 
+    public function get_indent(){
+        return $this->owner->parent instanceof RootNode && $this->owner instanceof BindingNode ? "" : $this->owner->indent."\t";
+    }
+
     public function get_binding($var_name){
         $value = $this->bindings[$var_name]->compile();
         return $this->owner->indent."$var_name = $value;\n";
@@ -282,17 +286,15 @@ class Scope{
     }
 
     public function init_lexical_scope(){
-        $indent = $this->owner->parent instanceof RootNode && $this->owner instanceof BindingNode ? "" : $this->owner->indent."\t";
-        return $indent.'Lexical::$scopes['.$this->id.'] = array();'."\n";
+        return $this->get_indent().'Lexical::$scopes['.$this->id.'] = array();'."\n";
     }
 
     public function get_lexing($var_name){
         if(!isset($this->lexically_needed[$var_name])){
             return "";
         }
-        $indent = $this->owner->parent instanceof RootNode && $this->owner instanceof BindingNode ? "" : $this->owner->indent."\t";
         $value = $this->bindings[$var_name]->compile();
-        return $indent.'Lexical::$scopes['.$this->id.'][\''.$var_name.'\'] =& '.$var_name.";\n";
+        return $this->get_indent().'Lexical::$scopes['.$this->id.'][\''.$var_name.'\'] =& '.$var_name.";\n";
     }
 
     public function get_lexical_bindings(){
