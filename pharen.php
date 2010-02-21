@@ -925,9 +925,15 @@ class AtArrayNode extends Node{
 }
 
 class ListAccessNode extends Node{
+    static $tmp_var = 0;
 
     public function compile(){
-        $varname = $this->children[0]->compile();
+        if($this->children[0] instanceof LeafNode){
+            $varname = $this->children[0]->compile();
+        }else{
+            $varname = '$__listAcessTmpVar'.self::$tmp_var++;
+            Node::$tmp .= $varname.' = '.$this->children[0]->compile().";\n";
+        }
         $indexes = "";
         foreach(array_slice($this->children, 1) as $index){
             $indexes .= '['.$index->compile().']';
@@ -936,7 +942,7 @@ class ListAccessNode extends Node{
     }
 
     public function compile_statement(){
-        return $this->compile().";\n";
+        return Node::add_tmp($this->compile().";\n");
     }
 }
 
