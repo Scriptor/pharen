@@ -71,6 +71,9 @@ class ListAccessToken extends Token{
 class NameToken extends Token{
 }
 
+class ExplicitVarToken extends Token{
+}
+
 class TreatedToken extends Token{
     public $value = array("", array());
 
@@ -162,11 +165,11 @@ class Lexer{
             }else if($this->char == '"'){
                 $this->tok = new StringToken;
                 $this->state = "string";
-            }else if($this->char == ':' and $this->code[$this->i-1] == "("){
+            }else if($this->code[$this->i-1] == "(" && $this->char == ':'){
                 $this->tok = new ListAccessToken;
-                if($this->code[$this->i+1] !== '('){
-                    //$this->state = "append";
-                }
+            }else if($this->code[$this->i-1] == "(" && $this->char == '$'){
+                $this->tok = new ExplicitVarToken;
+                $this->state = "append";
             }else if($this->char == ',' or $this->char == "'" or $this->char == '@'){
                 $this->tok = new TreatedToken($this->char);
                 $this->state = "treat";
@@ -1135,6 +1138,7 @@ class Parser{
 
     static $value;
     static $values;
+    static $func_call_name;
     static $func_call;
     static $infix_call;
     static $empty_node;
@@ -1156,8 +1160,14 @@ class Parser{
             "NumberToken" => "LeafNode",
             "UnquoteToken" => "UnquoteNode"
         );
+
         self::$values = array(self::$value);
-        self::$func_call = array("Node", "LeafNode", array(self::$value));
+
+        self::$func_call_name = array(
+            "NameToken" => "LeafNode",
+            "ExplicitVarToken" => "VariableNode"
+        );
+        self::$func_call = array("Node", self::$func_call_name, array(self::$value));
         self::$infix_call = array("InfixNode", "LeafNode", array(self::$value));
         self::$empty_node = array("EmptyNode");
 
@@ -1254,6 +1264,7 @@ class Parser{
             array_shift($cur_state);
         }else if(is_array($expected) && is_assoc($expected)){
             $class = $expected[get_class($tok)];
+            array_shift($cur_state);
         }else{
             $class = $expected;
             array_shift($cur_state);
