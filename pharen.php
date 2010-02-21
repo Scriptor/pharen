@@ -491,7 +491,7 @@ class InfixNode extends Node{
         $code = $this->compile();
         // Remove parentheses added by regular compile() since they're not
         // needed for statements. Makes pretty.
-        $code = $indent.substr($code, 1, strlen($code)-2).";\n";
+        $code = "\n".$indent.substr($code, 1, strlen($code)-2).";\n";
         $code = Node::add_tmp($code);
         return $code;
     }
@@ -925,12 +925,11 @@ class ListAccessNode extends Node{
 
     public function compile(){
         $varname = $this->children[0]->compile();
-        $index = $this->children[1]->compile();
-        $newval = "";
-        if(isset($this->children[2])){
-            $newval = ' = '.$this->children[2]->compile();
+        $indexes = "";
+        foreach(array_slice($this->children, 1) as $index){
+            $indexes .= '['.$index->compile().']';
         }
-        return $varname."[$index]".$newval;
+        return $varname.$indexes;
     }
 
     public function compile_statement(){
@@ -1149,7 +1148,7 @@ class Parser{
     private $tokens;
 
     public function __construct($tokens){
-        self::$INFIX_OPERATORS = array("+", "-", "*", ".", "/", "and", "or", "<", ">", "===", "==", "!=", "!==");
+        self::$INFIX_OPERATORS = array("+", "-", "*", ".", "/", "and", "or", "=", "<", ">", "===", "==", "!=", "!==");
 
         self::$value = array(
             "NameToken" => "VariableNode",
