@@ -284,12 +284,16 @@ class Scope{
     }
 
     public function get_lexical_binding($var_name, $id){
-        $value = 'Lexical::$scopes['.$id.'][\''.$var_name.'\']';
+        $value = 'Lexical::$scopes["'.Node::$ns.'"]['.$id.'][\''.$var_name.'\']';
         return "$var_name =& $value";
     }
 
+    public function init_namespace_scope(){
+        return "Lexical::\$scopes['".Node::$ns."'] = array();\n";
+    }
+
     public function init_lexical_scope(){
-        return $this->get_indent().'Lexical::$scopes['.$this->id.'] = array();'."\n";
+        return $this->get_indent().'Lexical::$scopes["'.Node::$ns.'"]['.$this->id.'] = array();'."\n";
     }
 
     public function get_lexing($var_name){
@@ -297,7 +301,7 @@ class Scope{
             return "";
         }
         $value = $this->bindings[$var_name]->compile();
-        return $this->get_indent().'Lexical::$scopes['.$this->id.'][\''.$var_name.'\'] =& '.$var_name.";\n";
+        return $this->get_indent().'Lexical::$scopes["'.Node::$ns.'"]['.$this->id.'][\''.$var_name.'\'] =& '.$var_name.";\n";
     }
 
     public function get_lexical_bindings(){
@@ -511,6 +515,8 @@ class RootNode extends Node{
 
     public function compile(){
         $code = "";
+        $code .= "require_once('".SYSTEM."/lexical.php"."');\n";
+        $code .= $this->scope->init_namespace_scope();
         foreach($this->children as $child){
             $code .= $child->compile_statement();
         }
@@ -535,7 +541,7 @@ class LeafNode extends Node{
     }
 
     public function compile(){
-        return str_replace('-', '_', $this->value);
+        return strlen($this->value) > 1 ? str_replace('-', '_', $this->value) : $this->value;
     }
 
     public function compile_statement(){
