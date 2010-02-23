@@ -167,7 +167,7 @@ class Lexer{
                 $this->state = "string";
             }else if($this->code[$this->i-1] == "(" && $this->char == ':'){
                 $this->tok = new ListAccessToken;
-            }else if($this->code[$this->i-1] == "(" && $this->char == '$'){
+            }else if($this->code[$this->i-1] == "(" && $this->char == '$' && trim($this->code[$this->i+1]) != ""){
                 $this->tok = new ExplicitVarToken;
                 $this->state = "append";
             }else if($this->char == ',' or $this->char == "'" or $this->char == '@'){
@@ -551,6 +551,7 @@ class VariableNode extends LeafNode{
         if($in_binding){
             return $varname;
         }
+
         if($varname[1] == '$'){
             return $varname;
         }
@@ -1118,7 +1119,7 @@ class BindingNode extends Node{
         $body = "";
         $last_line = "";
         if($return === True){
-            $last_line = $this->indent."return ".array_pop($this->children)->compile_statement();
+            $last_line = array_pop($this->children)->compile_return();
         }
         foreach(array_slice($this->children, 2) as $line){
             $l = $this->indent."\t".$line->compile_statement();
