@@ -196,7 +196,7 @@ class FuncInfo{
     private $args_given;
 
     static function get_next_name(){
-        return "__partial".self::$tmp_counter++;
+        return Node::$ns."__partial".self::$tmp_counter++;
     }
 
     public function __construct($name, $args){
@@ -335,6 +335,7 @@ class Node{
     static $delay_tmp = False;
     static $prev_tmp;
     static $tmp;
+    static $ns;
 
     public $parent;
     public $children;
@@ -761,7 +762,7 @@ class LambdaNode extends FuncDefNode{
     protected $scope;
 
     static function get_next_name(){
-        return "__lambdafunc".self::$counter++;
+        return Node::$ns."__lambdafunc".self::$counter++;
     }
 
     public function compile(){
@@ -1312,10 +1313,13 @@ class Parser{
 }
 
 function compile_file($fname){
+    $ns = basename($fname, EXTENSION);
+    Node::$ns = $ns;
+
     $code = file_get_contents($fname);
     $phpcode = compile($code);
  
-    $output = dirname($fname).DIRECTORY_SEPARATOR.basename($fname, EXTENSION).".php";
+    $output = dirname($fname).DIRECTORY_SEPARATOR.$ns.".php";
     file_put_contents($output, "<?php\n".$phpcode."?>");
     return $phpcode;
 }
