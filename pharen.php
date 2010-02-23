@@ -100,7 +100,7 @@ class Lexer{
     private $i=0;
 	
     public function __construct($code){
-        $this->code = $code;
+        $this->code = trim($code);
     }
 
     public function lex(){
@@ -556,10 +556,10 @@ class VariableNode extends LeafNode{
             return $varname;
         }
 
-        if($scope->find_immediate($this->value) !== False){
+        if($scope->find_immediate($varname) !== False){
             return $varname;
-        }else if(($id = $scope->find($this->value)) !== False){
-            $scope->bind_lexical('$'.$this->value, $id);
+        }else if(($id = $scope->find($varname)) !== False){
+            $scope->bind_lexical($varname, $id);
             return $varname;
         }else{
             return $varname;
@@ -579,7 +579,7 @@ class StringNode extends LeafNode{
 
     public function compile_statement(){
         $indent = $this->parent instanceof RootNode ? "" : $this->indent."\t";
-        return "# ".$indent.$this->compile()."\n";
+        return $indent.$this->compile().";\n";
     }
 }
 
@@ -625,7 +625,7 @@ class SpecialForm extends Node{
         return $this->compile($indent)."\n";
     }
 
-    public function compile_body($lines=false, $prefix=""){
+    public function compile_body($lines=false, $prefix="", $return=False){
         // Compile the body expressions of the special form according to
         // the start index of the first body expression.
         $body = "";
@@ -634,9 +634,11 @@ class SpecialForm extends Node{
         $indent = $prefix === "" ? $this->indent."\t" : $this->indent;
         $body_index = $lines === false ? $this->body_index : 0;
         $lines = $lines === false ? $this->children : $lines;
+        $last_line = $return ? array_pop($lines)->compile_return() : "";
         foreach(array_slice($lines, $body_index) as $child){
             $body .= $indent.$prefix.$child->compile_statement();
         }
+        $body .= $last_line;
         return $body;
     }
 
@@ -817,16 +819,14 @@ class CondNode extends SpecialForm{
         $prefix = Null;
         $code = "\n";   // Start with newline because current line already has tabs in it.
 
-        if($return){
-            $prefix = $this->indent."\t"."return";
-        }else if($use_tmp){
+        if($use_tmp){
             $prefix = '$'.self::get_tmp_name(). " = ";
             $code .= "$prefix NULL;\n";
         }
 
-        $code .= $this->compile_if($if_pair, $prefix);
+        $code .= $this->compile_if($if_pair, $prefix, $return);
         foreach($elseif_pairs as $elseif_pair){
-            $code .= $this->compile_elseif($elseif_pair, $prefix);
+            $code .= $this->compile_elseif($elseif_pair, $prefix, $return);
         }
         return $code;
     }
@@ -835,17 +835,17 @@ class CondNode extends SpecialForm{
         return $this->compile_statement(False, True);
     }
 
-    public function compile_if($pair, $tmp_var, $stmt_type="if"){
+    public function compile_if($pair, $tmp_var, $return=False, $stmt_type="if"){
         $condition = $pair->children[0]->compile();
-        $body = $this->compile_body(array($pair->children[1]), $tmp_var);
+        $body = $this->compile_body(array($pair->children[1]), $tmp_var, $return);
 
         return $this->indent."$stmt_type(".$condition."){\n"
             .$body
         .$this->indent."}\n";
     }
 
-    public function compile_elseif($pair, $tmp_var){
-        return $this->compile_if($pair, $tmp_var, "else if");
+    public function compile_elseif($pair, $tmp_var, $return=False){
+        return $this->compile_if($pair, $tmp_var, $return, "else if");
     }
 }
 
