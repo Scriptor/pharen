@@ -285,7 +285,7 @@ class Scope{
 
     public function get_lexical_binding($var_name, $id){
         $value = 'Lexical::$scopes['.$id.'][\''.$var_name.'\']';
-        return "$var_name = $value";
+        return "$var_name =& $value";
     }
 
     public function init_lexical_scope(){
