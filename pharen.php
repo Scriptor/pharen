@@ -516,9 +516,9 @@ class RootNode extends Node{
     public function compile(){
         $code = "";
         if(!isset(Flags::$flags['no-import-lang'])){
-            $code .= "require('".SYSTEM."/lang.php"."');\n";
+            $code .= "require_once('".SYSTEM."/lang.php"."');\n";
         }else{
-            $code .= "require('".SYSTEM."/lexical.php"."');\n";
+            $code .= "require_once('".SYSTEM."/lexical.php"."');\n";
         }
         $code .= $this->scope->init_namespace_scope();
         foreach($this->children as $child){
@@ -874,7 +874,7 @@ class LispyIfNode extends CondNode{
         $true_line = $this->children[2]->$compile_func($this->indent."\t");
         $code =  $this->indent."if($cond){\n".
                 $true_line.
-                $this->indent."};";
+                $this->indent."}";
         if(isset($this->children[3])){
             $code .= "else{\n".
                 $this->children[3]->$compile_func($this->indent."\t").
