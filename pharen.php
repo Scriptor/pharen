@@ -692,7 +692,7 @@ class FuncDefNode extends SpecialForm{
         if($this->is_tail_recursive($last_node)){
             list($body_nodes, $last_node) = $this->split_body_last();
             $this->indent .= "\t";
-            $body = $this->indent."while(1){";
+            $body = $this->indent."while(1){\n";
 
             list($while_body_nodes, $while_last_node) = split_body_last($body_nodes);
             $body .= $this->compile_body($while_body_nodes);
@@ -724,7 +724,7 @@ class FuncDefNode extends SpecialForm{
     }
 
     public function is_tail_recursive($last_node){
-        return $this->name == $last_node->get_last_func_call()->compile();
+        return $this->children[1]->compile() == $last_node->get_last_func_call()->compile();
     }
 
     public function compile_last($node){
@@ -872,7 +872,7 @@ class LispyIfNode extends CondNode{
 
         $cond = $this->children[1]->compile();
         $true_line = $this->children[2]->$compile_func($this->indent."\t");
-        $false_line = $this->children[3]->$compile_func($this->indent."\t");
+        $false_line = isset($this->children[3]) ? $this->children[3]->$compile_func($this->indent."\t") : "";
         return $this->indent."if($cond){\n".
                 $true_line.
             $this->indent."}else{\n".
@@ -882,6 +882,14 @@ class LispyIfNode extends CondNode{
 
     public function compile_return(){
         return $this->compile_statement(False, True);
+    }
+
+    public function get_last_func_call(){
+        return $this->children[3]->get_last_func_call();
+    }
+
+    public function get_last_expr(){
+        return $this->children[3];
     }
 }
 
