@@ -515,7 +515,11 @@ class RootNode extends Node{
 
     public function compile(){
         $code = "";
-        $code .= "require_once('".SYSTEM."/lang.php"."');\n";
+        if(!isset(Flags::$flags['no-import-lang'])){
+            $code .= "require('".SYSTEM."/lang.php"."');\n";
+        }else{
+            $code .= "require('".SYSTEM."/lexical.php"."');\n";
+        }
         $code .= $this->scope->init_namespace_scope();
         foreach($this->children as $child){
             $code .= $child->compile_statement();
@@ -1318,6 +1322,10 @@ class Parser{
     }
 }
 
+class Flags{
+    static $flags = array();
+}
+
 function compile_file($fname){
     $ns = basename($fname, EXTENSION);
     Node::$ns = $ns;
@@ -1344,7 +1352,12 @@ $input_files = array();
 if(isset($argv) && isset($argv[1])){
     array_shift($argv);
     foreach($argv as $arg){
-        $input_files[] = $arg;
+        if(strpos($arg, "--") === 0){
+            $flag = substr($arg, 2);
+            Flags::$flags[$flag] = True;
+        }else{
+            $input_files[] = $arg;
+        }
     }
 }
 
