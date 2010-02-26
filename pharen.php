@@ -71,6 +71,9 @@ class ListAccessToken extends Token{
 class NameToken extends Token{
 }
 
+class SplatToken extends Token{
+}
+
 class ExplicitVarToken extends Token{
 }
 
@@ -169,6 +172,9 @@ class Lexer{
                 $this->tok = new ListAccessToken;
             }else if($this->code[$this->i-1] == "(" && $this->char == '$' && trim($this->code[$this->i+1]) != ""){
                 $this->tok = new ExplicitVarToken;
+                $this->state = "append";
+            }else if($this->char == '&'){
+                $this->tok = new SplatToken();
                 $this->state = "append";
             }else if($this->char == ',' or $this->char == "'" or $this->char == '@'){
                 $this->tok = new TreatedToken($this->char);
@@ -582,6 +588,9 @@ class VariableNode extends LeafNode{
     }
 }
 
+class SplatNode extends VariableNode{
+}
+
 class StringNode extends LeafNode{
 
     public function compile(){
@@ -689,10 +698,18 @@ class FuncDefNode extends SpecialForm{
         $params = $this->children[2]->compile();
 
         list($body_nodes, $last_node) = parent::split_body_last();
+
+        $body = "";
+        $params_count = count($this->params);
+        if($this->params[$params_count-1] instanceof SplatNode){
+            $param = $varnames[$params_count-1];
+            $body .= "\n".$this->indent."\t".$param." = array_slice(func_get_args(), ".($params_count-1).");\n";
+        }
+
         if($this->is_tail_recursive($last_node)){
             list($body_nodes, $last_node) = $this->split_body_last();
             $this->indent .= "\t";
-            $body = $this->indent."while(1){\n";
+            $body .= $this->indent."while(1){\n";
 
             list($while_body_nodes, $while_last_node) = split_body_last($body_nodes);
             $body .= $this->compile_body($while_body_nodes);
@@ -708,7 +725,7 @@ class FuncDefNode extends SpecialForm{
             $body .= $this->indent."}\n";
             $this->indent = substr($this->indent, 1);
         }else{
-            $body = parent::compile_body($body_nodes);
+            $body .= parent::compile_body($body_nodes);
             $last = $last_node->compile_return();
             $body .= $last;
         }
@@ -1187,6 +1204,7 @@ class Parser{
             "NameToken" => "VariableNode",
             "StringToken" => "StringNode",
             "NumberToken" => "LeafNode",
+            "SplatToken" => "SplatNode",
             "UnquoteToken" => "UnquoteNode"
         );
 
