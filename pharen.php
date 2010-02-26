@@ -872,12 +872,15 @@ class LispyIfNode extends CondNode{
 
         $cond = $this->children[1]->compile();
         $true_line = $this->children[2]->$compile_func($this->indent."\t");
-        $false_line = isset($this->children[3]) ? $this->children[3]->$compile_func($this->indent."\t") : "";
-        return $this->indent."if($cond){\n".
+        $code =  $this->indent."if($cond){\n".
                 $true_line.
-            $this->indent."}else{\n".
-                $false_line.
+                $this->indent."};";
+        if(isset($this->children[3])){
+            $code .= "else{\n".
+                $this->children[3]->$compile_func($this->indent."\t").
             $this->indent."}\n";
+        }
+        return $code;
     }
 
     public function compile_return(){
