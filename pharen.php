@@ -515,7 +515,7 @@ class RootNode extends Node{
 
     public function compile(){
         $code = "";
-        $code .= "require_once('".SYSTEM."/lexical.php"."');\n";
+        $code .= "require_once('".SYSTEM."/lang.php"."');\n";
         $code .= $this->scope->init_namespace_scope();
         foreach($this->children as $child){
             $code .= $child->compile_statement();
