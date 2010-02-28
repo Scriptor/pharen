@@ -701,7 +701,7 @@ class FuncDefNode extends SpecialForm{
 
         $body = "";
         $params_count = count($this->params);
-        if($this->params[$params_count-1] instanceof SplatNode){
+        if($params_count > 0 && $this->params[$params_count-1] instanceof SplatNode){
             $param = $varnames[$params_count-1];
             $body .= "\n".$this->indent."\t".$param." = array_slice(func_get_args(), ".($params_count-1).");\n";
         }
