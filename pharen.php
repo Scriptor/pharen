@@ -1141,11 +1141,11 @@ class BindingNode extends Node{
 
     public function compile_statement($return=False){
         $this->indent = $this->parent instanceof RootNode ? "" : $this->parent->indent."\t";
-        $scope = $this->scope = new Scope($this);
+        $scope = $this->scope = $this->parent->get_scope();;
         $pairs = $this->children[1]->children;
         $var_names = array();
         $code = "";
-        $lexings = $this->indent.$scope->init_lexical_scope();
+        $lexings = "";
         foreach($pairs as $pair_node){
             $var_name = $pair_node->children[0]->compile();
             $var_names[] = $var_name;
