@@ -1,24 +1,34 @@
-(require "lexical.php")
-(define "LIB_PATH" "/Applications/MAMP/htdocs/pharen/lib/")
+(define "SYSTEM" (dirname __FILE__))
+(require_once (. SYSTEM "/lexical.php"))
+(define "LIB_PATH" (. SYSTEM "/lib/"))
 (set_include_path (. (get_include_path) PATH_SEPARATOR LIB_PATH))
 
 (fn first (xs)
-    (at xs 0))
+    (:xs 0))
+
+(fn first-pair (xs)
+    (array-slice xs 0 1))
 
 (fn rest (xs)
-    (array_slice xs 1))
+    (array-slice xs 1))
 
 (fn early (xs)
-    (array_slice xs 0 (- (count xs) 2)))
+    (array-slice xs 0 (- (count xs) 2)))
 
 (fn cons (x xs)
-    (array_merge (array x) xs))
+    (array-merge (array x) xs))
 
 (fn apply (f val)
     ($f val))
 
 (fn map (f xs)
     (if (== (sizeof xs) 0)
-        (array)
+        []
         (cons ($f (first xs))
               (map f (rest xs)))))
+
+(fn map-pairs (f pairs)
+    (if (== (count pairs) 0)
+        []
+        (cons ($f (:(:pairs 0) 0) (:(:pairs 0) 1))
+              (map-pairs f (rest pairs)))))
