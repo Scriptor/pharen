@@ -1236,6 +1236,7 @@ class Parser{
             "let" => array("BindingNode", self::$list_form, array(self::$value)),
             "dict" => array("DictNode", array(self::$literal_form)),
             "micro" => array("MicroNode", "LeafNode", "LeafNode", "LiteralNode", self::$values),
+            "defmacro" => array("MacroNode", "LeafNode", "LeafNode", "LiteralNode", self::$values),
             "each_pair" => array("EachPairNode", "LeafNode", "VariableNode", "LiteralNode", self::$value)
         );
         
