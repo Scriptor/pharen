@@ -77,20 +77,7 @@ class SplatToken extends Token{
 class ExplicitVarToken extends Token{
 }
 
-class TreatedToken extends Token{
-    public $value = array("", array());
-
-    public function __construct($treat){
-        $this->value[1][] = $treat;
-    }
-
-    public function append($c){
-        $this->value[0] .= $c;
-    }
-
-    public function append_treat($c){
-        $this->value[1][] = $c;
-    }
+class ReaderMacroToken extends Token{
 }
 
 class Lexer{
@@ -147,13 +134,6 @@ class Lexer{
             }else{
                 $this->tok->append($this->char);
             }
-        }else if($this->state == "treat"){
-            if($this->char == ',' or $this->char == "'" or $this->char == '@'){
-                $this->tok->append_treat($this->char);
-            }else{
-                $this->tok->append($this->char);
-                $this->state = "append";
-            }
         }else if($this->state == "new-expression"){
             // For function calls, a function name can itself be a sexpr that returns a function name
             if($this->char == "("){
@@ -176,9 +156,8 @@ class Lexer{
             }else if($this->char == '&'){
                 $this->tok = new SplatToken();
                 $this->state = "append";
-            }else if($this->char == ',' or $this->char == "'" or $this->char == '@'){
-                $this->tok = new TreatedToken($this->char);
-                $this->state = "treat";
+            }else if($this->char == ',' or $this->char == "'"){
+                $this->tok = new ReaderMacroToken($this->char);
             }else if(is_numeric($this->char)){
                 $this->tok = new NumberToken($this->char);
                 $this->state = "append";
@@ -600,40 +579,6 @@ class StringNode extends LeafNode{
     public function compile_statement(){
         $indent = $this->parent instanceof RootNode ? "" : $this->indent."\t";
         return $indent.$this->compile().";\n";
-    }
-}
-
-class TreatedNode extends LeafNode{
-
-    public function unquote($value){
-        $scope = $this->get_scope();
-        return $scope->find($value)->compile_nolookup();
-    }
-
-    public function unvar($value){
-        return trim($value, '$');
-    }
-
-    public function splice($value){
-        $els = array();
-        foreach($this->get_scope()->find($value)->children as $el){
-            $els[] = $el->compile_nolookup();
-        }
-        return implode(", ", $els);
-    }
-    
-    public function compile(){
-        $value = $this->value[0];
-        foreach(array_reverse($this->value[1]) as $treat){
-            if($treat == ','){
-                $value = $this->unquote($value);
-            }else if($treat == "'"){
-                $value = $this->unvar($value);
-            }else if($treat == '@'){
-                $value = $this->splice($value);
-            }
-        }
-        return $value;
     }
 }
 
