@@ -42,3 +42,8 @@
     (lambda (x)
         (* x 2))
     [1 2 3])
+
+(defmacro square (x)
+    (if (< x 10)
+        '(* ,x ,x)
+        (. ,x " is too big!")))
