@@ -3,6 +3,8 @@ error_reporting(E_ALL | E_STRICT | E_NOTICE);
 define("SYSTEM", dirname(__FILE__));
 define("EXTENSION", ".phn");
 
+require('lexical.php');
+
 // Some utility functions for use in Pharen
 
 function last($xs){
@@ -37,6 +39,8 @@ function print_tree($node){
             
 class Token{
     public $value;
+    public $quoted;
+    public $unquoted;
 
     public function __construct($value=null){
         $this->value = $value;
@@ -297,7 +301,7 @@ class Scope{
         return $code;
     }
 
-    public function find($var_name){
+    public function find($var_name, $return_value=False){
         if($var_name[0] != '$'){
             $var_name = '$'.$var_name;
         }
@@ -309,6 +313,9 @@ class Scope{
             }
         }
         $this->lexically_needed[$var_name] = True;
+        if($return_value){
+            return $this->bindings[$var_name];
+        }
         return $this->id;
     }
 
@@ -330,6 +337,8 @@ class Node{
     public $children;
     public $return_flag = False;
     public $indent;
+    public $quoted;
+    public $unquoted;
 
     protected $scope = Null;
     protected $value = "";
@@ -363,7 +372,7 @@ class Node{
         return array($this->children[0], array_slice($this->children, 1));
     }
 
-    public function add_child(Node $child){
+    public function add_child($child){
         $this->children[] = $child;
     }
 
@@ -416,6 +425,15 @@ class Node{
         if(MicroNode::is_micro($func_name)){
             $micro = MicroNode::get_micro($func_name);
             return $micro->get_body(array_slice($this->children, 1), $this->indent);
+        }else if(MacroNode::is_macro($func_name)){
+            $unevaluated_args = array_slice($this->children,1 );
+            MacroNode::evaluate($func_name, $unevaluated_args);
+            $expanded = call_user_func_array($func_name, $unevaluated_args);
+            if($expanded instanceof Quoted){
+                return $expanded->compile();
+            }else{
+                return $expanded;
+            }
         }else if($func->is_partial()){
             return $this->create_partial($func);
         }
@@ -639,10 +657,11 @@ class FuncDefNode extends SpecialForm{
 
         $this->params = $this->children[2]->children;
 
-        $varnames = $this->bind_params($this->params);
+        $varnames = $this->get_param_names($this->params);
+        $this->bind_params($varnames);
         $params = $this->children[2]->compile();
 
-        list($body_nodes, $last_node) = parent::split_body_last();
+        list($body_nodes, $last_node) = $this->split_body_last();
 
         $body = "";
         $params_count = count($this->params);
@@ -652,7 +671,7 @@ class FuncDefNode extends SpecialForm{
         }
 
         if($this->is_tail_recursive($last_node)){
-            list($body_nodes, $last_node) = $this->split_body_last();
+            list($body_nodes, $last_node) = $this->split_body_tail();
             $this->indent .= "\t";
             $body .= $this->indent."while(1){\n";
 
@@ -693,14 +712,6 @@ class FuncDefNode extends SpecialForm{
         return $node->compile_return($this->indent."\t");
     }
 
-    public function get_param_names($param_nodes){
-        $params = array();
-        foreach($param_nodes as $node){
-            $params[] = $node->compile();
-        }
-        return $params;
-    }
-
     public function get_param_lexings($varnames){
         $lexings = $this->scope->init_lexical_scope();
         foreach($varnames as $varname){
@@ -709,22 +720,111 @@ class FuncDefNode extends SpecialForm{
         return $lexings;
     }
 
-    public function bind_params($params){
+    public function get_param_names($param_nodes){
         $varnames = array();
-        $scope = $this->get_scope();
-        foreach($params as $param){
-            $varname = $param->compile(True);
-            $varnames[] = $varname;
-            $scope->bind($param->compile(True), new EmptyNode($this));
+        foreach($param_nodes as $node){
+            $varnames[] = $node->compile();
         }
         return $varnames;
     }
 
-    public function split_body_last(){
+    public function bind_params($params){
+        $scope = $this->get_scope();
+        foreach($params as $param){
+            $scope->bind($param->compile(True), new EmptyNode($this));
+        }
+    }
+
+    public function split_body_tail(){
         list($body, $last) = parent::split_body_last($this->children);
         $body = array_merge($body, $last->get_body_nodes());
         $last = $last->get_last_expr();
         return array($body, $last);
+    }
+}
+
+class MacroNode extends FuncDefNode{
+    static $macros = array();
+    static $literals = array();
+    static $next_literal_id = 0;
+
+    public $args;
+
+    static function is_macro($name){
+        return isset(self::$macros[$name]);
+    }
+
+    static function evaluate($name, $args){
+        $macronode = self::$macros[$name];
+        $macronode->args = $args;
+        foreach($macronode->params as $param){
+            $scope->bind($param->compile(), array_shift($args));
+        }
+        $code = $macronode->parent_compile();
+        eval($code);
+    }
+
+    public function parent_compile(){
+        return parent::compile();
+    }
+
+    public function compile(){
+        $name = $this->children[1]->compile();
+        self::$macros[$name] = $this;
+        return "";
+    }
+
+    public function split_body_last(){
+        list($body, $last) = parent::split_body_last();
+        if($last->quoted){
+            $last = new Quoted($last, self::$next_literal_id);
+            self::$literals[self::$next_literal_id++] = $last;
+        }
+        return array($body, $last);
+    }
+
+    public function bind_params($params){
+        $scope = $this->get_scope();
+
+        foreach($params as $param){
+            $scope->bind($param, array_shift($this->args));
+        }
+    }
+}
+
+class Quoted{
+    private $node;
+    private $literal_id;
+
+    function __construct(Node $node, $literal_id){
+        $this->node = $node;
+        $this->literal_id = $literal_id;
+    }
+
+    public function compile_return(){
+        return 'return MacroNode::$literals['.$this->literal_id.'];'."\n";
+    }
+
+    public function __call($name, $arguments){
+        return call_user_func_array(array($this->node, $name), $arguments);
+    }
+}
+
+class UnquoteWrapper{
+    private $node;
+
+    function __construct(Node $node){
+        $this->node = $node;
+    }
+
+    public function __call($name, $args){
+        return call_user_func_array(array($this->node, $name), $args);
+    }
+
+    public function compile(){
+        if($this->node instanceof LeafNode){
+            return $this->get_scope()->find($this->node->compile(), True)->compile();
+        }
     }
 }
 
@@ -1126,6 +1226,7 @@ class BindingNode extends Node{
 
 class Parser{
     static $INFIX_OPERATORS; 
+    static $reader_macros;
 
     static $value;
     static $values;
@@ -1144,6 +1245,11 @@ class Parser{
 
     public function __construct($tokens){
         self::$INFIX_OPERATORS = array("+", "-", "*", ".", "/", "and", "or", "=", "=&", "<", ">", "===", "==", "!=", "!==");
+
+        self::$reader_macros = array(
+            "'" => "quote",
+            "," => "unquote"
+        );
 
         self::$value = array(
             "NameToken" => "VariableNode",
@@ -1182,6 +1288,8 @@ class Parser{
             "dict" => array("DictNode", array(self::$literal_form)),
             "micro" => array("MicroNode", "LeafNode", "LeafNode", "LiteralNode", self::$values),
             "defmacro" => array("MacroNode", "LeafNode", "LeafNode", "LiteralNode", self::$values),
+            "quote" => array("LiteralNode", "LeafNode", self::$values),
+            "unquote" => array("UnquoteNode", "LeafNode", self::$values),
             "each_pair" => array("EachPairNode", "LeafNode", "VariableNode", "LiteralNode", self::$value)
         );
         
@@ -1224,8 +1332,14 @@ class Parser{
                     array_push($state, self::$func_call);
                 }
                 list($node, $state) = $this->parse_tok($tok, $state, $curnode);
+                $node->quoted = $tok->quoted;
                 $curnode->add_child($node);
                 $curnode = $node;
+            }else if($tok instanceof ReaderMacroToken){
+                if($tok->value == "'")
+                    $lookahead->quoted = True;
+                else if($tok->value == ",")
+                    $lookahead->unquoted = True;
             }else if($tok instanceof CloseParenToken or $tok instanceof CloseBracketToken){
                 $curnode = $curnode->parent;
                 array_pop($state);
@@ -1234,6 +1348,9 @@ class Parser{
                 }
             }else{
                 list($node, $state) = $this->parse_tok($tok, $state, $curnode);
+                if($tok->unquoted){
+                    $node =  new UnquoteWrapper($node);
+                }
                 $curnode->add_child($node);
             }
         }
