@@ -433,8 +433,10 @@ class Node{
                     $unevaluated_args[$key] = $val->compile();
             }
             $expanded = call_user_func_array($func_name, $unevaluated_args);
-            if($expanded instanceof Node){
+            if($expanded instanceof QuoteWrapper){
                 return $expanded->compile();
+            }else if(is_string($expanded)){
+                return '"'.$expanded.'"';
             }else{
                 return $expanded;
             }
@@ -1336,8 +1338,8 @@ class Parser{
                 }
                 list($node, $state) = $this->parse_tok($tok, $state, $curnode);
                 if($tok->quoted){
-                    MacroNode::$literals[MacroNode::$next_literal_id] = $node;
-                    $node = new QuoteWrapper($node, MacroNode::$next_literal_id++);
+                    $node = new QuoteWrapper($node, MacroNode::$next_literal_id);
+                    MacroNode::$literals[MacroNode::$next_literal_id++] = $node;
                 }
                 $curnode->add_child($node);
                 $curnode = $node;
