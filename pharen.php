@@ -428,8 +428,12 @@ class Node{
         }else if(MacroNode::is_macro($func_name)){
             $unevaluated_args = array_slice($this->children,1 );
             MacroNode::evaluate($func_name, $unevaluated_args);
+            foreach($unevaluated_args as $key=>$val){
+                if($val instanceof LeafNode)
+                    $unevaluated_args[$key] = $val->compile();
+            }
             $expanded = call_user_func_array($func_name, $unevaluated_args);
-            if($expanded instanceof Quoted){
+            if($expanded instanceof Node){
                 return $expanded->compile();
             }else{
                 return $expanded;
@@ -535,7 +539,7 @@ class RootNode extends Node{
 class LeafNode extends Node{
     public $value;
 
-    public function __construct(Node $parent, $children, $value){
+    public function __construct($parent, $children, $value){
         // $children is kept as an argument, even though LeafNode should
         // not have any child nodes, for compatibility with parameter
         // structure of Node
@@ -774,15 +778,6 @@ class MacroNode extends FuncDefNode{
         return "";
     }
 
-    public function split_body_last(){
-        list($body, $last) = parent::split_body_last();
-        if($last->quoted){
-            $last = new Quoted($last, self::$next_literal_id);
-            self::$literals[self::$next_literal_id++] = $last;
-        }
-        return array($body, $last);
-    }
-
     public function bind_params($params){
         $scope = $this->get_scope();
 
@@ -792,7 +787,7 @@ class MacroNode extends FuncDefNode{
     }
 }
 
-class Quoted{
+class QuoteWrapper{
     private $node;
     private $literal_id;
 
@@ -803,6 +798,14 @@ class Quoted{
 
     public function compile_return(){
         return 'return MacroNode::$literals['.$this->literal_id.'];'."\n";
+    }
+
+    public function __get($name){
+        return $this->node->$name;
+    }
+
+    public function __set($name, $val){
+        $this->node->$name = $val;
     }
 
     public function __call($name, $arguments){
@@ -1332,7 +1335,10 @@ class Parser{
                     array_push($state, self::$func_call);
                 }
                 list($node, $state) = $this->parse_tok($tok, $state, $curnode);
-                $node->quoted = $tok->quoted;
+                if($tok->quoted){
+                    MacroNode::$literals[MacroNode::$next_literal_id] = $node;
+                    $node = new QuoteWrapper($node, MacroNode::$next_literal_id++);
+                }
                 $curnode->add_child($node);
                 $curnode = $node;
             }else if($tok instanceof ReaderMacroToken){
