@@ -41,6 +41,7 @@ class Token{
     public $value;
     public $quoted;
     public $unquoted;
+    public $unquote_spliced;
 
     public function __construct($value=null){
         $this->value = $value;
@@ -160,7 +161,7 @@ class Lexer{
             }else if($this->char == '&'){
                 $this->tok = new SplatToken();
                 $this->state = "append";
-            }else if($this->char == ',' or $this->char == "'"){
+            }else if($this->char == ',' or $this->char == "'" or $this->char == '@'){
                 $this->tok = new ReaderMacroToken($this->char);
             }else if(is_numeric($this->char)){
                 $this->tok = new NumberToken($this->char);
@@ -254,7 +255,7 @@ class Scope{
         $this->id = self::$scope_id++;
     }
 
-    public function bind($var_name, Node $value_node){
+    public function bind($var_name, $value_node){
         // Keep value as just the node to allow for possible implementation of lazy evaluation in the future
         $this->bindings[$var_name] = $value_node;
     }
@@ -383,11 +384,17 @@ class Node{
         }
     }
 
-    public function compile_args($args){
-        while(list($key) = each($args)){
-            $args[$key] = $args[$key]->compile();
+    public function compile_args($args=Null){
+        $output = array();
+        for($x=0; $x<count($args); $x++){
+            $arg = $args[$x];
+            if($arg instanceof SpliceWrapper){
+                array_splice($args, $x+1, 0, $arg->compile());
+            }else{
+                $output[] = $arg->compile();
+            }
         }
-        return $args;
+        return $output;
     }
 
     public function get_last_func_call(){
@@ -495,7 +502,7 @@ class InfixNode extends Node{
 
     public function compile(){
         list($func_name, $args) = $this->get_compiled_func_args();
-        $func = new FuncInfo($func_name, array_slice($this->children, 1));
+        $func = new FuncInfo($func_name, $args);
         if($func->is_partial()){
             return $this->create_partial($func);
         }
@@ -656,11 +663,10 @@ class FuncDefNode extends SpecialForm{
 
     public function compile(){
         $this->indent = $this->parent instanceof RootNode ? "" : $this->parent->indent."\t";
-        $this->scope = new Scope($this);
+        $this->scope = $this->scope == Null ? new Scope($this) : $this->scope;
 
         $this->name = $this->children[1]->compile();
         self::$functions[$this->name] = $this;
-
         $this->params = $this->children[2]->children;
 
         $varnames = $this->get_param_names($this->params);
@@ -737,7 +743,7 @@ class FuncDefNode extends SpecialForm{
     public function bind_params($params){
         $scope = $this->get_scope();
         foreach($params as $param){
-            $scope->bind($param->compile(True), new EmptyNode($this));
+            $scope->bind($param, new EmptyNode($this));
         }
     }
 
@@ -763,8 +769,15 @@ class MacroNode extends FuncDefNode{
     static function evaluate($name, $args){
         $macronode = self::$macros[$name];
         $macronode->args = $args;
-        foreach($macronode->params as $param){
-            $scope->bind($param->compile(), array_shift($args));
+        $scope = $macronode->get_scope();
+        foreach($macronode->children[2]->children as $param_node){
+            if($param_node instanceof SplatNode){
+                $tmp_node = new Node($macronode);
+                $tmp_node->children = $args;
+                $scope->bind($param_node->compile(), $tmp_node);
+                break;
+            }
+            $scope->bind($param_node->compile(), array_shift($args));
         }
         $code = $macronode->parent_compile();
         eval($code);
@@ -776,25 +789,25 @@ class MacroNode extends FuncDefNode{
 
     public function compile(){
         $name = $this->children[1]->compile();
+        $this->scope = new Scope($this);
         self::$macros[$name] = $this;
         return "";
     }
 
     public function bind_params($params){
-        $scope = $this->get_scope();
-
-        foreach($params as $param){
-            $scope->bind($param, array_shift($this->args));
-        }
     }
 }
 
 class QuoteWrapper{
-    private $node;
+    public $node;
+    public $parent;
+    public $children;
     private $literal_id;
 
     function __construct(Node $node, $literal_id){
         $this->node = $node;
+        $this->parent = $node->parent;
+        $this->children =& $node->children;
         $this->literal_id = $literal_id;
     }
 
@@ -816,7 +829,7 @@ class QuoteWrapper{
 }
 
 class UnquoteWrapper{
-    private $node;
+    protected $node;
 
     function __construct(Node $node){
         $this->node = $node;
@@ -827,11 +840,20 @@ class UnquoteWrapper{
     }
 
     public function compile(){
+        $code = $this->node->compile();
         if($this->node instanceof LeafNode){
-            return $this->get_scope()->find($this->node->compile(), True)->compile();
+            return $this->get_scope()->find($code, True)->compile();
         }else{
-            return $this->node->compile();
+            return $code;
         }
+    }
+}
+
+class SpliceWrapper extends UnquoteWrapper{
+    
+    public function compile(){
+        $varname = str_replace('@', '', $this->node->compile());
+        return $this->get_scope()->find($varname, True)->children;
     }
 }
 
@@ -1350,6 +1372,9 @@ class Parser{
                     $lookahead->quoted = True;
                 else if($tok->value == ",")
                     $lookahead->unquoted = True;
+                else if($tok->value == '@' && $this->tokens[$i-1]->value == ','){
+                    $lookahead->unquote_spliced = True;
+                }
             }else if($tok instanceof CloseParenToken or $tok instanceof CloseBracketToken){
                 $curnode = $curnode->parent;
                 array_pop($state);
@@ -1360,6 +1385,8 @@ class Parser{
                 list($node, $state) = $this->parse_tok($tok, $state, $curnode);
                 if($tok->unquoted){
                     $node =  new UnquoteWrapper($node);
+                }else if($tok->unquote_spliced){
+                    $node = new SpliceWrapper($node);
                 }
                 $curnode->add_child($node);
             }
