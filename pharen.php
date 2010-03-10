@@ -829,6 +829,8 @@ class UnquoteWrapper{
     public function compile(){
         if($this->node instanceof LeafNode){
             return $this->get_scope()->find($this->node->compile(), True)->compile();
+        }else{
+            return $this->node->compile();
         }
     }
 }
