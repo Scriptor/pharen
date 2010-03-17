@@ -209,6 +209,7 @@ class FuncInfo{
         $params_diff = count($this->func->params) - count($this->args_given);
 
         $function = new FuncDefNode($parent);
+        $function->is_partial = True;
         $function->indent = $parent->indent;
         $fn = $function->add_child(new LeafNode($function, array(), 'fn'));
         $function->add_child(new LeafNode($function, array(), $name));
@@ -654,8 +655,10 @@ class FuncDefNode extends SpecialForm{
     static $functions;
 
     protected $body_index = 3;
-    public $params = array();
     protected $scope;
+
+    public $params = array();
+    public $is_partial;
     
     static function is_pharen_func($func_name){
         return isset(self::$functions[$func_name]);
@@ -686,6 +689,7 @@ class FuncDefNode extends SpecialForm{
             $body .= "\n".$this->indent."\t".$param." = array_slice(func_get_args(), ".($params_count-1).");\n";
         }
 
+        Node::$delay_tmp = True;
         if($this->is_tail_recursive($last_node)){
             list($body_nodes, $last_node) = $this->split_body_tail();
             $this->indent .= "\t";
@@ -716,6 +720,8 @@ class FuncDefNode extends SpecialForm{
             $lexings.
             $body.
             $this->indent."}\n";
+
+        if(!$this->is_partial) Node::$delay_tmp = False;
         $code = Node::add_tmp($code);
         return $code;
     }
@@ -1459,15 +1465,16 @@ class Flags{
     static $flags = array();
 }
 
-function compile_file($fname){
+function compile_file($fname, $output_dir=Null){
     $ns = basename($fname, EXTENSION);
     Node::$ns = $ns;
 
     $code = file_get_contents($fname);
     $phpcode = compile($code);
  
-    $output = dirname($fname).DIRECTORY_SEPARATOR.$ns.".php";
-    file_put_contents($output, "<?php\n".$phpcode."?>");
+    $output_dir = $output_dir === Null ? dirname($fname) : $output_dir;
+    $output = $output_dir.DIRECTORY_SEPARATOR.$ns.".php";
+    file_put_contents($output, $phpcode);
     return $phpcode;
 }
  
@@ -1478,7 +1485,7 @@ function compile($code, $root=Null){
     $parser = new Parser($tokens);
     $node_tree = $parser->parse($root);
     $phpcode = $node_tree->compile();
-    return $phpcode;
+    return "<?php\n".$phpcode."?>";
 }
 
 $input_files = array();
