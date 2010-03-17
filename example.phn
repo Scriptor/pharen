@@ -46,4 +46,4 @@
 (defmacro square (x)
     (if (< x 10)
         '(* ,x ,x)
-        (. ,x " is too big!")))
+        (. x " is too big!")))
