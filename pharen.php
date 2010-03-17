@@ -1,9 +1,9 @@
 <?php
 error_reporting(E_ALL | E_STRICT | E_NOTICE);
-define("SYSTEM", dirname(__FILE__));
+define("COMPILER_SYSTEM", dirname(__FILE__));
 define("EXTENSION", ".phn");
 
-require('lexical.php');
+require_once('lexical.php');
 
 // Some utility functions for use in Pharen
 
@@ -496,6 +496,10 @@ class LiteralNode extends Node{
         }
         return $code;
     }
+
+    public function compile_statement(){
+        return $this->compile().";\n";
+    }
 }
 
 class InfixNode extends Node{
@@ -532,9 +536,9 @@ class RootNode extends Node{
     public function compile(){
         $code = "";
         if(!isset(Flags::$flags['no-import-lang'])){
-            $code .= "require_once('".SYSTEM."/lang.php"."');\n";
+            $code .= "require_once('".COMPILER_SYSTEM."/lang.php"."');\n";
         }else{
-            $code .= "require_once('".SYSTEM."/lexical.php"."');\n";
+            $code .= "require_once('".COMPILER_SYSTEM."/lexical.php"."');\n";
         }
         $code .= $this->scope->init_namespace_scope();
         foreach($this->children as $child){
@@ -1492,7 +1496,7 @@ if(isset($argv) && isset($argv[1])){
 
 $php_code = "";
 if(isset($_SERVER['REQUEST_METHOD'])){
-    $php_code = compile_file(SYSTEM . "/lang.phn");
+    $php_code = compile_file(COMPILER_SYSTEM . "/lang.phn");
 }else{
     $php_code = "";
 }
