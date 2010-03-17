@@ -1,0 +1,17 @@
+(fn assert_equals (expected actual)
+    (== expected actual))
+
+(fn assert_true (expected)
+    (assert_equals expected TRUE))
+
+(fn check (val func)
+    (assert_true ($func val)))
+
+(fn describe (msg func)
+    (echo (. "Running tests for: " msg "\n"))
+    ($func))
+
+(fn it (msg func)
+    (if func
+        (print (. "Test passed:\t " msg "\n"))
+        (print (. "Test failed:\t " msg "\n"))))
