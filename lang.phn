@@ -21,14 +21,24 @@
 (fn apply (f val)
     ($f val))
 
+(fn reduce (f acc xs)
+    (if (empty xs)
+        acc
+        (reduce f ($f (first xs) acc) (rest xs))))
+
+(fn reduce-pairs (f acc xs)
+    (if (empty xs)
+        acc
+        (reduce-pairs f ($f (each xs) acc) (rest xs))))
+
 (fn map (f xs)
-    (if (== (sizeof xs) 0)
+    (reduce 
+        (lambda (x acc) (cons ($f x) acc)) 
         []
-        (cons ($f (first xs))
-              (map f (rest xs)))))
+        xs))
 
 (fn map-pairs (f pairs)
-    (if (== (count pairs) 0)
+    (reduce-pairs
+        (lambda (pair acc) (cons ($f (:pair 0) (:pair 1)) acc))
         []
-        (cons ($f (:(:pairs 0) 0) (:(:pairs 0) 1))
-              (map-pairs f (rest pairs)))))
+        pairs))
