@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+<head>
+	<title>Lists and Dictionaries</title>
+	
+	<link rel='stylesheet' href='css/syntax.css'/>
+	<link rel='stylesheet' href='css/screen.css' media='screen, projection'/>
+</head>
+<body>
+	<div id='topbar'>
+		<h2>Pharen: Lisp -> PHP</h2>
+	</div>
+	<div id='sidebar'>
+		<ul>
+			<li><a href='index.html'>Introduction</a></li>
+			<li><a href='download.html'>Downloading and usage</a></li>
+			<li><a href='basics.html'>Pharen Basics</a></li>
+			<li><a href='lists.html'>Lists and Dictionaries</a></li>
+		</ul>
+	</div>
+	
+	<div id='content'>
+		<h2 id='lists_and_dictionaries'>Lists and Dictionaries</h2>
+
+<h3 id='list-literals'>List Literals</h3>
+
+<p>A list is just a collection of values of any type. They are equivalent to arrays in PHP that don&#8217;t have keys explicitly set by the programmer. When creating lists, separate each item with a space and enclose everything in square brackets.</p>
+<div class='code-left'>
+
+<div class='highlight'><pre><code class='clojure'><span class='c1'>; The numbers from 1 to 7</span>
+<span class='p'>[</span><span class='mi'>1</span> <span class='mi'>2</span> <span class='s'>&quot;three&quot;</span> <span class='s'>&quot;four&quot;</span> <span class='mi'>5</span><span class='p'>]</span>
+
+<span class='c1'>; A list of strings</span>
+<span class='p'>[</span><span class='s'>&quot;foo&quot;</span> <span class='s'>&quot;bar&quot;</span> <span class='s'>&quot;baz&quot;</span><span class='p'>]</span>
+
+<span class='c1'>; Lists can be nested in each other</span>
+<span class='p'>[[</span><span class='mi'>1</span> <span class='mi'>2</span><span class='p'>]</span> <span class='p'>[</span><span class='s'>&quot;abc&quot;</span> <span class='s'>&quot;def&quot;</span><span class='p'>]]</span>
+</code></pre>
+</div>
+
+</div><div class='code-right'>
+
+<div class='highlight'><pre><code class='php'><span class='cp'>&lt;?php</span>
+<span class='k'>array</span><span class='p'>(</span><span class='m'>1</span><span class='p'>,</span> <span class='m'>2</span><span class='p'>,</span> <span class='s2'>&quot;three&quot;</span><span class='p'>,</span> <span class='s2'>&quot;four&quot;</span><span class='p'>,</span> <span class='m'>5</span><span class='p'>);</span>
+ 
+
+<span class='k'>array</span><span class='p'>(</span><span class='s2'>&quot;foo&quot;</span><span class='p'>,</span> <span class='s2'>&quot;bar&quot;</span><span class='p'>,</span> <span class='s2'>&quot;baz&quot;</span><span class='p'>);</span>
+
+ 
+<span class='k'>array</span><span class='p'>(</span><span class='k'>array</span><span class='p'>(</span><span class='m'>1</span><span class='p'>,</span> <span class='m'>2</span><span class='p'>),</span> <span class='k'>array</span><span class='p'>(</span><span class='s2'>&quot;abc&quot;</span><span class='p'>,</span> <span class='s2'>&quot;def&quot;</span><span class='p'>));</span>
+<span class='cp'>?&gt;</span><span class='x' />
+</code></pre>
+</div>
+
+</div>
+<h3 id='dictionaries'>Dictionaries</h3>
+
+<p>Dictionaries are created using the <code>dict</code> keyword, followed by key-value pairs enclosed in parentheses. They are the equivalent to associative arrays where keys <em>are</em> explicitly set. Keys can be either integers or strings and values can be any Pharen expression.</p>
+<div class='wide-code'>
+	<div class='code-left'>
+
+<div class='highlight'><pre><code class='clojure'><span class='p'>(</span><span class='nf'>dict</span>
+    <span class='p'>(</span><span class='s'>&quot;title&quot;</span> <span class='s'>&quot;Color of Magic&quot;</span><span class='p'>)</span>
+    <span class='p'>(</span><span class='s'>&quot;author&quot;</span> <span class='s'>&quot;Terry Pratchett&quot;</span><span class='p'>))</span>
+
+<span class='p'>(</span><span class='nf'>dict</span>
+    <span class='p'>(</span><span class='s'>&quot;functional&quot;</span> <span class='p'>[</span><span class='s'>&quot;haskell&quot;</span> <span class='s'>&quot;lisp&quot;</span> <span class='s'>&quot;scala&quot;</span><span class='p'>])</span>
+    <span class='p'>(</span><span class='s'>&quot;imperative&quot;</span> <span class='p'>[</span><span class='s'>&quot;c&quot;</span> <span class='s'>&quot;php&quot;</span> <span class='s'>&quot;python&quot;</span><span class='p'>]))</span>
+</code></pre>
+</div>
+
+	</div>
+	<div class='code-right'>
+
+<div class='highlight'><pre><code class='php'><span class='cp'>&lt;?php</span>
+<span class='k'>array</span><span class='p'>(</span>
+    <span class='s2'>&quot;title&quot;</span> <span class='o'>=&gt;</span> <span class='s2'>&quot;Color of Magic&quot;</span><span class='p'>,</span>
+    <span class='s2'>&quot;author&quot;</span> <span class='o'>=&gt;</span> <span class='s2'>&quot;Terry Pratchett&quot;</span>
+<span class='p'>);</span>
+
+<span class='k'>array</span><span class='p'>(</span>
+    <span class='s2'>&quot;functional&quot;</span> <span class='o'>=&gt;</span> <span class='k'>array</span><span class='p'>(</span><span class='s2'>&quot;haskell&quot;</span><span class='p'>,</span> <span class='s2'>&quot;lisp&quot;</span><span class='p'>,</span> <span class='s2'>&quot;scala&quot;</span><span class='p'>),</span>
+    <span class='s2'>&quot;imperative&quot;</span> <span class='o'>=&gt;</span> <span class='k'>array</span><span class='p'>(</span><span class='s2'>&quot;c&quot;</span><span class='p'>,</span> <span class='s2'>&quot;php&quot;</span><span class='p'>,</span> <span class='s2'>&quot;python&quot;</span><span class='p'>)</span>
+<span class='p'>);</span>
+<span class='cp'>?&gt;</span><span class='x' />
+</code></pre>
+</div>
+
+	</div>
+</div>
+<h3 id='retrieval'>Retrieving elements</h3>
+
+<p>Items from lists and dictionaries are fetched by their key. For lists, this would be the index of the item. In the following code a dictionary called <code>user</code> and a list called</p>
+<div class='highlight'><pre><code class='clojure'><span class='p'>(</span><span class='nf'>define</span> <span class='nv'>user</span> <span class='p'>(</span><span class='nf'>dict</span>
+	<span class='p'>(</span><span class='s'>&quot;name&quot;</span> 
+</code></pre>
+</div>
+	</div>
+	
+	<script type="text/javascript">
+	var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+	document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+	</script>
+	<script type="text/javascript">
+	try{
+	var pageTracker = _gat._getTracker("UA-xxxxxx-x");
+	pageTracker._trackPageview();
+	} catch(err) {}</script>
+</body>
+</html>

@@ -9,18 +9,10 @@ body {
 	font-family: 'verdana';
 	font: 14px;
 }
-#topbar {
-	margin-left: 20%;
-	margin-right: 20%;
-	margin-top: 20px;
-	border-bottom: 1px solid black;
-	padding-bottom: 2px;
-	text-align: center;
-}
 #content {
 	margin-top: 5%;
 	margin-bottom: 5%;
-	width: 55%;
+	width: 60%;
 	float: left;
 }
 #sidebar {
@@ -59,20 +51,14 @@ p{
 	clear: both;
 	display: block;
 }
-div.wide-code{
-	float: left;
-	width: 1000px;
-}
 div.highlight{
 	margin: 15px;
 }
-div.code-left {
+div.code-left div.highlight{
 	float: left;
 }
-div.code-right{
+div.code-right div.highlight{
 	float: left;
-	overflow: hidden;
-	height: inherit;
 	padding-left: 25px;
 	border-left: 1px solid #DDD;
 }

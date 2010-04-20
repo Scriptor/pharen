@@ -3,34 +3,37 @@ layout: default
 title: Introduction to Pharen
 ---
 
-## Pharen: The Lisp -> PHP Compiler ##
+## Introduction to Pharen ##
 
-The Pharen language brings together [Lisp](http://en.wikipedia.org/wiki/Lisp_%28programming_language%29)
-and [PHP](http://php.net/). This combines Lisp's advantages of uniform syntax and homoiconicity (macros!)
-and PHP's advantages of...being <em>everywhere</em>. Here's some sample Pharen and the equivalent PHP:
+Pharen is a compiler that takes a [Lisp](http://en.wikipedia.org/wiki/Lisp_%28programming_language%29)-like
+language and turns it into [PHP](http://php.net/) code. This combines Lisp's advantages of uniform syntax and homoiconicity (among others)
+and PHP's advantage of...being *everywhere*. Here's some sample Pharen and the equivalent PHP:
 
 <div class='code-left'>
 {% highlight clojure %}
-(fn greet (name)
+(fn greet-person (name)
     (. "Hello " name "!"))
-(echo (greet "visitor"))
+
+(echo (greet-person "visitor"))
 {% endhighlight %}
 </div>
 <div class='code-right'>
 {% highlight php startinline %}
 <?php
-function greet($name){
+function greet_person($name){
     return "Hello " . $name . "!";
 }
-echo greet("visitor");
+
+echo greet_person("visitor");
 ?>
 {% endhighlight %}
 </div>
 
-This shows some of the main differences (beyond the parentheses). Variables don't need the `$` prefix,
+This shows some of the differences between the two languages. Variables don't need the `$` prefix,
+hyphens in names for functions (and variables) are converted to underscores,
 everything, including string concatenation, looks like a function call,
-and most things are expressions. The last bit means that a function will return the last evaluated expression
-inside it. More will be explained in later sections.
+and most things are expressions. The last one means that a function will automatically return the 
+last evaluated expression inside it. More will be explained in later sections.
 
 Some of the rationale behind Pharen:
 1. Abstract out problems and irregularities in PHP's own parser and the language itself.

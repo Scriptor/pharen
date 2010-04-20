@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+<head>
+	<title>Introduction to Pharen</title>
+	
+	<link rel='stylesheet' href='css/syntax.css'/>
+	<link rel='stylesheet' href='css/screen.css' media='screen, projection'/>
+</head>
+<body>
+	<div id='topbar'>
+		<h2>Pharen: Lisp -> PHP</h2>
+	</div>
+	<div id='sidebar'>
+		<ul>
+			<li><a href='index.html'>Introduction</a></li>
+			<li><a href='download.html'>Downloading and usage</a></li>
+			<li><a href='basics.html'>Pharen Basics</a></li>
+			<li><a href='lists.html'>Lists and Dictionaries</a></li>
+		</ul>
+	</div>
+	
+	<div id='content'>
+		<h2 id='introduction_to_pharen'>Introduction to Pharen</h2>
+
+<p>Pharen is a compiler that takes a <a href='http://en.wikipedia.org/wiki/Lisp_%28programming_language%29'>Lisp</a>-like language and turns it into <a href='http://php.net/'>PHP</a> code. This combines Lisp&#8217;s advantages of uniform syntax and homoiconicity (among others) and PHP&#8217;s advantage of&#8230;being <em>everywhere</em>. Here&#8217;s some sample Pharen and the equivalent PHP:</p>
+<div class='code-left'>
+
+<div class='highlight'><pre><code class='clojure'><span class='p'>(</span><span class='k'>fn </span><span class='nv'>greet-person</span> <span class='p'>(</span><span class='nf'>name</span><span class='p'>)</span>
+    <span class='p'>(</span><span class='o'>.</span> <span class='s'>&quot;Hello &quot;</span> <span class='nv'>name</span> <span class='s'>&quot;!&quot;</span><span class='p'>))</span>
+
+<span class='p'>(</span><span class='nf'>echo</span> <span class='p'>(</span><span class='nf'>greet-person</span> <span class='s'>&quot;visitor&quot;</span><span class='p'>))</span>
+</code></pre>
+</div>
+
+</div><div class='code-right'>
+
+<div class='highlight'><pre><code class='php'><span class='cp'>&lt;?php</span>
+<span class='k'>function</span> <span class='nf'>greet_person</span><span class='p'>(</span><span class='nv'>$name</span><span class='p'>){</span>
+    <span class='k'>return</span> <span class='s2'>&quot;Hello &quot;</span> <span class='o'>.</span> <span class='nv'>$name</span> <span class='o'>.</span> <span class='s2'>&quot;!&quot;</span><span class='p'>;</span>
+<span class='p'>}</span>
+
+<span class='k'>echo</span> <span class='nx'>greet_person</span><span class='p'>(</span><span class='s2'>&quot;visitor&quot;</span><span class='p'>);</span>
+<span class='cp'>?&gt;</span><span class='x' />
+</code></pre>
+</div>
+
+</div>
+<p>This shows some of the differences between the two languages. Variables don&#8217;t need the <code>$</code> prefix, hyphens in names for functions (and variables) are converted to underscores, everything, including string concatenation, looks like a function call, and most things are expressions. The last one means that a function will automatically return the last evaluated expression inside it. More will be explained in later sections.</p>
+
+<p>Some of the rationale behind Pharen:</p>
+
+<ol>
+<li>Abstract out problems and irregularities in PHP&#8217;s own parser and the language itself.</li>
+
+<li>Compile more sophisticated features, such as closures and macros, to native PHP.</li>
+
+<li>Insanity.</li>
+</ol>
+	</div>
+	
+	<script type="text/javascript">
+	var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+	document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+	</script>
+	<script type="text/javascript">
+	try{
+	var pageTracker = _gat._getTracker("UA-xxxxxx-x");
+	pageTracker._trackPageview();
+	} catch(err) {}</script>
+</body>
+</html>
