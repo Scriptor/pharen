@@ -7,7 +7,6 @@ body {
 	width: 100%;
 	background-color: white;
 	font-family: 'verdana';
-	font: 14px;
 }
 #topbar {
 	margin-left: 20%;
@@ -45,23 +44,22 @@ body {
 	background-color: #FAFAFA;
 	border-left: 2px solid black;
 }
+
 h2{
 	font-size: 1.2em;
 	margin-bottom: 10px;
-	float: middle;
 }
 h3{
 	font-size: 1em;
 	margin-bottom: 5px;
 }
+h4{
+    font-size: .8em;
+}
 p{
 	margin-bottom: 10px;
 	clear: both;
 	display: block;
-}
-div.wide-code{
-	float: left;
-	width: 1000px;
 }
 div.highlight{
 	margin: 15px;
@@ -71,8 +69,11 @@ div.code-left {
 }
 div.code-right{
 	float: left;
-	overflow: hidden;
 	height: inherit;
-	padding-left: 25px;
+	padding-left: 15px;
 	border-left: 1px solid #DDD;
+    margin-right: -400px;
+}
+p, ul{
+    font-size: 0.92em;
 }

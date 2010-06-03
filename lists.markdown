@@ -70,9 +70,9 @@ array(
 </div>
 
 ### Retrieving elements ### {#retrieval}
-Items from lists and dictionaries are fetched by their key. For lists, this would be the index
-of the item. In the following code a dictionary called `user` and a list called 
+To get values back from a dictionary or list, prepend the variable's name with a colon and use it as if it was a function:
 {% highlight clojure %}
 (define user (dict
-	("name" 
+	("name" "Arthur Dent")
+	("location" "
 {% endhighlight %}
