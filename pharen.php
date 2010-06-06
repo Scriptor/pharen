@@ -1225,7 +1225,7 @@ class BindingNode extends Node{
 
     public function compile_statement($return=False){
         $this->indent = $this->parent instanceof RootNode ? "" : $this->parent->indent."\t";
-        $scope = $this->scope = $this->parent->get_scope();;
+        $scope = $this->scope = new Scope($this);
         $pairs = $this->children[1]->children;
         $var_names = array();
         $code = "";
