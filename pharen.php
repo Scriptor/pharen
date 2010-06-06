@@ -1220,22 +1220,36 @@ class EachPairNode extends SpecialForm{
     }
 }
 
+class DefNode extends Node{
+
+    public function compile_statement(){
+        $this->indent = $this->parent instanceof RootNode ? "" : $this->parent->indent."\t";
+        $this->scope = $this->parent->get_scope();
+        $varname = $this->children[1]->compile();
+        $value = $this->children[2]->compile();
+
+        $this->scope->bind($varname, $this->children[2]);
+
+        return $this->indent.$varname." = ".$value.";\n";
+    }
+}
+
 class BindingNode extends Node{
-    
+        
 
     public function compile_statement($return=False){
         $this->indent = $this->parent instanceof RootNode ? "" : $this->parent->indent."\t";
         $scope = $this->scope = new Scope($this);
         $pairs = $this->children[1]->children;
-        $var_names = array();
+        $varnames = array();
         $code = "";
         $lexings = "";
         foreach($pairs as $pair_node){
-            $var_name = $pair_node->children[0]->compile();
-            $var_names[] = $var_name;
+            $varname = $pair_node->children[0]->compile();
+            $varnames[] = $varname;
 
-            $scope->bind($var_name, $pair_node->children[1]);
-            $code .= $scope->get_binding($var_name);
+            $scope->bind($varname, $pair_node->children[1]);
+            $code .= $scope->get_binding($varname);
         }
 
         $this->indent = substr($this->indent, 1);
@@ -1252,8 +1266,8 @@ class BindingNode extends Node{
             $body .= $l;
         }
 
-        foreach($var_names as $var_name){
-            $lexings .= $scope->get_lexing($var_name);
+        foreach($varnames as $varname){
+            $lexings .= $scope->get_lexing($varname);
         }
         return $this->scope->get_lexical_bindings($this->indent."\t").$code."\n".$lexings."\n".$body.$last_line;
     }
@@ -1323,6 +1337,7 @@ class Parser{
             "php_else" => array("ElseNode", self::$values),
             "at" => array("AtArrayNode", "LeafNode", "VariableNode", self::$value),
             "$" => array("SuperGlobalNode", "LeafNode", "LeafNode", self::$value),
+            "def" => array("DefNode", "LeafNode", "VariableNode", self::$value),
             "let" => array("BindingNode", self::$list_form, array(self::$value)),
             "dict" => array("DictNode", array(self::$literal_form)),
             "micro" => array("MicroNode", "LeafNode", "LeafNode", "LiteralNode", self::$values),
