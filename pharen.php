@@ -1525,7 +1525,7 @@ if(isset($argv) && isset($argv[1])){
 $php_code = "";
 Flags::$flags['no-import-lang'] = True;
 $lang_code = compile_file(COMPILER_SYSTEM . "/lang.phn");
-Flags::$flags['no-import-lang'] = False;
+unset(Flags::$flags['no-import-lang']);
 if(isset($_SERVER['REQUEST_METHOD'])){
     $php_code = $lang_code;
 }else{
