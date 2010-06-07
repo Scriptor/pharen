@@ -354,7 +354,7 @@ class Node{
         return $code;
     }
 
-    public function __construct(Node $parent=null){
+    public function __construct($parent=null){
         $this->parent = $parent;
         $this->children = array();
     }
