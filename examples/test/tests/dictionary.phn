@@ -1,0 +1,6 @@
+(dict
+  ("/" "IndexController")
+  ("/blog" "BlogController")
+  ("/code" (dict
+    ("/php" "PHPCodeController")
+    ("/pharen" "PharenCodeController"))))

@@ -15,8 +15,11 @@
         ("nested_func_call" "function call nested in another")
         ("infix_call" "call to the `+` infix operator of two integers and a float")
         ("def_definition" "single definition of a variable using the 'def' form")
-        ("let_definition" "Binding and use of two variables using let form")
+        ("let_definition" "binding and use of two variables using let form")
         ("vector_literals" "vector literal of integers and another of strings")
+        ("range" "range of numbers between 1 and 1000")
+        ("stepped_range" "range of even numbers between 2 and 1000")
+        ("dictionary" "dictionary with two keys set to strings and one key set to a nested dictionary")
     )]]
     
     (describe "Pharen compiler"
