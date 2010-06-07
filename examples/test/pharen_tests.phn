@@ -6,17 +6,17 @@
         (file-get-contents target)))
 
 (fn run-test (fname msg)
-    (it msg
+    (it (. "Compiles a " msg)
         (check (. "tests/" fname ".phn") (compiles-to (. "tests/" fname ".php")))))
 
 (let 
     [[tests (dict
-        ("basic_func_call" "Basic function call")
-        ("nested_func_call" "Function call nested in another")
-        ("infix_call" "Call to the `+` infix operator of two integers and a float")
-        ("def_definition" "Single definition of a variable using the 'def' form")
+        ("basic_func_call" "basic function call")
+        ("nested_func_call" "function call nested in another")
+        ("infix_call" "call to the `+` infix operator of two integers and a float")
+        ("def_definition" "single definition of a variable using the 'def' form")
         ("let_definition" "Binding and use of two variables using let form")
-        ("vector_literals" "Vector literal of integers and another of strings")
+        ("vector_literals" "vector literal of integers and another of strings")
     )]]
     
     (describe "Pharen compiler"
