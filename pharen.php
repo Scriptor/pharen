@@ -771,6 +771,7 @@ class MacroNode extends FuncDefNode{
     static $next_literal_id = 0;
 
     public $args;
+    public $evaluated = False;
 
     static function is_macro($name){
         return isset(self::$macros[$name]);
@@ -790,7 +791,12 @@ class MacroNode extends FuncDefNode{
             $scope->bind($param_node->compile(), array_shift($args));
         }
         $code = $macronode->parent_compile();
-        eval($code);
+        if($macronode->evaluated){
+            return;
+        }else{
+            eval($code);
+            $macronode->evaluated = True;
+        }
     }
 
     public function parent_compile(){
@@ -1517,8 +1523,11 @@ if(isset($argv) && isset($argv[1])){
 }
 
 $php_code = "";
+Flags::$flags['no-import-lang'] = True;
+$lang_code = compile_file(COMPILER_SYSTEM . "/lang.phn");
+Flags::$flags['no-import-lang'] = False;
 if(isset($_SERVER['REQUEST_METHOD'])){
-    $php_code = compile_file(COMPILER_SYSTEM . "/lang.phn");
+    $php_code = $lang_code;
 }else{
     $php_code = "";
 }
