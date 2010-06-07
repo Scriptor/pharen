@@ -15,6 +15,7 @@
         ("nested_func_call" "Compiles a function call nested in another")
         ("infix_call" "Compiles a call to the `+` infix operator of two integers and a float")
         ("def_definition" "Compiles a single definition of a variable using the 'def' form")
+        ("let_definition" "Compiles binding and use of two variables using let form")
         ("vector_literals" "Compiles a vector literal of integers and another of strings")
     )]]
     

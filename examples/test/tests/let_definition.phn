@@ -1,0 +1,6 @@
+(let
+  ((full-name "Arthur Dent")
+   (answer 42))
+
+  (print (. "Full name: " full-name))
+  (print (. "Answer " answer)))
