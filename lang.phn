@@ -42,3 +42,6 @@
         (lambda (pair acc) (cons ($f (:pair 0) (:pair 1)) acc))
         []
         pairs))
+
+(defmacro puts (s)
+    '(print (. ,s "\n")))
