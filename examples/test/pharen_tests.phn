@@ -14,6 +14,7 @@
         ("basic_func_call" "basic function call")
         ("nested_func_call" "function call nested in another")
         ("infix_call" "call to the `+` infix operator of two integers and a float")
+        ("comments" "a stand-alone comment, end-of-expression comment, and middle-of-expression comment so they don't show up (for now) in the compiled code")
         ("def_definition" "single definition of a variable using the 'def' form")
         ("let_definition" "binding and use of two variables using let form")
         ("vector_literals" "vector literal of integers and another of strings")

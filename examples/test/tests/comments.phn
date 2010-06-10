@@ -1,0 +1,4 @@
+; Just a comment
+(foo "bar") ; End of expression
+(foo "bar" ; Middle of expression
+     "baz")
