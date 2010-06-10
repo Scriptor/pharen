@@ -85,6 +85,9 @@ class ExplicitVarToken extends Token{
 class ReaderMacroToken extends Token{
 }
 
+class CommentToken extends Token{
+}
+
 class Lexer{
     private $code;
     private $char;
@@ -125,6 +128,15 @@ class Lexer{
                 if($this->escaping){
                     $this->escaping = False;
                 }
+                $this->tok->append($this->char);
+            }
+        }else if($this->char == ";"){
+            $this->state = "comment";
+            $this->tok = new CommentToken;
+        }else if($this->state == "comment"){
+            if($this->char == "\n" or $this->char == "\r"){
+                $this->state = "new-expression";
+            }else{
                 $this->tok->append($this->char);
             }
         }else if($this->state == "append"){
@@ -548,6 +560,21 @@ class RootNode extends Node{
         return $code;
     }
 
+}
+
+class CommentNode extends Node{
+    public function __construct($parent, $value){
+        $this->parent = $parent;
+        $this->value = $value;
+    }
+
+    public function compile(){
+        return '# '.$this->value."\n";
+    }
+
+    public function compile_statement(){
+        return $this->compile();
+    }
 }
 
 class LeafNode extends Node{
@@ -1398,6 +1425,8 @@ class Parser{
                 }
                 $curnode->add_child($node);
                 $curnode = $node;
+            }else if($tok instanceof CommentToken){
+                // $curnode->add_child(new CommentNode($curnode, $tok->value));
             }else if($tok instanceof ReaderMacroToken){
                 if($tok->value == "'")
                     $lookahead->quoted = True;
@@ -1524,7 +1553,7 @@ if(isset($argv) && isset($argv[1])){
 
 $php_code = "";
 Flags::$flags['no-import-lang'] = True;
-$lang_code = compile_file(COMPILER_SYSTEM . "/lang.phn");
+//$lang_code = compile_file(COMPILER_SYSTEM . "/lang.phn");
 unset(Flags::$flags['no-import-lang']);
 if(isset($_SERVER['REQUEST_METHOD'])){
     $php_code = $lang_code;
