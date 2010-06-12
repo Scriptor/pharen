@@ -347,7 +347,7 @@ class Scope{
     }
 }
 
-class Node implements Iterator, ArrayAccess{
+class Node implements Iterator, ArrayAccess, Countable{
     static $delay_tmp = False;
     static $prev_tmp;
     static $tmp;
@@ -411,6 +411,10 @@ class Node implements Iterator, ArrayAccess{
 
     public function offsetUnset($offset){
         unset($this->children[$offset]);
+    }
+
+    public function count(){
+        return count($this->children);
     }
 
     public function get_scope(){
@@ -1080,7 +1084,7 @@ class IfNode extends SpecialForm{
     protected $body_index = 2;
     protected $type = "if";
 
-    public function compile($indent){
+    public function compile($indent=""){
         $this->indent = $indent;
         $cond = $this->children[1]->compile();
         $body = $this->compile_body();
