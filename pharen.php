@@ -548,9 +548,9 @@ class RootNode extends Node{
 
     public function compile(){
         $code = "";
-        if(!isset(Flags::$flags['no-import-lang'])){
+        if(!isset(Flags::$flags['no-import-lang']) or Flags::$flags['no-import-lang'] == False){
             $code .= "require_once('".COMPILER_SYSTEM."/lang.php"."');\n";
-        }else{
+        }else if(Flags::$flags['no-import-lang'] == True){
             $code .= "require_once('".COMPILER_SYSTEM."/lexical.php"."');\n";
         }
         $code .= $this->scope->init_namespace_scope();
@@ -1552,9 +1552,10 @@ if(isset($argv) && isset($argv[1])){
 }
 
 $php_code = "";
+$old_setting = Flags::$flags['no-import-lang'];
 Flags::$flags['no-import-lang'] = True;
 //$lang_code = compile_file(COMPILER_SYSTEM . "/lang.phn");
-unset(Flags::$flags['no-import-lang']);
+Flags::$flags['no-import-lang'] = $old_setting;
 if(isset($_SERVER['REQUEST_METHOD'])){
     $php_code = $lang_code;
 }else{
