@@ -890,6 +890,10 @@ class UnquoteWrapper{
             return $code;
         }
     }
+
+    public function compile_return(){
+        return "return ".$this->compile().";\n";
+    }
 }
 
 class SpliceWrapper extends UnquoteWrapper{
@@ -1552,7 +1556,7 @@ if(isset($argv) && isset($argv[1])){
 }
 
 $php_code = "";
-$old_setting = Flags::$flags['no-import-lang'];
+$old_setting = isset(Flags::$flags['no-import-lang']) ? Flags::$flags['no-import-lang'] : False;
 Flags::$flags['no-import-lang'] = True;
 //$lang_code = compile_file(COMPILER_SYSTEM . "/lang.phn");
 Flags::$flags['no-import-lang'] = $old_setting;
