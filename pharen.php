@@ -88,6 +88,9 @@ class ReaderMacroToken extends Token{
 class CommentToken extends Token{
 }
 
+class UnvarToken extends Token{
+}
+
 class Lexer{
     private $code;
     private $char;
@@ -175,6 +178,9 @@ class Lexer{
                 $this->state = "append";
             }else if($this->char == ',' or $this->char == "'" or $this->char == '@'){
                 $this->tok = new ReaderMacroToken($this->char);
+            }else if($this->char == '-'){
+                $this->tok = new UnvarToken;
+                $this->state = "append";
             }else if(is_numeric($this->char)){
                 $this->tok = new NumberToken($this->char);
                 $this->state = "append";
@@ -1344,6 +1350,7 @@ class Parser{
         self::$value = array(
             "NameToken" => "VariableNode",
             "StringToken" => "StringNode",
+            "UnvarToken" => "LeafNode",
             "NumberToken" => "LeafNode",
             "SplatToken" => "SplatNode",
             "UnquoteToken" => "UnquoteNode"
