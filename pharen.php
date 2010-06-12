@@ -321,7 +321,7 @@ class Scope{
         }
         if(!array_key_exists($var_name, $this->bindings)){
             if($this->owner->parent !== Null){
-                return $this->owner->parent->get_scope()->find($var_name);
+                return $this->owner->parent->get_scope()->find($var_name, $return_value);
             }else{
                 return False;
             }
