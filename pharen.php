@@ -347,7 +347,7 @@ class Scope{
     }
 }
 
-class Node{
+class Node implements Iterator, ArrayAccess{
     static $delay_tmp = False;
     static $prev_tmp;
     static $tmp;
@@ -375,6 +375,42 @@ class Node{
     public function __construct($parent=null){
         $this->parent = $parent;
         $this->children = array();
+    }
+
+    public function rewind(){
+        reset($this->children);
+    }
+
+    public function current(){
+        return current($this->children);
+    }
+
+    public function key(){
+        return key($this->children);
+    }
+
+    public function next(){
+        return next($this->children);
+    }
+
+    public function valid(){
+        return $this->current !== False;
+    }
+
+    public function offsetExists($offset){
+        return isset($this->children[$offset]);
+    }
+
+    public function offsetGet($offset){
+        return isset($this->children[$offset]) ? $this->children[$offset] : Null;
+    }
+
+    public function offsetSet($offset, $value){
+        $this->children[$offset] = $value;
+    }
+
+    public function offsetUnset($offset){
+        unset($this->children[$offset]);
     }
 
     public function get_scope(){
