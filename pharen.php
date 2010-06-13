@@ -1176,6 +1176,10 @@ class DictNode extends Node{
         }
         return "array(".implode(", ", $mappings).")";
     }
+
+    public function compile_statement(){
+        return $this->compile().";\n";
+    }
 }
 
 
