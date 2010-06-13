@@ -1,5 +1,5 @@
 <?php
-error_reporting(E_ALL | E_STRICT | E_NOTICE);
+error_reporting(E_ALL | E_NOTICE);
 define("COMPILER_SYSTEM", dirname(__FILE__));
 define("EXTENSION", ".phn");
 
@@ -62,6 +62,12 @@ class OpenBracketToken extends Token{
 }
 
 class CloseBracketToken extends Token{
+}
+
+class OpenBraceToken extends Token{
+}
+
+class CloseBraceToken extends Token{
 }
 
 class NumberToken extends Token{
@@ -165,6 +171,10 @@ class Lexer{
                 $this->tok = new OpenBracketToken;
             }else if($this->char == "]"){
                 $this->tok = new CloseBracketToken;
+            }else if($this->char == "{"){
+                $this->tok = new OpenBraceToken;
+            }else if($this->char == "}"){
+                $this->char = new CloseBraceToken;
             }else if($this->char == '"'){
                 $this->tok = new StringToken;
                 $this->state = "string";
@@ -1165,7 +1175,9 @@ class SuperGlobalNode extends Node{
 class DictNode extends Node{
 
     public function compile(){
-        $pairs = array_slice($this->children, 1);
+        // Use an offset when using the (dict... notation for dictionaries
+        $offset = count($this->children[0]->children) === 0 ? 1 : 0;
+        $pairs = array_slice($this->children, $offset);
         $mappings = array();
         $code = "";
 
@@ -1452,7 +1464,7 @@ class Parser{
             }
             $node;
             
-            if($tok instanceof OpenParenToken or $tok instanceof OpenBracketToken){
+            if($tok instanceof OpenParenToken or $tok instanceof OpenBracketToken or $tok instanceof OpenBraceToken){
                 $expected_state = $this->get_expected($state);
                 if($this->is_literal($expected_state)){
                     if(!is_array($state[count($state)-1][0])){
@@ -1464,6 +1476,8 @@ class Parser{
                 }else if($lookahead instanceof ListAccessToken){
                     array_push($state, self::$list_access_form);
                     array_splice($this->tokens, $i+1, 1);
+                }else if($tok instanceof OpenBraceToken){
+                    array_push($state, self::$special_forms["dict"]);
                 }else if($this->is_special($lookahead)){
                     array_push($state, self::$special_forms[$lookahead->value]);
                 }else if($this->is_infix($lookahead)){
