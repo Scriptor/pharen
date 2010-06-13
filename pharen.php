@@ -1176,14 +1176,17 @@ class DictNode extends Node{
 
     public function compile(){
         // Use an offset when using the (dict... notation for dictionaries
-        $offset = count($this->children[0]->children) === 0 ? 1 : 0;
+        $offset = ($this->children[0] instanceof LeafNode and $this->children[0]->value === "dict") ? 1 : 0;
         $pairs = array_slice($this->children, $offset);
+        if($pairs[0][0] === Null){
+            $pairs = array_chunk($pairs, 2);
+        }
         $mappings = array();
         $code = "";
 
         foreach($pairs as $pair){
-            $key = $pair->children[0]->compile();
-            $value = $pair->children[1]->compile();
+            $key = $pair[0]->compile();
+            $value = $pair[1]->compile();
             $mappings[] = "$key => $value";
         }
         return "array(".implode(", ", $mappings).")";
@@ -1442,7 +1445,8 @@ class Parser{
             "$" => array("SuperGlobalNode", "LeafNode", "LeafNode", self::$value),
             "def" => array("DefNode", "LeafNode", "VariableNode", self::$value),
             "let" => array("BindingNode", self::$list_form, array(self::$value)),
-            "dict" => array("DictNode", array(self::$literal_form)),
+            "dict" => array("DictNode", "LeafNode", array(self::$value)),
+            "dict-literal" => array("DictNode", array(self::$value)),
             "micro" => array("MicroNode", "LeafNode", "LeafNode", "LiteralNode", self::$values),
             "defmacro" => array("MacroNode", "LeafNode", "LeafNode", "LiteralNode", self::$values),
             "quote" => array("LiteralNode", "LeafNode", self::$values),
@@ -1479,7 +1483,7 @@ class Parser{
                     array_push($state, self::$list_access_form);
                     array_splice($this->tokens, $i+1, 1);
                 }else if($tok instanceof OpenBraceToken){
-                    array_push($state, self::$special_forms["dict"]);
+                    array_push($state, self::$special_forms["dict-literal"]);
                 }else if($this->is_special($lookahead)){
                     array_push($state, self::$special_forms[$lookahead->value]);
                 }else if($this->is_infix($lookahead)){
