@@ -1,21 +1,6 @@
-(define "PHAKE-SYSTEM" (dirname __FILE__))
-(define "PHAREN-SYSTEM" (dirname (realpath "./..")))
-
-(require (. PHAREN-SYSTEM "/pharen.php"))
-(fn proj (name attrs)
-  "Do stuff with project info here")
-
-(defmacro task (name desc &body)
-  '(fn ~name () ~@body))
-
 (proj "Phake"
       {"description" "A built and automation tool written in Pharen."
        "version" "0.0.1"})
 
 (task -build "Compile Pharen files to PHP."
       (compile-file (. PHAKE-SYSTEM "/phake.phn")))
-
-(let
-  [task (:argv 1)]
-
-  ($task))

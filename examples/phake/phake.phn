@@ -1,0 +1,20 @@
+(define "PHAKE-SYSTEM" (dirname __FILE__))
+(define "PHAREN-SYSTEM" (dirname (realpath "./..")))
+(define "PROJECT-SYSTEM" (getcwd))
+
+(require (. PHAREN-SYSTEM "/pharen.php"))
+
+(fn proj (name attrs)
+  "Do stuff with project info here")
+
+(defmacro task (name desc &body)
+  '(fn ~name () 
+     (print (. "Running " ~$name ": " ~desc "\n"))
+      ~@body))
+
+(compile-file (. PHAKE-SYSTEM "/phake.phn"))
+(compile-file (. PROJECT-SYSTEM "/phakephile"))
+(require (. PROJECT-SYSTEM "/phakephile.php"))
+
+(def task (:argv 1))
+($task)
