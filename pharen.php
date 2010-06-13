@@ -174,7 +174,7 @@ class Lexer{
             }else if($this->char == "{"){
                 $this->tok = new OpenBraceToken;
             }else if($this->char == "}"){
-                $this->char = new CloseBraceToken;
+                $this->tok = new CloseBraceToken;
             }else if($this->char == '"'){
                 $this->tok = new StringToken;
                 $this->state = "string";
@@ -198,7 +198,7 @@ class Lexer{
                 $this->tok = new NameToken($this->char);
                 $this->state = "append";
             }
-        }            
+        }
     }
 }
 
@@ -1463,7 +1463,6 @@ class Parser{
                 $lookahead = $this->tokens[$i+1];
             }
             $node;
-            
             if($tok instanceof OpenParenToken or $tok instanceof OpenBracketToken or $tok instanceof OpenBraceToken){
                 $expected_state = $this->get_expected($state);
                 if($this->is_literal($expected_state)){
@@ -1504,7 +1503,7 @@ class Parser{
                 else if($tok->value == '@' && $this->tokens[$i-1]->value == ','){
                     $lookahead->unquote_spliced = True;
                 }
-            }else if($tok instanceof CloseParenToken or $tok instanceof CloseBracketToken){
+            }else if($tok instanceof CloseParenToken or $tok instanceof CloseBracketToken or $tok instanceof CloseBraceToken){
                 $curnode = $curnode->parent;
                 array_pop($state);
                 if(count($state) === 0){
