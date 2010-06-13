@@ -94,9 +94,6 @@ class ReaderMacroToken extends Token{
 class CommentToken extends Token{
 }
 
-class UnvarToken extends Token{
-}
-
 class Lexer{
     private $code;
     private $char;
@@ -188,9 +185,6 @@ class Lexer{
                 $this->state = "append";
             }else if($this->char == '~' or $this->char == "'" or $this->char == '@'){
                 $this->tok = new ReaderMacroToken($this->char);
-            }else if($this->char == '-'){
-                $this->tok = new UnvarToken;
-                $this->state = "append";
             }else if(is_numeric($this->char)){
                 $this->tok = new NumberToken($this->char);
                 $this->state = "append";
@@ -937,15 +931,19 @@ class UnquoteWrapper{
     }
 
     public function compile(){
+        $unstring = False;
+        if($this->node->value[0] == '-'){
+            $unstring = True;
+            $this->node->value = substr($this->node->value, 1);
+        }
         $code = $this->node->compile();
         if($this->node instanceof LeafNode){
-            $revar_prefix = "";
-            if($code[1] == '$'){
-                $revar_prefix = '$';
-                $code = substr($code, 1);
-            }
             $val = $this->get_scope()->find($code, True)->compile();
-            return $revar_prefix.$val;
+            if($unstring){
+                $val = trim($val, '"');
+                $this->node->value = '-'.$this->node->value;
+            }
+            return $val;
         }else{
             return $code;
         }
@@ -1435,7 +1433,6 @@ class Parser{
         self::$value = array(
             "NameToken" => "VariableNode",
             "StringToken" => "StringNode",
-            "UnvarToken" => "LeafNode",
             "NumberToken" => "LeafNode",
             "SplatToken" => "SplatNode",
             "UnquoteToken" => "UnquoteNode"
