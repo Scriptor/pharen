@@ -8,8 +8,8 @@
   "Do stuff with project info here")
 
 (defmacro task (name desc &body)
-  '(fn ~name () 
-     (print (. "Running " ~$name ": " ~desc "\n"))
+  '(fn ~-name () 
+     (print (. "Running " ~name ": " ~desc "\n"))
       ~@body))
 
 (compile-file (. PHAKE-SYSTEM "/phake.phn"))
