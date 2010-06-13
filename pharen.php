@@ -939,7 +939,13 @@ class UnquoteWrapper{
     public function compile(){
         $code = $this->node->compile();
         if($this->node instanceof LeafNode){
-            return $this->get_scope()->find($code, True)->compile();
+            $revar_prefix = "";
+            if($code[1] == '$'){
+                $revar_prefix = '$';
+                $code = substr($code, 1);
+            }
+            $val = $this->get_scope()->find($code, True)->compile();
+            return $revar_prefix.$val;
         }else{
             return $code;
         }
