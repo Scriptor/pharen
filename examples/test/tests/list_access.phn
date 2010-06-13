@@ -1,7 +1,7 @@
 (def colors ["blue" "orange" "red" "green"])
 (def planets (dict
-               ("smallest" "Mercury")
-               ("gaseous" ["Jupiter" "Saturn" "Uranus" "Neptune"])))
+               "smallest" "Mercury"
+               "gaseous" ["Jupiter" "Saturn" "Uranus" "Neptune"]))
 
 (print (:colors 2))
 (print (:(:planets "gaseous") 0))
