@@ -1630,33 +1630,35 @@ function compile($code, $root=Null){
     return "<?php\n".$phpcode."?>";
 }
 
-$input_files = array();
-if(isset($argv) && isset($argv[1])){
-    array_shift($argv);
-    foreach($argv as $arg){
-        if(strpos($arg, "--") === 0){
-            $flag = substr($arg, 2);
-            Flags::$flags[$flag] = True;
-        }else{
-            $input_files[] = $arg;
+if(__FILE__ === realpath($_SERVER['SCRIPT_NAME'])){
+    $input_files = array();
+    if(isset($argv) && isset($argv[1])){
+        array_shift($argv);
+        foreach($argv as $arg){
+            if(strpos($arg, "--") === 0){
+                $flag = substr($arg, 2);
+                Flags::$flags[$flag] = True;
+            }else{
+                $input_files[] = $arg;
+            }
         }
     }
-}
 
-$php_code = "";
-$old_setting = isset(Flags::$flags['no-import-lang']) ? Flags::$flags['no-import-lang'] : False;
-Flags::$flags['no-import-lang'] = True;
-//$lang_code = compile_file(COMPILER_SYSTEM . "/lang.phn");
-Flags::$flags['no-import-lang'] = $old_setting;
-if(isset($_SERVER['REQUEST_METHOD'])){
-    $php_code = $lang_code;
-}else{
     $php_code = "";
-}
-//require(SYSTEM . "/lang.php");
-foreach($input_files as $file){
-    $php_code .= compile_file($file);
-}
-if(isset($_SERVER['REQUEST_METHOD'])){
-    echo "<pre>$php_code</pre>";
+    $old_setting = isset(Flags::$flags['no-import-lang']) ? Flags::$flags['no-import-lang'] : False;
+    Flags::$flags['no-import-lang'] = True;
+    //$lang_code = compile_file(COMPILER_SYSTEM . "/lang.phn");
+    Flags::$flags['no-import-lang'] = $old_setting;
+    if(isset($_SERVER['REQUEST_METHOD'])){
+        $php_code = $lang_code;
+    }else{
+        $php_code = "";
+    }
+    //require(SYSTEM . "/lang.php");
+    foreach($input_files as $file){
+        $php_code .= compile_file($file);
+    }
+    if(isset($_SERVER['REQUEST_METHOD'])){
+        echo "<pre>$php_code</pre>";
+    }
 }
