@@ -930,18 +930,26 @@ class UnquoteWrapper{
         return call_user_func_array(array($this->node, $name), $args);
     }
 
+    public function __get($name){
+        return $this->node->$name;
+    }
+
+    public function __set($name, $val){
+        $this->node->$name = $val;
+    }
+
     public function compile(){
         $unstring = False;
-        if($this->node->value[0] == '-'){
+        if(isset($this->node->value) and count($this->value) > 0 and $this->value[0] == '-'){
             $unstring = True;
-            $this->node->value = substr($this->node->value, 1);
+            $this->value = substr($this->value, 1);
         }
         $code = $this->node->compile();
         if($this->node instanceof LeafNode){
             $val = $this->get_scope()->find($code, True)->compile();
             if($unstring){
                 $val = trim($val, '"');
-                $this->node->value = '-'.$this->node->value;
+                $this->value = '-'.$this->value;
             }
             return $val;
         }else{
@@ -1517,6 +1525,8 @@ class Parser{
                 if($tok->quoted){
                     $node = new QuoteWrapper($node, MacroNode::$next_literal_id);
                     MacroNode::$literals[MacroNode::$next_literal_id++] = $node;
+                }else if($tok->unquoted){
+                    $node = new UnquoteWrapper($node);
                 }
                 $curnode->add_child($node);
                 $curnode = $node;
