@@ -4,44 +4,50 @@
 (set_include_path (. (get_include_path) PATH_SEPARATOR LIB_PATH))
 
 (fn first (xs)
-    (:xs 0))
+  (:xs 0))
 
 (fn first-pair (xs)
-    (array-slice xs 0 1))
+  (array-slice xs 0 1))
 
 (fn rest (xs)
-    (array-slice xs 1))
+  (array-slice xs 1))
 
 (fn early (xs)
-    (array-slice xs 0 (- (count xs) 2)))
+  (array-slice xs 0 (- (count xs) 2)))
+
+(fn take (x xs)
+  (array-slice xs 0 x))
+
+(fn drop (x xs)
+  (array-slice xs x))
 
 (fn cons (x xs)
-    (array-merge (array x) xs))
+  (array-merge (array x) xs))
 
 (fn apply (f val)
-    ($f val))
+  ($f val))
 
 (fn reduce (f acc xs)
-    (if (empty xs)
-        acc
-        (reduce f ($f (first xs) acc) (rest xs))))
+  (if (empty xs)
+    acc
+    (reduce f ($f (first xs) acc) (rest xs))))
 
 (fn reduce-pairs (f acc xs)
-    (if (empty xs)
-        acc
-        (reduce-pairs f ($f (each xs) acc) (rest xs))))
+  (if (empty xs)
+    acc
+    (reduce-pairs f ($f (each xs) acc) (rest xs))))
 
 (fn map (f xs)
-    (reduce 
-        (lambda (x acc) (cons ($f x) acc)) 
-        []
-        xs))
+  (reduce 
+    (lambda (x acc) (cons ($f x) acc)) 
+    []
+    xs))
 
 (fn map-pairs (f pairs)
-    (reduce-pairs
-        (lambda (pair acc) (cons ($f (:pair 0) (:pair 1)) acc))
-        []
-        pairs))
+  (reduce-pairs
+    (lambda (pair acc) (cons ($f (:pair 0) (:pair 1)) acc))
+    []
+    pairs))
 
 (defmacro puts (s)
-    '(print (. ,s "\n")))
+  '(print (. ,s "\n")))
