@@ -1,0 +1,4 @@
+{("/" "IndexController")
+  ("/blog" "BlogController")
+  ("/code" {("/php" "PHPCodeController")
+    ("/pharen" "PharenCodeController")})}

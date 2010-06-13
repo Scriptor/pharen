@@ -10,7 +10,7 @@
         (check (. "tests/" fname ".phn") (compiles-to (. "tests/" fname ".php")))))
 
 (let 
-    [[tests (dict
+    [[tests {
         ("basic_func_call" "basic function call")
         ("nested_func_call" "function call nested in another")
         ("infix_call" "call to the `+` infix operator of two integers and a float")
@@ -21,8 +21,9 @@
         ("range" "range of numbers between 1 and 1000")
         ("stepped_range" "range of even numbers between 2 and 1000")
         ("dictionary" "dictionary with two keys set to strings and one key set to a nested dictionary")
+        ("dictionary_literal" "dictionary with the same data as dictionary.phn but using the literal {braced} syntax")
         ("list_access" "access of a list and nested access of a list inside a dictionary")
-    )]]
+    }]]
     
     (describe "Pharen compiler"
         (lambda ()
