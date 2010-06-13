@@ -149,7 +149,7 @@ class Lexer{
                 $this->tok->append($this->char);
             }
         }else if($this->state == "append"){
-            if(trim($this->char) === ""){
+            if(trim($this->char) === "" or $this->char === ","){
                 $this->state = "new-expression";
             }else if($this->char == ")"){
                 $this->tok = new CloseParenToken;
@@ -186,7 +186,7 @@ class Lexer{
             }else if($this->char == '&'){
                 $this->tok = new SplatToken();
                 $this->state = "append";
-            }else if($this->char == ',' or $this->char == "'" or $this->char == '@'){
+            }else if($this->char == '~' or $this->char == "'" or $this->char == '@'){
                 $this->tok = new ReaderMacroToken($this->char);
             }else if($this->char == '-'){
                 $this->tok = new UnvarToken;
@@ -194,7 +194,7 @@ class Lexer{
             }else if(is_numeric($this->char)){
                 $this->tok = new NumberToken($this->char);
                 $this->state = "append";
-            }else if(trim($this->char) !== ""){
+            }else if(trim($this->char) !== "" and $this->char !== ","){
                 $this->tok = new NameToken($this->char);
                 $this->state = "append";
             }
@@ -1505,9 +1505,9 @@ class Parser{
             }else if($tok instanceof ReaderMacroToken){
                 if($tok->value == "'")
                     $lookahead->quoted = True;
-                else if($tok->value == ",")
+                else if($tok->value == "~")
                     $lookahead->unquoted = True;
-                else if($tok->value == '@' && $this->tokens[$i-1]->value == ','){
+                else if($tok->value == '@' && $this->tokens[$i-1]->value == '~'){
                     $lookahead->unquote_spliced = True;
                 }
             }else if($tok instanceof CloseParenToken or $tok instanceof CloseBracketToken or $tok instanceof CloseBraceToken){
