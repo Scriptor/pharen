@@ -1340,14 +1340,17 @@ class BindingNode extends Node{
         $this->indent = $this->parent instanceof RootNode ? "" : $this->parent->indent."\t";
         $scope = $this->scope = new Scope($this);
         $pairs = $this->children[1]->children;
+        if(!($pairs[0] instanceof ListNode)){
+            $pairs = array_chunk($pairs, 2);
+        }
         $varnames = array();
         $code = "";
         $lexings = "";
         foreach($pairs as $pair_node){
-            $varname = $pair_node->children[0]->compile();
+            $varname = $pair_node[0]->compile();
             $varnames[] = $varname;
 
-            $scope->bind($varname, $pair_node->children[1]);
+            $scope->bind($varname, $pair_node[1]);
             $code .= $scope->get_binding($varname);
         }
 
