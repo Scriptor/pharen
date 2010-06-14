@@ -1,4 +1,4 @@
-(require "test.php")
+(require "../../lib/test.php")
 (require "../../pharen.php")
 
 (fn compiles-to (target source)
