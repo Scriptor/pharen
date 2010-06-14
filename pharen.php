@@ -860,7 +860,7 @@ class MacroNode extends FuncDefNode{
         $scope = $macronode->get_scope();
         foreach($macronode->children[2]->children as $param_node){
             if($param_node instanceof SplatNode){
-                $scope->bind($param_node->compile(), $args);
+                $scope->bind($param_node->compile(), new SpliceWrapper($args, True));
                 break;
             }
             $scope->bind($param_node->compile(), array_shift($args));
@@ -963,10 +963,25 @@ class UnquoteWrapper{
 }
 
 class SpliceWrapper extends UnquoteWrapper{
+    public $as_collection = False;
+    public $exprs;
+
+    public function __construct($wrapped, $as_collection=False){
+        if($as_collection){
+            $this->as_collection = True;
+            $this->exprs = $wrapped;
+        }else{
+            $this->node = $wrapped;
+        }
+    }
     
     private function get_exprs(){
-        $varname = str_replace('@', '', $this->node->compile());
-        return $this->get_scope()->find($varname, True);
+        if($this->as_collection){
+            return $this->exprs;
+        }else{
+            $varname = str_replace('@', '', $this->node->compile());
+            return $this->get_scope()->find($varname, True)->get_exprs();
+        }
     }
 
     public function compile(){
