@@ -2,5 +2,10 @@
       {"description" "A built and automation tool written in Pharen."
        "version" "0.0.1"})
 
-(task "build" "Compile Pharen files to PHP."
+(task "build" "Compile Phake project files to PHP."
       (compile-file (. PHAKE-SYSTEM "/phake.phn")))
+
+(task "test" "Test Phake library."
+      (def tests-file (. PHAKE-SYSTEM "/test/phake_tests"))
+      (compile-file (. tests-file ".phn"))
+      (require (. tests-file ".php")))

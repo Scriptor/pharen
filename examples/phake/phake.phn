@@ -16,5 +16,6 @@
 (compile-file (. PROJECT-SYSTEM "/phakephile"))
 (require (. PROJECT-SYSTEM "/phakephile.php"))
 
-(def task (:argv 1))
-($task)
+(if (> (count argv) 1)
+  ((:argv 1))
+  (print "Doing nothing"))
