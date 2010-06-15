@@ -28,4 +28,4 @@
     
     (describe "Pharen compiler"
         (lambda ()
-            (map-pairs "run-test" tests))))
+            (map-pairs "run_test" tests))))
