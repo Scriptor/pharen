@@ -1,0 +1,12 @@
+(def num 3)
+(cond
+    ((== num 1) "Num is 1")
+    ((== num 2) (print "Num is 2"))
+    ((== num 3) (. "Num is " "3"))
+    (TRUE "Num is something else."))
+
+(def s "Hello, world!")
+(def result
+    (cond
+        ((== s "!dlrow, olleH") "That's backwards!")
+        ((== s "Hello, world!") (. "Creative" " much?"))))

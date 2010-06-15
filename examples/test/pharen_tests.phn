@@ -22,7 +22,8 @@
         "stepped_range" "range of even numbers between 2 and 1000",
         "dictionary" "dictionary with two keys set to strings and one key set to a nested dictionary",
         "dictionary_literal" "dictionary with the same data as dictionary.phn but using the literal {braced} syntax",
-        "list_access" "access of a list and nested access of a list inside a dictionary"
+        "list_access" "access of a list and nested access of a list inside a dictionary",
+        "cond" "stand-alone cond expression with 3 branches and another one used as the value in a def assignment."
     }]]
     
     (describe "Pharen compiler"
