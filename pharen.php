@@ -686,7 +686,7 @@ class SplatNode extends VariableNode{
 class StringNode extends LeafNode{
 
     public function compile(){
-        return '"'.parent::compile().'"';
+        return '"'.$this->value.'"';
     }
 
     public function compile_statement(){
