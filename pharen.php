@@ -783,9 +783,13 @@ class FuncDefNode extends SpecialForm{
             $new_param_values = array_slice($last_node->children, 1);
             $params_len = count($new_param_values);
             for($x=0; $x<$params_len; $x++){
+                $val_node = $new_param_values[$x];
+                $body .= $this->indent."\t"."\$__tailrecursetmp$x = " . $val_node->compile().";\n";
+            }
+            for($x=0; $x<$params_len; $x++){
                 $var_node = $this->params[$x];
                 $val_node = $new_param_values[$x];
-                $body .= $this->indent."\t".$var_node->compile() . " = " . $val_node->compile().";\n";
+                $body .= $this->indent."\t".$var_node->compile() . " = \$__tailrecursetmp$x;\n";
             }
             $body .= $this->indent."}\n";
             $this->indent = substr($this->indent, 1);
