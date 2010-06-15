@@ -582,7 +582,7 @@ class InfixNode extends Node{
         $code = $this->compile();
         // Remove parentheses added by regular compile() since they're not
         // needed for statements. Makes pretty.
-        $code = "\n".$indent.substr($code, 1, strlen($code)-2).";\n";
+        $code = $indent.substr($code, 1, strlen($code)-2).";\n";
         $code = Node::add_tmp($code);
         return $code;
     }
