@@ -1099,23 +1099,31 @@ class CondNode extends SpecialForm{
 }
 
 class LispyIfNode extends CondNode{
+    static $tmp_num = 0;
 
-    public function compile(){
-        return $this->compile_statement(True);
+    static function get_tmp_var(){
+        return '$__iftmpvar'.self::$tmp_num++;
     }
 
-    public function compile_statement($prefix=False, $return=False){
+    public function compile(){
+        $tmp_var = self::get_tmp_var();
+        Node::$tmp .= $tmp_var . " = Null;\n";
+        Node::$tmp .= $this->compile_statement($tmp_var." = ");
+        return $tmp_var;
+    }
+
+    public function compile_statement($prefix="", $return=False){
         $this->indent .= $this->parent instanceof RootNode ? "" : "\t";
         $compile_func = $return ? "compile_return" : "compile_statement";
 
         $cond = $this->children[1]->compile();
         $true_line = $this->children[2]->$compile_func($this->indent."\t");
         $code =  $this->indent."if($cond){\n".
-                $true_line.
+                $prefix.$true_line.
                 $this->indent."}";
         if(isset($this->children[3])){
             $code .= "else{\n".
-                $this->children[3]->$compile_func($this->indent."\t").
+                $prefix.$this->children[3]->$compile_func($this->indent."\t").
             $this->indent."}\n";
         }
         return $code;
