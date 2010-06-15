@@ -1376,7 +1376,7 @@ class DefNode extends Node{
 
         $this->scope->bind($varname, $this->children[2]);
 
-        return $this->indent.$varname." = ".$value.";\n";
+        return Node::add_tmp($this->indent.$varname." = ".$value.";\n");
     }
 }
 
