@@ -1040,11 +1040,7 @@ class CondNode extends SpecialForm{
     static $tmp_num = 0;
 
     static function get_tmp_name(){
-        return "__condtmpvar".self::$tmp_num++;
-    }
-
-    static function get_prev_tmp_name(){
-        return "__condtmpvar".(self::$tmp_num-1);
+        return "\$__condtmpvar".self::$tmp_num++;
     }
 
     public function get_last_func_call(){
@@ -1063,27 +1059,23 @@ class CondNode extends SpecialForm{
     }
 
     public function compile(){
-        Node::$prev_tmp.= "\n".$this->compile_statement(True);
-        return '$'.self::get_prev_tmp_name();
+        $tmp_var = self::get_tmp_name();
+        Node::$prev_tmp.= "\n".$this->compile_statement($tmp_var);
+        return $tmp_var;
     }
 
-    public function compile_statement($use_tmp=False, $return=False){
+    public function compile_statement($tmp_var="", $return=False){
         $this->indent = $this->parent instanceof RootNode ? "" : $this->parent->indent."\t";
         $pairs = array_slice($this->children, 1);
         $if_pair = array_shift($pairs);
         $elseif_pairs = $pairs;
 
-        $prefix = Null;
         $code = "\n";   // Start with newline because current line already has tabs in it.
+        $code .= $tmp_var . " = Null;\n";
 
-        if($use_tmp){
-            $prefix = '$'.self::get_tmp_name(). " = ";
-            $code .= "$prefix NULL;\n";
-        }
-
-        $code .= $this->compile_if($if_pair, $prefix, $return);
+        $code .= $this->compile_if($if_pair, $tmp_var." = ", $return);
         foreach($elseif_pairs as $elseif_pair){
-            $code .= $this->compile_elseif($elseif_pair, $prefix, $return);
+            $code .= $this->compile_elseif($elseif_pair, $tmp_var." = ", $return);
         }
         return $code;
     }
@@ -1092,17 +1084,17 @@ class CondNode extends SpecialForm{
         return $this->compile_statement(False, True);
     }
 
-    public function compile_if($pair, $tmp_var, $return=False, $stmt_type="if"){
+    public function compile_if($pair, $prefix, $return=False, $stmt_type="if"){
         $condition = $pair->children[0]->compile();
-        $body = $this->compile_body(array($pair->children[1]), $tmp_var, $return);
+        $body = $this->compile_body(array($pair->children[1]), $prefix, $return);
 
         return $this->indent."$stmt_type(".$condition."){\n"
             .$body
         .$this->indent."}\n";
     }
 
-    public function compile_elseif($pair, $tmp_var, $return=False){
-        return $this->compile_if($pair, $tmp_var, $return, "else if");
+    public function compile_elseif($pair, $prefix, $return=False){
+        return $this->compile_if($pair, $prefix, $return, "else if");
     }
 }
 
