@@ -1,0 +1,24 @@
+(fn empty-func ())
+
+(fn one-expr ()
+    "No arguments, one statement.")
+
+(fn one-arg (a)
+    (. "Argument is " arg1))
+
+(fn add-two-args (a b)
+    (+ a b))
+
+(fn two-exprs (a b)
+    (print a)
+    (print b))
+
+(fn if-inside (a)
+    (if a
+        "This could be returned."
+        "This could be returned as well."))
+
+(fn iterative-factorial (n acc)
+    (if (== n 0)
+        acc
+        (iterative-factorial (- n 1) (* acc n))))

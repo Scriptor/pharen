@@ -24,7 +24,8 @@
         "dictionary_literal" "dictionary with the same data as dictionary.phn but using the literal {braced} syntax",
         "list_access" "access of a list and nested access of a list inside a dictionary",
         "cond" "stand-alone cond expression with 3 branches and another one used as the value in a def assignment.",
-        "if" "stand-alone if expression and another used as the value in a def assignment."
+        "if" "stand-alone if expression and another used as the value in a def assignment.",
+        "function_definition" "variety of functions, including one with an if expression as the return value and the other being tail recursion optimized."
     }]]
     
     (describe "Pharen compiler"
