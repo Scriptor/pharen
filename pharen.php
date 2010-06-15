@@ -804,7 +804,7 @@ class FuncDefNode extends SpecialForm{
     }
 
     public function is_tail_recursive($last_node){
-        return $this->children[1]->compile() == $last_node->get_last_func_call()->compile();
+        return count($this->children) > 3 && $this->children[1]->compile() == $last_node->get_last_func_call()->compile();
     }
 
     public function compile_last($node){
