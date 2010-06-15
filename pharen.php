@@ -552,6 +552,10 @@ class LiteralNode extends Node{
         return "(".implode(", ", $els).")";
     }
 
+    public function compile_return(){
+        return "";
+    }
+
     public function compile_as_code(){
         $code = "";
         foreach($this->children as $c){
