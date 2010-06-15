@@ -23,7 +23,8 @@
         "dictionary" "dictionary with two keys set to strings and one key set to a nested dictionary",
         "dictionary_literal" "dictionary with the same data as dictionary.phn but using the literal {braced} syntax",
         "list_access" "access of a list and nested access of a list inside a dictionary",
-        "cond" "stand-alone cond expression with 3 branches and another one used as the value in a def assignment."
+        "cond" "stand-alone cond expression with 3 branches and another one used as the value in a def assignment.",
+        "if" "stand-alone if expression and another used as the value in a def assignment."
     }]]
     
     (describe "Pharen compiler"

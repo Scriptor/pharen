@@ -1,0 +1,9 @@
+(def bool False)
+(if bool
+    "bool is apprently True."
+    "That's false.")
+
+(def result
+    (if True
+        (def value "True after all")
+        (def value "Shouldn't be here")))
