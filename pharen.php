@@ -582,11 +582,10 @@ class InfixNode extends Node{
     }
 
     public function compile_statement(){
-        $indent = $this->parent instanceof RootNode ? "" : $this->parent->indent."\t";
         $code = $this->compile();
         // Remove parentheses added by regular compile() since they're not
         // needed for statements. Makes pretty.
-        $code = $indent.substr($code, 1, strlen($code)-2).";\n";
+        $code = substr($code, 1, strlen($code)-2).";\n";
         $code = Node::add_tmp($code);
         return $code;
     }
@@ -1060,22 +1059,21 @@ class CondNode extends SpecialForm{
 
     public function compile(){
         $tmp_var = self::get_tmp_name();
-        Node::$prev_tmp.= "\n".$this->compile_statement($tmp_var);
+        Node::$prev_tmp.= "\n".$this->compile_statement($tmp_var." = ");
         return $tmp_var;
     }
 
-    public function compile_statement($tmp_var="", $return=False){
+    public function compile_statement($prefix="", $return=False){
         $this->indent = $this->parent instanceof RootNode ? "" : $this->parent->indent."\t";
         $pairs = array_slice($this->children, 1);
         $if_pair = array_shift($pairs);
         $elseif_pairs = $pairs;
 
-        $code = "\n";   // Start with newline because current line already has tabs in it.
-        $code .= $tmp_var . " = Null;\n";
+        $code = $prefix === "" ? "" : "\n$prefix Null;\n";   // Start with newline because current line already has tabs in it.
 
-        $code .= $this->compile_if($if_pair, $tmp_var." = ", $return);
+        $code .= $this->compile_if($if_pair, $prefix, $return);
         foreach($elseif_pairs as $elseif_pair){
-            $code .= $this->compile_elseif($elseif_pair, $tmp_var." = ", $return);
+            $code .= $this->compile_elseif($elseif_pair, $prefix, $return);
         }
         return $code;
     }
@@ -1101,15 +1099,8 @@ class CondNode extends SpecialForm{
 class LispyIfNode extends CondNode{
     static $tmp_num = 0;
 
-    static function get_tmp_var(){
+    static function get_tmp_name(){
         return '$__iftmpvar'.self::$tmp_num++;
-    }
-
-    public function compile(){
-        $tmp_var = self::get_tmp_var();
-        Node::$tmp .= $tmp_var . " = Null;\n";
-        Node::$tmp .= $this->compile_statement($tmp_var." = ");
-        return $tmp_var;
     }
 
     public function compile_statement($prefix="", $return=False){
@@ -1118,9 +1109,11 @@ class LispyIfNode extends CondNode{
 
         $cond = $this->children[1]->compile();
         $true_line = $this->children[2]->$compile_func($this->indent."\t");
-        $code =  $this->indent."if($cond){\n".
-                $prefix.$true_line.
-                $this->indent."}\n";
+
+        $code = $prefix === "" ? $prefix : $prefix."Null;\n";
+        $code .=  $this->indent."if($cond){\n".
+                  $prefix.$true_line.
+                  $this->indent."}\n";
         if(isset($this->children[3])){
             $code .= "else{\n".
                 $prefix.$this->children[3]->$compile_func($this->indent."\t").
@@ -1380,11 +1373,12 @@ class DefNode extends Node{
         $this->indent = $this->parent instanceof RootNode ? "" : $this->parent->indent."\t";
         $this->scope = $this->parent->get_scope();
         $varname = $this->children[1]->compile();
-        $value = $this->children[2]->compile();
 
         $this->scope->bind($varname, $this->children[2]);
+        $code = $this->scope->get_binding($varname);
+        $code .= $this->scope->get_lexing($varname);
 
-        return Node::add_tmp($this->indent.$varname." = ".$value.";\n");
+        return Node::add_tmp($code);
     }
 }
 
