@@ -1,4 +1,4 @@
-(def bool False)
+(def bool FALSE)
 (if bool
     "bool is apprently True."
     "That's false.")
