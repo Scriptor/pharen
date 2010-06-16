@@ -705,6 +705,7 @@ class SpecialForm extends Node{
         // If there is a prefix then it should be indented as if it were an expression.
         $body_index = $lines === false ? $this->body_index : 0;
         $lines = $lines === false ? $this->children : $lines;
+        $bt = debug_backtrace();
         $last = array_pop($lines);
         if($return){
             $last_line = $last->compile_return();
@@ -789,7 +790,7 @@ class FuncDefNode extends SpecialForm{
             $body .= $this->indent."}\n";
             $this->indent = substr($this->indent, 1);
         }else{
-            $body .= parent::compile_body($body_nodes);
+            $body .= count($body_nodes) > 0 ? parent::compile_body($body_nodes) : "";
             $last = $last_node->compile_return();
             $body .= $last;
         }
