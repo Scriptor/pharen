@@ -425,9 +425,13 @@ class Node implements Iterator, ArrayAccess, Countable{
         return count($this->children);
     }
 
-    public function format_statement($code){
+    public function format_line($code){
         $this->indent = $this->parent instanceof RootNode ? "" : $this->parent->indent."\t";
-        return Node::add_tmp($this->indent.$code."\n");
+        return $this->indent.$code."\n";
+    }
+
+    public function format_statement($code){
+        return Node::add_tmp($this->format_line($code));
     }
 
     public function get_scope(){
@@ -1071,9 +1075,9 @@ class CondNode extends SpecialForm{
         $condition = $pair->children[0]->compile();
         $body = $this->compile_body(array($pair->children[1]), $prefix, $return);
 
-        return $this->indent."$stmt_type(".$condition."){\n"
+        return $this->format_line("$stmt_type(".$condition."){")
             .$body
-        .$this->indent."}\n";
+        .$this->format_line("}");
     }
 
     public function compile_elseif($pair, $prefix, $return=False){
