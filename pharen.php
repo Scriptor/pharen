@@ -978,8 +978,7 @@ class SpliceWrapper extends UnquoteWrapper{
         }
     }
 
-    public function compile(){
-        $exprs = $this->get_exprs();
+    private function compile_exprs($exprs){
         $code = "";
         foreach($exprs as $expr){
             $code .= $expr->compile_statement();
@@ -987,14 +986,13 @@ class SpliceWrapper extends UnquoteWrapper{
         return $code;
     }
 
+    public function compile(){
+        return $this->compile_exprs($this->get_exprs());
+    }
+
     public function compile_return(){
         $exprs = $this->get_exprs();
-        $code = "";
-        foreach(array_slice($exprs, 0, -1) as $expr){
-            $code .= $expr->compile_statement();
-        }
-        $code .= $exprs[count($exprs)-1]->compile_return();
-        return $code;
+        return $this->compile_exprs(array_slice($exprs, 0, -1));
     }
 }
 
