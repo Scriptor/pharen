@@ -351,6 +351,10 @@ class Scope{
     }
 }
 
+class Formatter{
+
+}
+
 class Node implements Iterator, ArrayAccess, Countable{
     static $delay_tmp = False;
     static $prev_tmp;
@@ -421,6 +425,11 @@ class Node implements Iterator, ArrayAccess, Countable{
         return count($this->children);
     }
 
+    public function format_statement($code){
+        $this->indent = $this->parent instanceof RootNode ? "" : $this->parent->indent."\t";
+        return Node::add_tmp($this->indent.$code."\n");
+    }
+
     public function get_scope(){
         if($this->scope === Null){
             return $this->parent->get_scope();
@@ -487,7 +496,7 @@ class Node implements Iterator, ArrayAccess, Countable{
         return '"'.$tmp_name.'"';
     }
 
-    private function _compile(){
+    public function compile(){
         $scope = $this->get_scope();
         list($func_name, $args) = $this->get_compiled_func_args();
 
@@ -518,21 +527,13 @@ class Node implements Iterator, ArrayAccess, Countable{
 
         return "$func_name($args_string)";
     }
-    
-    public function compile(){
-        $this->indent = $this->parent instanceof RootNode ? "" : $this->parent->indent."\t";
-        return $this->_compile();
-    }
 
     public function compile_statement(){
-        $this->indent = $this->parent instanceof RootNode ? "" : $this->parent->indent."\t";
-        $line = $this->indent.$this->_compile();
-        return Node::add_tmp($line).";\n";
+        return $this->format_statement($this->compile().";");
     }
 
     public function compile_return(){
-        $this->indent = $this->parent instanceof RootNode ? "" : $this->parent->indent."\t";
-        return Node::add_tmp($this->indent."return ".trim($this->compile()).";\n");
+        return $this->format_statement("return ".trim($this->compile()).";");
     }
 }
 
@@ -563,10 +564,6 @@ class LiteralNode extends Node{
         }
         return $code;
     }
-
-    public function compile_statement(){
-        return $this->compile().";\n";
-    }
 }
 
 class InfixNode extends Node{
@@ -585,9 +582,8 @@ class InfixNode extends Node{
         $code = $this->compile();
         // Remove parentheses added by regular compile() since they're not
         // needed for statements. Makes pretty.
-        $code = substr($code, 1, strlen($code)-2).";\n";
-        $code = Node::add_tmp($code);
-        return $code;
+        $code = substr($code, 1, strlen($code)-2).";";
+        return $this->format_statement($code);
     }
 }
 
@@ -648,11 +644,6 @@ class LeafNode extends Node{
     public function compile(){
         return strlen($this->value) > 1 ? str_replace('-', '_', $this->value) : $this->value;
     }
-
-    public function compile_statement(){
-        $indent = $this->parent instanceof RootNode ? "" : $this->indent."\t";
-        return $indent.$this->compile().";\n";
-    }
 }
 
 class VariableNode extends LeafNode{
@@ -691,11 +682,6 @@ class StringNode extends LeafNode{
     public function compile(){
         return '"'.$this->value.'"';
     }
-
-    public function compile_statement(){
-        $indent = $this->parent instanceof RootNode ? "" : $this->indent."\t";
-        return $indent.$this->compile().";\n";
-    }
 }
 
 class SpecialForm extends Node{
@@ -716,6 +702,7 @@ class SpecialForm extends Node{
         $body_index = $lines === false ? $this->body_index : 0;
         $lines = $lines === false ? $this->children : $lines;
         $last_line = $return ? array_pop($lines)->compile_return() : "";
+
         foreach(array_slice($lines, $body_index) as $child){
             $body .= $indent.$prefix.$child->compile_statement();
         }
