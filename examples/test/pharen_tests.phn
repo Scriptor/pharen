@@ -9,8 +9,7 @@
     (it (. "Compiles a " msg)
         (check (. "tests/" fname ".phn") (compiles-to (. "tests/" fname ".php")))))
 
-(let 
-    [[tests {
+(let [tests {
         "basic_func_call" "basic function call",
         "nested_func_call" "function call nested in another",
         "infix_call" "call to the `+` infix operator of two integers and a float",
@@ -26,8 +25,8 @@
         "cond" "stand-alone cond expression with 3 branches and another one used as the value in a def assignment.",
         "if" "stand-alone if expression and another used as the value in a def assignment.",
         "function_definition" "variety of functions, including one with an if expression as the return value and the other being tail recursion optimized."
-    }]]
-    
-    (describe "Pharen compiler"
-        (lambda ()
-            (map-pairs "run_test" tests))))
+    }]
+
+  (describe "Pharen compiler"
+      (lambda ()
+          (map-pairs "run_test" tests))))
