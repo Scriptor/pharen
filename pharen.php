@@ -293,7 +293,7 @@ class Scope{
 
     public function get_binding($var_name){
         $value = $this->bindings[$var_name]->compile();
-        return $this->owner->indent."$var_name = $value;\n";
+        return $this->owner->indent."$var_name = $value;";
     }
 
     public function get_lexical_binding($var_name, $id){
@@ -314,7 +314,7 @@ class Scope{
             return "";
         }
         $value = $this->bindings[$var_name]->compile();
-        return $this->get_indent().'Lexical::$scopes["'.Node::$ns.'"]['.$this->id.'][\''.$var_name.'\'] =& '.$var_name.";\n";
+        return $this->get_indent().'Lexical::$scopes["'.Node::$ns.'"]['.$this->id.'][\''.$var_name.'\'] =& '.$var_name.";";
     }
 
     public function get_lexical_bindings(){
