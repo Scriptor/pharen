@@ -425,7 +425,7 @@ class Node implements Iterator, ArrayAccess, Countable{
         return count($this->children);
     }
 
-    public function format_line($code){
+    public function format_statement($code){
         $this->indent = $this->parent instanceof RootNode ? "" : $this->parent->indent."\t";
         return Node::add_tmp($this->indent.$code."\n");
     }
@@ -529,11 +529,11 @@ class Node implements Iterator, ArrayAccess, Countable{
     }
 
     public function compile_statement(){
-        return $this->format_line($this->compile().";");
+        return $this->format_statement($this->compile().";");
     }
 
     public function compile_return(){
-        return $this->format_line("return ".trim($this->compile()).";");
+        return $this->format_statement("return ".trim($this->compile()).";");
     }
 }
 
@@ -583,7 +583,7 @@ class InfixNode extends Node{
         // Remove parentheses added by regular compile() since they're not
         // needed for statements. Makes pretty.
         $code = substr($code, 1, strlen($code)-2).";";
-        return $this->format_line($code);
+        return $this->format_statement($code);
     }
 }
 
