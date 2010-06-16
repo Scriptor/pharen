@@ -351,10 +351,6 @@ class Scope{
     }
 }
 
-class Formatter{
-
-}
-
 class Node implements Iterator, ArrayAccess, Countable{
     static $delay_tmp = False;
     static $prev_tmp;
@@ -367,6 +363,7 @@ class Node implements Iterator, ArrayAccess, Countable{
     public $indent;
     public $quoted;
     public $unquoted;
+    public $tmped;
 
     protected $scope = Null;
     protected $value = "";
@@ -425,13 +422,17 @@ class Node implements Iterator, ArrayAccess, Countable{
         return count($this->children);
     }
 
-    public function format_line($code){
-        $this->indent = $this->parent instanceof RootNode ? "" : $this->parent->indent."\t";
-        return $this->indent.$code."\n";
+    public function format_line($code, $prefix=""){
+        if($this->tmped){
+            $this->indent = $this->parent->indent;
+        }else{
+            $this->indent = $this->parent instanceof RootNode ? "" : $this->parent->indent."\t";
+        }
+        return $this->indent.$prefix.$code."\n";
     }
 
-    public function format_statement($code){
-        return Node::add_tmp($this->format_line($code));
+    public function format_statement($code, $prefix=""){
+        return Node::add_tmp($this->format_line($code, $prefix));
     }
 
     public function get_scope(){
@@ -532,8 +533,8 @@ class Node implements Iterator, ArrayAccess, Countable{
         return "$func_name($args_string)";
     }
 
-    public function compile_statement(){
-        return $this->format_statement($this->compile().";");
+    public function compile_statement($prefix=""){
+        return $this->format_statement($this->compile().";", $prefix);
     }
 
     public function compile_return(){
@@ -702,13 +703,17 @@ class SpecialForm extends Node{
         $body = "";
 
         // If there is a prefix then it should be indented as if it were an expression.
-        $indent = $prefix === "" ? $this->indent."\t" : $this->indent;
         $body_index = $lines === false ? $this->body_index : 0;
         $lines = $lines === false ? $this->children : $lines;
-        $last_line = $return ? array_pop($lines)->compile_return() : "";
+        $last = array_pop($lines);
+        if($return){
+            $last_line = $last->compile_return();
+        }else{
+            $last_line = $last->compile_statement($prefix);
+        }
 
         foreach(array_slice($lines, $body_index) as $child){
-            $body .= $indent.$prefix.$child->compile_statement();
+            $body .= $child->compile_statement();
         }
         $body .= $last_line;
         return $body;
@@ -1048,6 +1053,7 @@ class CondNode extends SpecialForm{
 
     public function compile(){
         $tmp_var = self::get_tmp_name();
+        $this->tmped = True;
         Node::$prev_tmp.= "\n".$this->compile_statement($tmp_var." = ");
         return $tmp_var;
     }
@@ -1058,7 +1064,7 @@ class CondNode extends SpecialForm{
         $if_pair = array_shift($pairs);
         $elseif_pairs = $pairs;
 
-        $code = $prefix === "" ? "" : "\n$prefix Null;\n";   // Start with newline because current line already has tabs in it.
+        $code = $prefix === "" ? "" : "\n".$this->format_line("$prefix Null;");   // Start with newline because current line already has tabs in it.
 
         $code .= $this->compile_if($if_pair, $prefix, $return);
         foreach($elseif_pairs as $elseif_pair){
@@ -1073,7 +1079,7 @@ class CondNode extends SpecialForm{
 
     public function compile_if($pair, $prefix, $return=False, $stmt_type="if"){
         $condition = $pair->children[0]->compile();
-        $body = $this->compile_body(array($pair->children[1]), $prefix, $return);
+        $body = $this->compile_body(array_slice($pair->children, 1), $prefix, $return);
 
         return $this->format_line("$stmt_type(".$condition."){")
             .$body
@@ -1359,7 +1365,6 @@ class EachPairNode extends SpecialForm{
 class DefNode extends Node{
 
     public function compile_statement(){
-        $this->indent = $this->parent instanceof RootNode ? "" : $this->parent->indent."\t";
         $this->scope = $this->parent->get_scope();
         $varname = $this->children[1]->compile();
 
@@ -1367,7 +1372,7 @@ class DefNode extends Node{
         $code = $this->scope->get_binding($varname);
         $code .= $this->scope->get_lexing($varname);
 
-        return Node::add_tmp($code);
+        return $this->format_statement($code);
     }
 }
 
