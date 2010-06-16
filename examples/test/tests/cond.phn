@@ -9,4 +9,4 @@
 (def result
     (cond
         ((== s "!dlrow, olleH") "That's backwards!")
-        ((== s "Hello, world!") (. "Creative" " much?"))))
+        ((== s "Hello, world!") (. "Creative" " much?") "Who is world anyway?")))

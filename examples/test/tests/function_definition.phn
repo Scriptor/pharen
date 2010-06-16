@@ -1,5 +1,3 @@
-(fn empty-func ())
-
 (fn one-expr ()
     "No arguments, one statement.")
 
