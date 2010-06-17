@@ -1099,6 +1099,7 @@ class LispyIfNode extends CondNode{
     static $tmp_num = 0;
 
     static function get_tmp_name(){
+        // Won't be called below PHP 5.3 because of lack of late static binding
         return '$__iftmpvar'.self::$tmp_num++;
     }
 
@@ -1109,12 +1110,12 @@ class LispyIfNode extends CondNode{
 
         $code = $prefix ? $prefix."Null;\n" : "";
         $code .=  $this->format_line("if($cond){")
-                      .$prefix.$this->children[2]->$compile_func()
+                      .$this->children[2]->$compile_func($prefix)
                   .$this->format_line("}");
 
         if(isset($this->children[3])){
             $code .= $this->format_line("else{")
-                .$prefix.$this->children[3]->$compile_func()
+                .$this->children[3]->$compile_func($prefix)
             .$this->format_line("}");
         }
         return $code;
