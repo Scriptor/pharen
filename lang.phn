@@ -49,5 +49,5 @@
     []
     pairs))
 
-(defmacro puts (s)
-  '(print (. ,s "\n")))
+(defmacro error (&msgs)
+  '(error-log (. ~@msgs)))

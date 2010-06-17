@@ -1,17 +1,19 @@
-(fn assert_equals (expected actual)
-    (== expected actual))
+(fn log (msg)
+  (print msg))
 
-(fn assert_true (expected)
-    (assert_equals expected TRUE))
-
-(fn check (val func)
-    (assert_true ($func val)))
+(fn check (expr expected)
+  (if (== expr expected)
+    TRUE
+    (do
+      (def bt (debug_backtrace))
+      (error "Test failed on line: " (:bt 0 "line"))
+      False)))
 
 (fn describe (msg func)
-    (echo (. "Running tests for: " msg "\n"))
-    ($func))
+  (echo (. "Running tests for: " msg "\n"))
+  ($func))
 
 (fn it (msg func)
-    (if func
-        (print (. "Test passed:\t " msg "\n"))
-        (print (. "Test failed:\t " msg "\n"))))
+  (if func
+    (print (. "Test passed:\t " msg "\n"))
+    (print (. "Test failed:\t " msg "\n"))))
