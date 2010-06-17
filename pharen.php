@@ -363,6 +363,7 @@ class Node implements Iterator, ArrayAccess, Countable{
     public $quoted;
     public $unquoted;
     public $tmped;
+    public $has_splice;
 
     protected $scope = Null;
     protected $value = "";
@@ -465,7 +466,10 @@ class Node implements Iterator, ArrayAccess, Countable{
         for($x=0; $x<count($args); $x++){
             $arg = $args[$x];
             if($arg instanceof SpliceWrapper){
-                array_splice($args, $x+1, 0, $arg->compile());
+                $this->has_splice = True;
+                array_splice($args, $x+1, 0, $arg->get_exprs());
+            }else if(is_string($arg)){
+                $output[] = $arg;
             }else{
                 $output[] = $arg->compile();
             }
@@ -523,7 +527,7 @@ class Node implements Iterator, ArrayAccess, Countable{
             }else{
                 return $expanded;
             }
-        }else if($func->is_partial()){
+        }else if(!$this->has_splice && $func->is_partial()){
             return $this->create_partial($func);
         }
 
@@ -709,7 +713,6 @@ class SpecialForm extends Node{
         if($return){
             $last_line = $last->compile_return();
         }else{
-            $bt = debug_backtrace();
             $last_line = $last->compile_statement($prefix);
         }
 
@@ -978,8 +981,8 @@ class SpliceWrapper extends UnquoteWrapper{
             $this->node = $wrapped;
         }
     }
-    
-    private function get_exprs(){
+
+    public function get_exprs(){
         if($this->as_collection){
             return $this->exprs;
         }else{
@@ -1675,7 +1678,7 @@ if(__FILE__ === realpath($_SERVER['SCRIPT_NAME'])){
     $php_code = "";
     $old_setting = isset(Flags::$flags['no-import-lang']) ? Flags::$flags['no-import-lang'] : False;
     Flags::$flags['no-import-lang'] = True;
-    //$lang_code = compile_file(COMPILER_SYSTEM . "/lang.phn");
+    $lang_code = compile_file(COMPILER_SYSTEM . "/lang.phn");
     Flags::$flags['no-import-lang'] = $old_setting;
     if(isset($_SERVER['REQUEST_METHOD'])){
         $php_code = $lang_code;
