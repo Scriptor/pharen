@@ -20,9 +20,8 @@ function is_assoc($xs){
 }
 
 function split_body_last($xs){
-    $len = count($xs);
-    $body = array_slice($xs, 0, $len-2);
-    $last = $xs[$len-1];
+    $body = array_slice($xs, 0, -1);
+    $last = $xs[count($xs)-1];
     return array($body, $last);
 }
 
@@ -425,7 +424,7 @@ class Node implements Iterator, ArrayAccess, Countable{
     public function format_line($code, $prefix=""){
         if($this->tmped){
             $this->indent = $this->parent->indent;
-        }else{
+        }else if(!$this->indent){
             $this->indent = $this->parent instanceof RootNode ? "" : $this->parent->indent."\t";
         }
         return $this->indent.$prefix.$code."\n";
@@ -537,8 +536,8 @@ class Node implements Iterator, ArrayAccess, Countable{
         return $this->format_statement($this->compile().";", $prefix);
     }
 
-    public function compile_return(){
-        return $this->format_statement("return ".trim($this->compile()).";");
+    public function compile_return($prefix=""){
+        return $this->format_statement("return ".$this->compile().";", $prefix);
     }
 }
 
@@ -710,6 +709,7 @@ class SpecialForm extends Node{
         if($return){
             $last_line = $last->compile_return();
         }else{
+            $bt = debug_backtrace();
             $last_line = $last->compile_statement($prefix);
         }
 
@@ -768,15 +768,15 @@ class FuncDefNode extends SpecialForm{
 
         Node::$delay_tmp = True;
         if($this->is_tail_recursive($last_node)){
-            list($body_nodes, $last_node) = $this->split_body_tail();
+            list($body_nodes, $last_expr) = $this->split_body_tail();
             $this->indent .= "\t";
-            $body .= $this->indent."while(1){\n";
+            $body .= $this->format_line("while(1){");
 
             list($while_body_nodes, $while_last_node) = split_body_last($body_nodes);
-            $body .= $this->compile_body($while_body_nodes);
-            $body .= $while_last_node->compile_return($this->indent."\t");
+            $body .= count($while_body_nodes) > 0 ? $this->compile_body($while_body_nodes) : "";
+            $body .= $while_last_node->compile_return();
 
-            $new_param_values = array_slice($last_node->children, 1);
+            $new_param_values = array_slice($last_expr->children, 1);
             $params_len = count($new_param_values);
             for($x=0; $x<$params_len; $x++){
                 $val_node = $new_param_values[$x];
@@ -839,10 +839,10 @@ class FuncDefNode extends SpecialForm{
     }
 
     public function split_body_tail(){
-        list($body, $last) = parent::split_body_last($this->children);
-        $body = array_merge($body, $last->get_body_nodes());
+        list($body_nodes, $last) = parent::split_body_last($this->children);
+        $body_nodes = array_merge($body_nodes, $last->get_body_nodes());
         $last = $last->get_last_expr();
-        return array($body, $last);
+        return array($body_nodes, $last);
     }
 }
 
@@ -1045,6 +1045,9 @@ class CondNode extends SpecialForm{
     public function get_body_nodes(){
         $body = clone $this;
         array_pop($body->children);
+        foreach($body->children as $c){
+            $c->parent = $body;
+        }
         return array($body);
     }
 
@@ -1099,21 +1102,20 @@ class LispyIfNode extends CondNode{
         return '$__iftmpvar'.self::$tmp_num++;
     }
 
-    public function compile_statement($prefix="", $return=False){
-        $this->indent .= $this->parent instanceof RootNode ? "" : "\t";
+    public function compile_statement($prefix=False, $return=False){
         $compile_func = $return ? "compile_return" : "compile_statement";
 
         $cond = $this->children[1]->compile();
-        $true_line = $this->children[2]->$compile_func($this->indent."\t");
 
-        $code = $prefix === "" ? $prefix : $prefix."Null;\n";
-        $code .=  $this->indent."if($cond){\n".
-                  $prefix.$true_line.
-                  $this->indent."}\n";
+        $code = $prefix ? $prefix."Null;\n" : "";
+        $code .=  $this->format_line("if($cond){")
+                      .$prefix.$this->children[2]->$compile_func()
+                  .$this->format_line("}");
+
         if(isset($this->children[3])){
-            $code .= "else{\n".
-                $prefix.$this->children[3]->$compile_func($this->indent."\t").
-            $this->indent."}\n";
+            $code .= $this->format_line("else{")
+                .$prefix.$this->children[3]->$compile_func()
+            .$this->format_line("}");
         }
         return $code;
     }
@@ -1395,7 +1397,7 @@ class BindingNode extends Node{
             $varnames[] = $varname;
 
             $scope->bind($varname, $pair_node[1]);
-            $code .= $scope->get_binding($varname);
+            $code .= $this->format_statement($scope->get_binding($varname));
         }
 
         $this->indent = substr($this->indent, 1);
