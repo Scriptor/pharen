@@ -380,6 +380,7 @@ class Node implements Iterator, ArrayAccess, Countable{
     public function __construct($parent=null){
         $this->parent = $parent;
         $this->children = array();
+        $this->indent = $this->parent instanceof RootNode ? "" : $this->parent->indent."\t";
     }
 
     public function rewind(){
@@ -1033,6 +1034,27 @@ class LambdaNode extends FuncDefNode{
     }
 }
 
+class DoNode extends SpecialForm{
+    public $body_index = 1;
+
+    public function __construct($parent){
+        parent::__construct($parent);
+        $this->indent = $this->parent->indent;
+    }
+
+    public function compile(){
+        return $this->compile_body();
+    }
+
+    public function compile_return($prefix=""){
+        return $this->compile_body(False, $prefix, True);
+    }
+
+    public function compile_statement($prefix=""){
+        return $this->compile_body(False, $prefix, False);
+    }
+}
+
 class CondNode extends SpecialForm{
     static $tmp_num = 0;
 
@@ -1384,7 +1406,11 @@ class DefNode extends Node{
 }
 
 class BindingNode extends Node{
-        
+
+    public function __construct($parent){
+        parent::__construct($parent);
+        $this->indent = $this->parent->indent;
+    }
 
     public function compile_statement($return=False){
         $this->indent = $this->parent instanceof RootNode ? "" : $this->parent->indent."\t";
@@ -1482,6 +1508,7 @@ class Parser{
         self::$special_forms = array(
             "fn" => array("FuncDefNode", "LeafNode", "LeafNode", "LiteralNode", self::$values),
             "lambda" => array("LambdaNode", "LeafNode", "LiteralNode", self::$values),
+            "do" => array("DoNode", "LeafNode", self::$values),
             "cond" => array("CondNode", "LeafNode", array(self::$cond_pair)),
             "if" => array("LispyIfNode", "LeafNode", self::$value, self::$value, self::$value),
             "php_if" => array("IfNode", "LiteralNode", self::$values),
