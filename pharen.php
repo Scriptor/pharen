@@ -258,7 +258,7 @@ class FuncInfo{
             $var = new VariableNode($body, array(), "arg$x");
             $body->add_child($var);
         }
-        return array($function->compile()."\n", $name);
+        return array($function->compile().$this->format_line(""), $name);
     }
 
 }
@@ -301,11 +301,11 @@ class Scope{
     }
 
     public function init_namespace_scope(){
-        return "Lexical::\$scopes['".Node::$ns."'] = array();\n";
+        return $this->owner->format_line("Lexical::\$scopes['".Node::$ns."'] = array();");
     }
 
     public function init_lexical_scope(){
-        return $this->get_indent().'Lexical::$scopes["'.Node::$ns.'"]['.$this->id.'] = array();'."\n";
+        return $this->owner->format_line_indent('Lexical::$scopes["'.Node::$ns.'"]['.$this->id.'] = array();');
     }
 
     public function get_lexing($var_name){
@@ -313,13 +313,13 @@ class Scope{
             return "";
         }
         $value = $this->bindings[$var_name]->compile();
-        return $this->get_indent().'Lexical::$scopes["'.Node::$ns.'"]['.$this->id.'][\''.$var_name.'\'] =& '.$var_name.";";
+        return $this->owner->format_line('Lexical::$scopes["'.Node::$ns.'"]['.$this->id.'][\''.$var_name.'\'] =& '.$var_name.";");
     }
 
     public function get_lexical_bindings(){
         $code = "";
         foreach($this->lexical_bindings as $var_name=>$id){
-            $code .= $this->owner->indent."\t".$this->get_lexical_binding($var_name, $id).";\n";
+            $code .= $this->owner->format_line_indent($this->get_lexical_binding($var_name, $id).";");
         }
         return $code;
     }
@@ -380,7 +380,11 @@ class Node implements Iterator, ArrayAccess, Countable{
     public function __construct($parent=null){
         $this->parent = $parent;
         $this->children = array();
-        $this->indent = $this->parent->indent."\t";
+        if($this->parent instanceof SpecialForm){
+            $this->indent = $this->parent->indent."\t";
+        }else{
+            $this->indent = $this->parent->indent;
+        }
     }
 
     public function rewind(){
@@ -421,6 +425,24 @@ class Node implements Iterator, ArrayAccess, Countable{
 
     public function count(){
         return count($this->children);
+    }
+
+    public function increase_indent(){
+        $this->indent .= "\t";
+        if(is_array($this->children)){
+            foreach($this->children as $c){
+                $c->increase_indent();
+            }
+        }
+    }
+
+    public function decrease_indent(){
+        $this->indent = substr($this->indent, 1);
+        if(is_array($this->children)){
+            foreach($this->children as $c){
+                $c->decrease_indent();
+            }
+        }
     }
 
     public function format_line($code, $prefix=""){
@@ -591,12 +613,12 @@ class InfixNode extends Node{
         return "(".$code.")";
     }
 
-    public function compile_statement(){
+    public function compile_statement($prefix=""){
         $code = $this->compile();
         // Remove parentheses added by regular compile() since they're not
         // needed for statements. Makes pretty.
         $code = substr($code, 1, strlen($code)-2).";";
-        return $this->format_statement($code);
+        return $this->format_statement($code, $prefix);
     }
 }
 
@@ -606,14 +628,15 @@ class RootNode extends Node{
         $this->parent = Null;
         $this->children = array();
         $this->scope = new Scope($this);
+        $this->indent = "";
     }
 
     public function compile(){
         $code = "";
         if(!isset(Flags::$flags['no-import-lang']) or Flags::$flags['no-import-lang'] == False){
-            $code .= "require_once('".COMPILER_SYSTEM."/lang.php"."');\n";
+            $code .= $this->format_line("require_once('".COMPILER_SYSTEM."/lang.php"."');");
         }else if(Flags::$flags['no-import-lang'] == True){
-            $code .= "require_once('".COMPILER_SYSTEM."/lexical.php"."');\n";
+            $code .= $this->format_line("require_once('".COMPILER_SYSTEM."/lexical.php"."');");
         }
         $code .= $this->scope->init_namespace_scope();
         foreach($this->children as $child){
@@ -631,7 +654,7 @@ class CommentNode extends Node{
     }
 
     public function compile(){
-        return '# '.$this->value."\n";
+        return $this->format_line('# '.$this->value);
     }
 
     public function compile_statement(){
@@ -698,9 +721,8 @@ class StringNode extends LeafNode{
 class SpecialForm extends Node{
     protected $body_index;
 
-    public function compile_statement($indent=""){
-        $this->indent = $indent;
-        return $this->compile($indent)."\n";
+    public function compile_statement(){
+        return $this->compile();
     }
 
     public function compile_body($lines=false, $prefix="", $return=False){
@@ -741,10 +763,6 @@ class FuncDefNode extends SpecialForm{
 
     public $params = array();
     public $is_partial;
-    
-    public function __construct($parent){
-        parent::__construct($parent);
-    }
 
     static function is_pharen_func($func_name){
         return isset(self::$functions[$func_name]);
@@ -755,7 +773,6 @@ class FuncDefNode extends SpecialForm{
     }
 
     public function compile(){
-        $this->indent = $this->parent instanceof RootNode ? "" : $this->parent->indent."\t";
         $this->scope = $this->scope == Null ? new Scope($this) : $this->scope;
 
         $this->name = $this->children[1]->compile();
@@ -772,19 +789,19 @@ class FuncDefNode extends SpecialForm{
         $params_count = count($this->params);
         if($params_count > 0 && $this->params[$params_count-1] instanceof SplatNode){
             $param = $varnames[$params_count-1];
-            $body .= "\n".$this->indent."\t".$param." = array_slice(func_get_args(), ".($params_count-1).");\n";
+            $body .= $this->format_line("").$this->format_line_indent($param." = array_slice(func_get_args(), ".($params_count-1).");");
         }
 
         Node::$delay_tmp = True;
         if($this->is_tail_recursive($last_node)){
             list($body_nodes, $last_expr) = $this->split_body_tail();
             // Indent because the nodes below are nested inside the while loop
-            $this->indent .= "\t";
+            $this->increase_indent();
             $body .= $this->format_line("while(1){");
 
             list($while_body_nodes, $while_last_node) = split_body_last($body_nodes);
             $body .= count($while_body_nodes) > 0 ? $this->compile_body($while_body_nodes) : "";
-            $while_last_node->indent .= "\t";
+            $while_last_node->increase_indent();
             $body .= $while_last_node->compile_return();
 
             $new_param_values = array_slice($last_expr->children, 1);
@@ -799,7 +816,7 @@ class FuncDefNode extends SpecialForm{
                 $body .= $this->format_line_indent($var_node->compile() . " = \$__tailrecursetmp$x;");
             }
             $body .= $this->format_line("}");
-            $this->indent = substr($this->indent, 1);
+            $this->decrease_indent();
         }else{
             $body .= count($body_nodes) > 0 ? parent::compile_body($body_nodes) : "";
             $last = $last_node->compile_return();
@@ -973,7 +990,7 @@ class UnquoteWrapper{
     }
 
     public function compile_return(){
-        return "return ".$this->compile().";\n";
+        return $this->format_line("return ".$this->compile().";");
     }
 }
 
@@ -1032,12 +1049,12 @@ class LambdaNode extends FuncDefNode{
         array_splice($this->children, 1, 0, array($name_node));
 
         $code = parent::compile();
-        Node::$tmp .= $code."\n";
+        Node::$tmp .= $code.$this->format_line("");
         return '"'.$name.'"';
     }
 
     public function compile_statement(){
-        return $this->compile().";\n";
+        return $ths->format_line($this->compile().";");
     }
 }
 
@@ -1090,17 +1107,16 @@ class CondNode extends SpecialForm{
     public function compile(){
         $tmp_var = self::get_tmp_name();
         $this->tmped = True;
-        Node::$prev_tmp.= "\n".$this->compile_statement($tmp_var." = ");
+        Node::$prev_tmp.= $this->format_line("").$this->compile_statement($tmp_var." = ");
         return $tmp_var;
     }
 
     public function compile_statement($prefix="", $return=False){
-        $this->indent = $this->parent instanceof RootNode ? "" : $this->parent->indent."\t";
         $pairs = array_slice($this->children, 1);
         $if_pair = array_shift($pairs);
         $elseif_pairs = $pairs;
 
-        $code = $prefix === "" ? "" : "\n".$this->format_line("$prefix Null;");   // Start with newline because current line already has tabs in it.
+        $code = $prefix === "" ? "" : $this->format_line("").$this->format_line("$prefix Null;");   // Start with newline because current line already has tabs in it.
 
         $code .= $this->compile_if($if_pair, $prefix, $return);
         foreach($elseif_pairs as $elseif_pair){
@@ -1371,7 +1387,6 @@ class BindingNode extends Node{
     }
 
     public function compile_statement($return=False){
-        $this->indent = $this->parent instanceof RootNode ? "" : $this->parent->indent."\t";
         $scope = $this->scope = new Scope($this);
         $pairs = $this->children[1]->children;
         if(!($pairs[0] instanceof ListNode)){
@@ -1388,24 +1403,19 @@ class BindingNode extends Node{
             $code .= $this->format_statement($scope->get_binding($varname));
         }
 
-        $this->indent = substr($this->indent, 1);
         $body = "";
         $last_line = "";
         if($return === True){
             $last_line = array_pop($this->children)->compile_return();
         }
         foreach(array_slice($this->children, 2) as $line){
-            $l = $this->indent."\t".$line->compile_statement();
-            if($this->parent instanceof RootNode){
-                $l = ltrim($l);
-            }
-            $body .= $l;
+            $body .= $line->compile_statement();
         }
 
         foreach($varnames as $varname){
             $lexings .= $scope->get_lexing($varname);
         }
-        return $this->scope->get_lexical_bindings($this->indent."\t").$code."\n".$lexings."\n".$body.$last_line;
+        return $this->scope->get_lexical_bindings().$code.$this->format_line("").$lexings.$this->format_line("").$body.$last_line;
     }
 
     public function compile_return(){
@@ -1659,7 +1669,7 @@ if(__FILE__ === realpath($_SERVER['SCRIPT_NAME'])){
     $php_code = "";
     $old_setting = isset(Flags::$flags['no-import-lang']) ? Flags::$flags['no-import-lang'] : False;
     Flags::$flags['no-import-lang'] = True;
-    $lang_code = compile_file(COMPILER_SYSTEM . "/lang.phn");
+//    $lang_code = compile_file(COMPILER_SYSTEM . "/lang.phn");
     Flags::$flags['no-import-lang'] = $old_setting;
     if(isset($_SERVER['REQUEST_METHOD'])){
         $php_code = $lang_code;
