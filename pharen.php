@@ -1166,57 +1166,6 @@ class LispyIfNode extends CondNode{
     }
 }
 
-class IfNode extends SpecialForm{
-    protected $body_index = 2;
-    protected $type = "if";
-
-    public function compile($indent=""){
-        $this->indent = $indent;
-        $cond = $this->children[1]->compile();
-        $body = $this->compile_body();
-
-        return $this->indent.$this->type."(".$cond."){\n".
-                    $body.
-                $this->indent."}";
-    }
-
-    public function compile_statement($indent=""){
-        return $this->compile($indent)."\n";
-    }
-}
-
-class ElseIfNode extends IfNode{
-    protected $type = "else if";
-}
-
-class ElseNode extends IfNode{
-    protected $type = "else";
-    protected $body_index = 1;
-
-    public function compile($indent=0){
-        $body = $this->compile_body();
-
-        return $this->indent.$this->type."{\n".
-                $body.
-            $this->indent."}";
-    }
-}
-
-class WhileNode extends IfNode{
-    protected $type = "while";
-}
-
-
-// Deprecated way to access an array
-class AtArrayNode extends Node{
-
-    public function compile(){
-        $varname = $this->children[1]->compile();
-        $index = $this->children[2]->compile();
-        return $varname."[$index]";
-    }
-}
-
 class ListAccessNode extends Node{
     static $tmp_var = 0;
 
@@ -1518,10 +1467,6 @@ class Parser{
             "do" => array("DoNode", "LeafNode", self::$values),
             "cond" => array("CondNode", "LeafNode", array(self::$cond_pair)),
             "if" => array("LispyIfNode", "LeafNode", self::$value, self::$value, self::$value),
-            "php_if" => array("IfNode", "LiteralNode", self::$values),
-            "php_elseif" => array("ElseIfNode", "LiteralNode", self::$values),
-            "php_else" => array("ElseNode", self::$values),
-            "at" => array("AtArrayNode", "LeafNode", "VariableNode", self::$value),
             "$" => array("SuperGlobalNode", "LeafNode", "LeafNode", self::$value),
             "def" => array("DefNode", "LeafNode", "VariableNode", self::$value),
             "let" => array("BindingNode", self::$list_form, array(self::$value)),
