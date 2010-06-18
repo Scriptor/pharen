@@ -1,0 +1,9 @@
+(def name "Arthur Dent")
+(check name "Arthur Dent")
+
+(let
+  [question NULL
+   answer (* 6 9)]
+
+  (check question NULL)
+  (check answer 54))

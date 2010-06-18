@@ -1,22 +1,39 @@
 (fn one-expr ()
-    "No arguments, one statement.")
+  1)
+(check (one-expr) 1)
 
 (fn one-arg (a)
-    (. "Argument is " arg1))
+    (. "Argument is " a))
+(check (one-arg "this") "Argument is this")
 
 (fn add-two-args (a b)
     (+ a b))
+(check (add-two-args 133 123) 256)
 
 (fn two-exprs (a b)
-    (print a)
-    (print b))
+    (one-arg a)
+    (one-arg b))
+(check (two-exprs "that" "this") "Argument is this")
 
 (fn if-inside (a)
     (if a
-        "This could be returned."
-        "This could be returned as well."))
+        "foo"
+        "bar"))
+(check (if-inside FALSE) "bar")
 
-(fn iterative-factorial (n acc)
+(fn fact (n)
+  (if (== n 0)
+    1
+    (* n (fact (- n 1)))))
+(check (fact 5) 120)
+
+(fn iterative-fact (n acc)
     (if (== n 0)
         acc
-        (iterative-factorial (- n 1) (* acc n))))
+        (iterative-fact (- n 1) (* acc n))))
+(check (iterative-fact 5 1) 120)
+
+(fn splat-usage (a &others)
+  (array-sum others))
+(check (splat-usage 1 2 3) 5)
+

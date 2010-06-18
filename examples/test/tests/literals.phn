@@ -1,0 +1,5 @@
+(check 8 (* 4 2))
+(check "abc" (. "a" "bc"))
+(check TRUE TRUE)
+(check [1 2 3] [1 2 3])
+(check ["list" "of" "strings"] ["list" "of" "strings"])

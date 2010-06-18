@@ -1,0 +1,5 @@
+(check (substr "abc" 1) "bc")
+(check (+ 1 2 3.1) 6.1)
+(check (. "hello, " "world") "hello, world")
+(check (substr (. "foo" "bar") 3) "bar")
+

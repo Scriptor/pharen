@@ -1,2 +1,0 @@
-(def name "Arthur Dent")
-(print name)

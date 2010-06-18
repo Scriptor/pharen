@@ -1,9 +1,27 @@
-(def bool FALSE)
+(def bool TRUE)
 (if bool
-    "bool is apprently True."
-    "That's false.")
+    (check TRUE TRUE)
+    (check TRUE FALSE))
+
+(check (if TRUE
+         (. "This " "works")
+         (. "Doesn't" "work"))
+       "This works")
+
+(check (if FALSE
+         (. "Doesn't" "work")
+         (. "This " "works"))
+       "This works")
 
 (def result
-    (if True
+    (if TRUE
         (def value "True after all")
         (def value "Shouldn't be here")))
+(check result "True after all")
+
+(check (if TRUE
+         (do
+           "Working"
+           "Done!")
+         "Not working")
+       "Done!")

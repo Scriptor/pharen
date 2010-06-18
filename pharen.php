@@ -1203,6 +1203,8 @@ class DictNode extends Node{
         // Use an offset when using the (dict... notation for dictionaries
         $offset = ($this->children[0] instanceof LeafNode and $this->children[0]->value === "dict") ? 1 : 0;
         $pairs = array_slice($this->children, $offset);
+
+        // Code uses the paren-less syntax for dictionaries, so break it up into pairs
         if($pairs[0][0] === Null){
             $pairs = array_chunk($pairs, 2);
         }
@@ -1657,7 +1659,7 @@ if(__FILE__ === realpath($_SERVER['SCRIPT_NAME'])){
     $php_code = "";
     $old_setting = isset(Flags::$flags['no-import-lang']) ? Flags::$flags['no-import-lang'] : False;
     Flags::$flags['no-import-lang'] = True;
-    //$lang_code = compile_file(COMPILER_SYSTEM . "/lang.phn");
+    $lang_code = compile_file(COMPILER_SYSTEM . "/lang.phn");
     Flags::$flags['no-import-lang'] = $old_setting;
     if(isset($_SERVER['REQUEST_METHOD'])){
         $php_code = $lang_code;
