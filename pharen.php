@@ -380,7 +380,7 @@ class Node implements Iterator, ArrayAccess, Countable{
     public function __construct($parent=null){
         $this->parent = $parent;
         $this->children = array();
-        $this->indent = $this->parent instanceof RootNode ? "" : $this->parent->indent."\t";
+        $this->indent = $this->parent->indent;
     }
 
     public function rewind(){
@@ -430,6 +430,10 @@ class Node implements Iterator, ArrayAccess, Countable{
             $this->indent = $this->parent instanceof RootNode ? "" : $this->parent->indent."\t";
         }
         return $this->indent.$prefix.$code."\n";
+    }
+
+    public function format_line_indent($code, $prefix=""){
+        return "\t".$this->format_line($code, $prefix);
     }
 
     public function format_statement($code, $prefix=""){
@@ -696,6 +700,11 @@ class StringNode extends LeafNode{
 class SpecialForm extends Node{
     protected $body_index;
 
+    public function __construct($parent){
+        parent::__construct($parent);
+        $this->indent = $this->parent instanceof RootNode ? "" : $this->parent->indent . "\t";
+    }
+
     public function compile_statement($indent=""){
         $this->indent = $indent;
         return $this->compile($indent)."\n";
@@ -773,25 +782,27 @@ class FuncDefNode extends SpecialForm{
         Node::$delay_tmp = True;
         if($this->is_tail_recursive($last_node)){
             list($body_nodes, $last_expr) = $this->split_body_tail();
+            // Indent because the nodes below are nested inside the while loop
             $this->indent .= "\t";
             $body .= $this->format_line("while(1){");
 
             list($while_body_nodes, $while_last_node) = split_body_last($body_nodes);
             $body .= count($while_body_nodes) > 0 ? $this->compile_body($while_body_nodes) : "";
+            $while_last_node->indent .= "\t";
             $body .= $while_last_node->compile_return();
 
             $new_param_values = array_slice($last_expr->children, 1);
             $params_len = count($new_param_values);
             for($x=0; $x<$params_len; $x++){
                 $val_node = $new_param_values[$x];
-                $body .= $this->indent."\t"."\$__tailrecursetmp$x = " . $val_node->compile().";\n";
+                $body .= $this->format_line_indent("\$__tailrecursetmp$x = " . $val_node->compile().";");
             }
             for($x=0; $x<$params_len; $x++){
                 $var_node = $this->params[$x];
                 $val_node = $new_param_values[$x];
-                $body .= $this->indent."\t".$var_node->compile() . " = \$__tailrecursetmp$x;\n";
+                $body .= $this->format_line_indent($var_node->compile() . " = \$__tailrecursetmp$x;");
             }
-            $body .= $this->indent."}\n";
+            $body .= $this->format_line("}");
             $this->indent = substr($this->indent, 1);
         }else{
             $body .= count($body_nodes) > 0 ? parent::compile_body($body_nodes) : "";
@@ -801,10 +812,10 @@ class FuncDefNode extends SpecialForm{
         $body = $this->scope->get_lexical_bindings().$body;
         $lexings = $this->get_param_lexings($varnames);
 
-        $code = $this->indent."function ".$this->name.$params."{\n".
+        $code = $this->format_line("function ".$this->name.$params."{").
             $lexings.
             $body.
-            $this->indent."}\n";
+            $this->format_line("}");
 
         if(!$this->is_partial) Node::$delay_tmp = False;
         $code = Node::add_tmp($code);
@@ -1036,11 +1047,6 @@ class LambdaNode extends FuncDefNode{
 
 class DoNode extends SpecialForm{
     public $body_index = 1;
-
-    public function __construct($parent){
-        parent::__construct($parent);
-        $this->indent = $this->parent->indent;
-    }
 
     public function compile(){
         return $this->compile_body();
@@ -1406,11 +1412,6 @@ class DefNode extends Node{
 }
 
 class BindingNode extends Node{
-
-    public function __construct($parent){
-        parent::__construct($parent);
-        $this->indent = $this->parent->indent;
-    }
 
     public function compile_statement($return=False){
         $this->indent = $this->parent instanceof RootNode ? "" : $this->parent->indent."\t";
