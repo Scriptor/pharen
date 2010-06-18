@@ -359,7 +359,7 @@ class Node implements Iterator, ArrayAccess, Countable{
     public $parent;
     public $children;
     public $return_flag = False;
-    public $indent;
+    public $indent = Null;
     public $quoted;
     public $unquoted;
     public $tmped;
@@ -380,7 +380,7 @@ class Node implements Iterator, ArrayAccess, Countable{
     public function __construct($parent=null){
         $this->parent = $parent;
         $this->children = array();
-        $this->indent = $this->parent->indent;
+        $this->indent = $this->parent->indent."\t";
     }
 
     public function rewind(){
@@ -426,7 +426,7 @@ class Node implements Iterator, ArrayAccess, Countable{
     public function format_line($code, $prefix=""){
         if($this->tmped){
             $this->indent = $this->parent->indent;
-        }else if(!$this->indent){
+        }else if($this->indent === Null){
             $this->indent = $this->parent instanceof RootNode ? "" : $this->parent->indent."\t";
         }
         return $this->indent.$prefix.$code."\n";
@@ -643,10 +643,8 @@ class LeafNode extends Node{
     public $value;
 
     public function __construct($parent, $children, $value){
-        // $children is kept as an argument, even though LeafNode should
-        // not have any child nodes, for compatibility with parameter
-        // structure of Node
-        $this->parent = $parent;
+        parent::__construct($parent);
+        $this->children = Null;
         $this->value = $value;
     }
 
@@ -700,11 +698,6 @@ class StringNode extends LeafNode{
 class SpecialForm extends Node{
     protected $body_index;
 
-    public function __construct($parent){
-        parent::__construct($parent);
-        $this->indent = $this->parent instanceof RootNode ? "" : $this->parent->indent . "\t";
-    }
-
     public function compile_statement($indent=""){
         $this->indent = $indent;
         return $this->compile($indent)."\n";
@@ -718,7 +711,6 @@ class SpecialForm extends Node{
         // If there is a prefix then it should be indented as if it were an expression.
         $body_index = $lines === false ? $this->body_index : 0;
         $lines = $lines === false ? $this->children : $lines;
-        $bt = debug_backtrace();
         $last = array_pop($lines);
         if($return){
             $last_line = $last->compile_return();
@@ -750,6 +742,10 @@ class FuncDefNode extends SpecialForm{
     public $params = array();
     public $is_partial;
     
+    public function __construct($parent){
+        parent::__construct($parent);
+    }
+
     static function is_pharen_func($func_name){
         return isset(self::$functions[$func_name]);
     }
@@ -1047,6 +1043,11 @@ class LambdaNode extends FuncDefNode{
 
 class DoNode extends SpecialForm{
     public $body_index = 1;
+
+    public function __construct($parent){
+        parent::__construct($parent);
+        $this->indent = $this->parent->indent;
+    }
 
     public function compile(){
         return $this->compile_body();
@@ -1413,6 +1414,11 @@ class DefNode extends Node{
 
 class BindingNode extends Node{
 
+    public function __construct($parent){
+        parent::__construct($parent);
+        $this->indent = $this->parent->indent;
+    }
+
     public function compile_statement($return=False){
         $this->indent = $this->parent instanceof RootNode ? "" : $this->parent->indent."\t";
         $scope = $this->scope = new Scope($this);
@@ -1706,7 +1712,7 @@ if(__FILE__ === realpath($_SERVER['SCRIPT_NAME'])){
     $php_code = "";
     $old_setting = isset(Flags::$flags['no-import-lang']) ? Flags::$flags['no-import-lang'] : False;
     Flags::$flags['no-import-lang'] = True;
-    $lang_code = compile_file(COMPILER_SYSTEM . "/lang.phn");
+    //$lang_code = compile_file(COMPILER_SYSTEM . "/lang.phn");
     Flags::$flags['no-import-lang'] = $old_setting;
     if(isset($_SERVER['REQUEST_METHOD'])){
         $php_code = $lang_code;
