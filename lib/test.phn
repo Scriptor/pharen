@@ -1,13 +1,10 @@
-(fn log (msg)
-  (print msg))
-
 (fn check (expr expected)
   (if (== expr expected)
     TRUE
     (do
       (def bt (debug_backtrace))
-      (error "Test failed on line: " (:bt 0 "line"))
-      False)))
+      (error "Test failed on line: " (:bt 0 "line") " in " (:bt 0 "file"))
+      FALSE)))
 
 (fn describe (msg func)
   (echo (. "Running tests for: " msg "\n"))
