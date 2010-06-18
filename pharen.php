@@ -1333,38 +1333,6 @@ class ListNode extends LiteralNode{
     }
 }
 
-class EachPairNode extends SpecialForm{
-    protected $body_index = 3;
-    
-    public function compile_statement(){
-        $this->indent = $this->parent instanceof RootNode ? "" : $this->parent->indent."\t";
-        Node::$delay_tmp = True;
-
-        $dict_name = $this->children[1]->compile();
-        $key_name = $this->children[2]->children[0]->compile(True);
-        $val_name = $this->children[2]->children[1]->compile(True);
-
-        $scope = $this->scope = new Scope($this);
-        $scope->init_lexical_scope();
-
-        $scope->bind($key_name, new EmptyNode($this));
-        $scope->bind($val_name, new EmptyNode($this));
-
-        $lexings = "";
-        $lexings .= $this->indent."\t".$scope->get_lexing($key_name);
-        $lexings .= "\n".$this->indent."\t".$scope->get_lexing($val_name)."\n";
-
-        $body = $this->compile_body();
-        Node::$delay_tmp = False;
-        
-        $code =  $this->indent."foreach($dict_name as $key_name => $val_name){\n"
-            .$lexings
-            .$body
-        .$this->indent."}\n";
-        return Node::add_tmp($code);
-    }
-}
-
 class DefNode extends Node{
 
     public function compile_statement(){
