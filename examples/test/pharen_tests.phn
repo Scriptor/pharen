@@ -8,14 +8,15 @@
     
 
 (let [tests [
-        "literals"
-        "func_calls"
-        "comments"
-        "bindings"
-        "lists_and_dicts"
-        "cond"
-        "if"
-        "function_definition"
+        "literals",
+        "func_calls",
+        "comments",
+        "bindings",
+        "lists_and_dicts",
+        "cond",
+        "if",
+        "function_definition",
+        "lambdas"
     ]]
 
   (describe "Pharen"
