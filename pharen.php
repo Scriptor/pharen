@@ -355,6 +355,7 @@ class Node implements Iterator, ArrayAccess, Countable{
     static $prev_tmp;
     static $tmp;
     static $ns;
+    static $tmp_funcname_var=0;
 
     public $parent;
     public $children;
@@ -375,6 +376,10 @@ class Node implements Iterator, ArrayAccess, Countable{
             Node::$tmp = '';
         }
         return $code;
+    }
+
+    static function get_tmp_funcname_var(){
+        return "\$__tmpfuncname".self::$tmp_funcname_var++;
     }
 
     public function __construct($parent=null){
@@ -520,7 +525,12 @@ class Node implements Iterator, ArrayAccess, Countable{
         // Returns the compiled code for the function name and the arguments
         // in a function call.
         list($func_name_node, $args) = $this->split_children();
-        $func_name = $func_name_node->compile();
+        if(!($func_name_node instanceof LeafNode)){
+            $func_name = self::get_tmp_funcname_var();
+            Node::$tmp .= $this->format_line($func_name." = ".$func_name_node->compile().";");
+        }else{
+            $func_name = $func_name_node->compile();
+        }
         $args = $this->compile_args($args);
         return array($func_name, $args);
     }
@@ -1054,7 +1064,7 @@ class LambdaNode extends FuncDefNode{
     }
 
     public function compile_statement(){
-        return $ths->format_line($this->compile().";");
+        return $this->format_line($this->compile().";");
     }
 }
 
@@ -1156,7 +1166,7 @@ class LispyIfNode extends CondNode{
 
         $cond = $this->children[1]->compile();
 
-        $code = $prefix ? $prefix."Null;\n" : "";
+        $code = $prefix ? $this->format_line($prefix."Null;") : "";
         $code .=  $this->format_line("if($cond){")
                       .$this->children[2]->$compile_func($prefix)
                   .$this->format_line("}");
@@ -1335,7 +1345,7 @@ class ListNode extends LiteralNode{
 
 class DefNode extends Node{
 
-    public function compile_statement(){
+    public function compile_statement($prefix=""){
         $this->scope = $this->parent->get_scope();
         $varname = $this->children[1]->compile();
 
@@ -1343,7 +1353,7 @@ class DefNode extends Node{
         $code = $this->scope->get_binding($varname);
         $code .= $this->scope->get_lexing($varname);
 
-        return $this->format_statement($code);
+        return $this->format_statement($code, $prefix);
     }
 }
 
