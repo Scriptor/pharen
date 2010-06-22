@@ -351,7 +351,7 @@ class Scope{
 }
 
 class Node implements Iterator, ArrayAccess, Countable{
-    static $delay_tmp = False;
+    static $delay_tmp = 0;
     static $prev_tmp;
     static $tmp;
     static $ns;
@@ -370,7 +370,7 @@ class Node implements Iterator, ArrayAccess, Countable{
     protected $value = "";
 
     static function add_tmp($code){
-        if(!Node::$delay_tmp){
+        if(Node::$delay_tmp === 0){
             $code = Node::$prev_tmp.Node::$tmp.$code;
             Node::$prev_tmp = '';
             Node::$tmp = '';
@@ -802,7 +802,7 @@ class FuncDefNode extends SpecialForm{
             $body .= $this->format_line("").$this->format_line_indent($param." = array_slice(func_get_args(), ".($params_count-1).");");
         }
 
-        Node::$delay_tmp = True;
+        Node::$delay_tmp++;
         if($this->is_tail_recursive($last_node)){
             list($body_nodes, $last_expr) = $this->split_body_tail();
             // Indent because the nodes below are nested inside the while loop
@@ -840,7 +840,9 @@ class FuncDefNode extends SpecialForm{
             $body.
             $this->format_line("}");
 
-        if(!$this->is_partial) Node::$delay_tmp = False;
+        if(!$this->is_partial && Node::$delay_tmp > 0){
+            Node::$delay_tmp--;
+        }
         $code = Node::add_tmp($code);
         return $code;
     }
