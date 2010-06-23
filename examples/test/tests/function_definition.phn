@@ -36,4 +36,3 @@
 (fn splat-usage (a &others)
   (array-sum others))
 (check (splat-usage 1 2 3) 5)
-

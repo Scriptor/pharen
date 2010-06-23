@@ -363,7 +363,6 @@ class Node implements Iterator, ArrayAccess, Countable{
     public $indent = Null;
     public $quoted;
     public $unquoted;
-    public $tmped;
     public $has_splice;
 
     protected $scope = Null;
@@ -451,9 +450,7 @@ class Node implements Iterator, ArrayAccess, Countable{
     }
 
     public function format_line($code, $prefix=""){
-        if($this->tmped){
-            $this->indent = $this->parent->indent;
-        }else if($this->indent === Null){
+        if($this->indent === Null){
             $this->indent = $this->parent instanceof RootNode ? "" : $this->parent->indent."\t";
         }
         return $this->indent.$prefix.$code."\n";
@@ -803,6 +800,9 @@ class FuncDefNode extends SpecialForm{
         }
 
         Node::$delay_tmp++;
+        if(Node::$delay_tmp > 1){
+            $this->decrease_indent();
+        }
         if($this->is_tail_recursive($last_node)){
             list($body_nodes, $last_expr) = $this->split_body_tail();
             // Indent because the nodes below are nested inside the while loop
@@ -1068,6 +1068,11 @@ class LambdaNode extends FuncDefNode{
     public function compile_statement(){
         return $this->format_line($this->compile().";");
     }
+
+    public function compile_return(){
+        // Indent because FuncDefNode decreases an indent
+        return $this->format_line_indent("return ".$this->compile().";");
+    }
 }
 
 class DoNode extends SpecialForm{
@@ -1118,7 +1123,6 @@ class CondNode extends SpecialForm{
 
     public function compile(){
         $tmp_var = self::get_tmp_name();
-        $this->tmped = True;
         Node::$prev_tmp.= $this->format_line("").$this->compile_statement($tmp_var." = ");
         return $tmp_var;
     }

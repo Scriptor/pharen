@@ -10,3 +10,9 @@
   "line1"
   (lambda () (. "Hello " s "!")))
 (check ((greet-generator-test "Hammurabi")) "Hello Hammurabi!")
+
+(fn multiple-calls-test ()
+  (lambda () "foobar"))
+(multiple-calls-test)
+(multiple-calls-test)
+(check ((multiple-calls-test)) "foobar")
