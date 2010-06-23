@@ -624,7 +624,7 @@ class InfixNode extends Node{
         $code = $this->compile();
         // Remove parentheses added by regular compile() since they're not
         // needed for statements. Makes pretty.
-        $code = substr($code, 1, strlen($code)-2).";";
+        $code = substr($code, 1, -1).";";
         return $this->format_statement($code, $prefix);
     }
 }
@@ -1028,16 +1028,22 @@ class SpliceWrapper extends UnquoteWrapper{
         }
     }
 
-    private function compile_exprs($exprs){
+    private function compile_exprs($exprs, $prefix){
         $code = "";
+        $last = array_pop($exprs);
         foreach($exprs as $expr){
             $code .= $expr->compile_statement();
         }
+        $code .= $last->compile_statement($prefix);
         return $code;
     }
 
-    public function compile(){
-        return $this->compile_exprs($this->get_exprs());
+    public function compile($prefix=""){
+        return $this->compile_exprs($this->get_exprs(), $prefix);
+    }
+
+    public function compile_statement($prefix=""){
+        return $this->compile($prefix);
     }
 
     public function compile_return(){

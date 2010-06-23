@@ -1,0 +1,22 @@
+(defmacro simple-macro-test (n)
+  (if (< n 10)
+    '(* ~n ~n)
+    '(. ~n " is too big!")))
+(check (simple-macro-test 5) 25)
+(check (simple-macro-test 15) "15 is too big!")
+
+(defmacro fn-generator-test (nm value)
+  '(fn ~-nm ()
+     (def stuff "foo")
+     (. stuff ~value)))
+(fn-generator-test "generated_test_fn" "bar")
+(check (generated-test-fn) "foobar")
+
+(defmacro when-test (c &body)
+  '(if ~c
+     (do
+       ~@body)
+     FALSE))
+(check (when-test (== 2 2)
+                  (. "line" 1)
+                  "foobar") "foobar")

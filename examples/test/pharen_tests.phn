@@ -16,7 +16,8 @@
         "cond",
         "if",
         "function_definition",
-        "lambdas"
+        "lambdas",
+        "macros"
     ]]
 
   (describe "Pharen"
