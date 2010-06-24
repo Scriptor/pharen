@@ -27,6 +27,12 @@
 (fn apply (f val)
   ($f val))
 
+(fn when (c &body)
+  '(if ~c
+     (do
+       ~@body)
+     FALSE))
+
 (fn reduce (f acc xs)
   (if (empty xs)
     acc
