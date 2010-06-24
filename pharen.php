@@ -640,6 +640,11 @@ class RootNode extends Node{
 
     public function compile(){
         $code = "";
+        if(isset(Flags::$flags['executable'])){
+            $code .= $this->format_line("#! /usr/bin/env php");
+        }
+
+        $code .= $this->format_line("<?php");
         if(!isset(Flags::$flags['no-import-lang']) or Flags::$flags['no-import-lang'] == False){
             $code .= $this->format_line("require_once('".COMPILER_SYSTEM."/lang.php"."');");
         }else if(Flags::$flags['no-import-lang'] == True){
@@ -1530,7 +1535,7 @@ class Parser{
                 $curnode->add_child($node);
                 $curnode = $node;
             }else if($tok instanceof CommentToken){
-                // $curnode->add_child(new CommentNode($curnode, $tok->value));
+                //$curnode->add_child(new CommentNode($curnode, $tok->value));
             }else if($tok instanceof ReaderMacroToken){
                 if($tok->value == "'")
                     $lookahead->quoted = True;
@@ -1619,6 +1624,11 @@ class Flags{
     static $flags = array();
 }
 
+function set_flag($arg){
+    $flag = substr($arg, 2);
+    Flags::$flags[$flag] = True;
+}
+
 function compile_file($fname, $output_dir=Null){
     $ns = basename($fname, EXTENSION);
     Node::$ns = $ns;
@@ -1639,6 +1649,5 @@ function compile($code, $root=Null){
     $parser = new Parser($tokens);
     $node_tree = $parser->parse($root);
     $phpcode = $node_tree->compile();
-    return "<?php\n".$phpcode."?>";
+    return $phpcode;
 }
-
