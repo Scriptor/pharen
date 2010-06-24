@@ -688,7 +688,7 @@ class LeafNode extends Node{
     }
 
     public function compile(){
-        return strlen($this->value) > 1 ? str_replace('-', '_', $this->value) : $this->value;
+        return strlen($this->value) > 1 && !is_numeric($this->value[1]) ? str_replace('-', '_', $this->value) : $this->value;
     }
 }
 
