@@ -10,8 +10,7 @@ if(__FILE__ === realpath($_SERVER['SCRIPT_NAME'])){
         array_shift($argv);
         foreach($argv as $arg){
             if(strpos($arg, "--") === 0){
-                $flag = substr($arg, 2);
-                Flags::$flags[$flag] = True;
+                set_flag($arg);
             }else{
                 $input_files[] = $arg;
             }
