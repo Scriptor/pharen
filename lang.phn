@@ -13,7 +13,7 @@
   (array-slice xs 1))
 
 (fn early (xs)
-  (array-slice xs 0 (- (count xs) 2)))
+  (array-slice xs 0 -1))
 
 (fn take (x xs)
   (array-slice xs 0 x))
@@ -22,16 +22,13 @@
   (array-slice xs x))
 
 (fn cons (x xs)
-  (array-merge (array x) xs))
+  (array-merge [x] xs))
+
+(fn append (x xs)
+  (array-merge xs [x]))
 
 (fn apply (f val)
   ($f val))
-
-(fn when (c &body)
-  '(if ~c
-     (do
-       ~@body)
-     FALSE))
 
 (fn reduce (f acc xs)
   (if (empty xs)
@@ -54,6 +51,12 @@
     (lambda (pair acc) (cons ($f (:pair 0) (:pair 1)) acc))
     []
     pairs))
+
+(defmacro when (c &body)
+  '(if ~c
+     (do
+       ~@body)
+     FALSE))
 
 (defmacro error (&msgs)
   '(error-log (. ~@msgs)))
