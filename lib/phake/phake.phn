@@ -1,3 +1,4 @@
+(require "path.php")
 (define "PHAKE-SYSTEM" (dirname __FILE__))
 (define "PHAREN-SYSTEM" (dirname (realpath "./..")))
 (define "PROJECT-SYSTEM" (getcwd))
@@ -13,8 +14,8 @@
       ~@body))
 
 (compile-file (. PHAKE-SYSTEM "/phake.phn"))
-(compile-file (. PROJECT-SYSTEM "/phakephile"))
-(require (. PROJECT-SYSTEM "/phakephile.php"))
+(compile-file (. PROJECT-SYSTEM "/phakefile"))
+(require (. PROJECT-SYSTEM "/phakefile.php"))
 
 (if (> (count argv) 1)
   ((:argv 1))
