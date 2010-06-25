@@ -1,9 +1,11 @@
-(define TESTS-DIR (dirname __FILE__))
-(require "../../lib/test.php")
-(require "../../pharen.php")
+(require "test.php")
+(require-once "path.php")
+
+(define "TESTS_DIR" (dirname __FILE__))
+(require-once (path-join TESTS-DIR "../.." "pharen.php"))
 
 (fn run-test (fname)
-    (compile-file (. TESTS-DIR "/tests/" fname ".phn") "tmp")
+    (compile-file (. TESTS-DIR "/tests/" fname ".phn") (. TESTS-DIR "/tmp"))
     (require (. TESTS-DIR "/tmp/" fname ".php")))
     
 

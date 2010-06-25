@@ -1,9 +1,9 @@
-(require "path.php")
+(require_once "path.php")
 (define "PHAKE_SYSTEM" (realpath (dirname __FILE__)))
 (define "PHAREN_SYSTEM" (path-join PHAKE-SYSTEM "../.."))
 (define "PROJECT_SYSTEM" (getcwd))
 
-(require (. PHAREN-SYSTEM "/pharen.php"))
+(require-once (. PHAREN-SYSTEM "/pharen.php"))
 
 (fn proj (name attrs)
   "Do stuff with project info here")
