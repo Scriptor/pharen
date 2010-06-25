@@ -3,6 +3,9 @@
 (fn path-normalize-array (chunks)
   (reduce (lambda (chunk acc)
                   (cond
+                    ((empty chunk) (if (empty acc)
+                                     (append chunk acc)
+                                     acc))
                     ((== ".." chunk) (early acc))
                     (TRUE (append chunk acc))))
           []
