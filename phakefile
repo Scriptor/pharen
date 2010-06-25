@@ -1,0 +1,7 @@
+(proj "Pharen"
+    {"description" "Lisp -> PHP Compiler"
+     "version" "0.1.5"})
+
+(task "test" "Run tests for Pharen compiler"
+      (require (. PROJECT-SYSTEM "/examples/test/pharen_tests.php"))
+      TRUE)
