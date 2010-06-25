@@ -1,3 +1,5 @@
+; Structure and protocol for the following was pretty much copied from NodeJS's path library,
+; the meat is done functionally, however
 (fn path-normalize-array (chunks)
   (reduce (lambda (chunk acc)
                   (cond
