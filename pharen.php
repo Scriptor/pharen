@@ -1033,13 +1033,13 @@ class SpliceWrapper extends UnquoteWrapper{
         }
     }
 
-    private function compile_exprs($exprs, $prefix){
+    private function compile_exprs($exprs, $prefix="", $return=False){
         $code = "";
         $last = array_pop($exprs);
         foreach($exprs as $expr){
             $code .= $expr->compile_statement();
         }
-        $code .= $last->compile_statement($prefix);
+        $code .= $return ? $last->compile_return() : $last->compile_statement($prefix);
         return $code;
     }
 
@@ -1052,8 +1052,7 @@ class SpliceWrapper extends UnquoteWrapper{
     }
 
     public function compile_return(){
-        $exprs = $this->get_exprs();
-        return $this->compile_exprs(array_slice($exprs, 0, -1));
+        return $this->compile_exprs($this->get_exprs(), "", True);
     }
 }
 
