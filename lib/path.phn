@@ -1,0 +1,13 @@
+(fn path-normalize-array (chunks)
+  (reduce (lambda (chunk acc)
+                  (cond
+                    ((== ".." chunk) (early acc))
+                    (TRUE (append chunk acc))))
+          []
+          chunks))
+
+(fn path-normalize (path)
+  (implode "/" (path-normalize-array (explode "/" path))))
+
+(fn path-join (&paths)
+  (path-normalize (implode "/" paths)))
