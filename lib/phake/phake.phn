@@ -1,7 +1,7 @@
 (require "path.php")
-(define "PHAKE-SYSTEM" (dirname __FILE__))
-(define "PHAREN-SYSTEM" (dirname (realpath "./..")))
-(define "PROJECT-SYSTEM" (getcwd))
+(define "PHAKE_SYSTEM" (realpath (dirname __FILE__)))
+(define "PHAREN_SYSTEM" (path-join PHAKE-SYSTEM "../.."))
+(define "PROJECT_SYSTEM" (getcwd))
 
 (require (. PHAREN-SYSTEM "/pharen.php"))
 
@@ -19,4 +19,4 @@
 
 (if (> (count argv) 1)
   ((:argv 1))
-  (print "Doing nothing"))
+  (print "Doing nothing\n"))
