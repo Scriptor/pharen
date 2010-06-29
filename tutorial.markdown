@@ -34,6 +34,6 @@ Save this in your server's document root directory as `hello.phn`. From inside t
 pharen hello.phn
 {% endhighlight %}
 
-If you go to [](http://localhost/hello.php) you will see "Hello, world!" printed out. Very basic, but it shows the nitty-gritty details are done.
+If you go to [http://localhost/hello.php]() you will see "Hello, world!" printed out. Very basic, but it shows the nitty-gritty details are done.
 
-### 
+###
