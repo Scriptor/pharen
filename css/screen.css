@@ -6,7 +6,7 @@ body {
 	height: 100%;
 	width: 100%;
 	background-color: white;
-	font-family: 'verdana';
+	font-family: 'dejavu sans', 'verdana';
 }
 #topbar {
 	margin-left: 20%;
@@ -30,10 +30,9 @@ body {
 	float: left;
 }
 #sidebar ul{
-	background-color: #FCFCFC;
 	text-decoration: none;
 	list-style: none;
-	font-size: 15px;
+	font-size: 1..05em;
 }
 #sidebar ul li{
 	border-left: 2px solid #999;
@@ -75,5 +74,5 @@ div.code-right{
     margin-right: -400px;
 }
 p, ul{
-    font-size: 0.92em;
+    font-size: 0.9em;
 }
