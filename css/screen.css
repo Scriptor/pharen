@@ -18,13 +18,13 @@ body {
 }
 #content {
 	margin-top: 5%;
-	margin-bottom: 5%;
-	width: 55%;
+	padding-bottom: 3%;
+	width: 60%;
 	float: left;
 }
 #sidebar {
 	width: 15%;
-	margin-right: 5%;
+	margin-right: 3%;
 	margin-top: 10%;
 	margin-left: 5%;
 	float: left;

@@ -122,6 +122,7 @@ array(
     "/blog" => "BlogController",
     "/code" => "CodeController"
 );
+?>
 {% endhighlight %}
 </div>
 
@@ -143,6 +144,7 @@ array(
     2 => "Two",
     3 => "Three"
 );
+?>
 {% endhighlight %}
 </div>
 Iterating through and printing the values in this example would print "Five" "Two" "Three".

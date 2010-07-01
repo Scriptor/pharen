@@ -3,10 +3,13 @@ layout: default
 title: Pharen Tutorial
 ---
 
-### Prerequisites {#prerequisites}
-This tutorial is somewhat Unix-oriented and requires knowledge of using its command-line, so Windows users may need to adapt some of the instructions. However, most of the content of this tutorial should be platform-agnostic.
+### About this tutorial{#goal}
+The goal of this tutorial is to get started with Pharen by writing a bare-bones pastebin. Each section will be split into a code-centered portion followed by a more in-depth look. You can initially skip the in-depth stuff to get something up and running fast, then come back later if you want to understand more.
 
-You will need a server that can handle PHP files and a text editor. If you want language integration you can set your editor to use a plugin for another Lisp. For example, I currently use VimClojure and have it set to treat Pharen files like Clojure files.
+### Prerequisites {#prerequisites}
+This tutorial is somewhat Unix-oriented and requires knowledge of its command-line. Windows users may need to adapt some of the instructions. However, most of it is platform-agnostic.
+
+You will need a server that can handle PHP files and a text editor. If you want language integration you can set your editor to use a plugin for another Lisp. For example, I currently use VimClojure and have it treat Pharen (.phn) files as Clojure files.
 
 ### Getting set up {#set-up}
 First, get Pharen from the [download page](/download.html). Then open up a shell, cd into the directory the Pharen files are located and run:
@@ -17,18 +20,15 @@ First, get Pharen from the [download page](/download.html). Then open up a shell
 
 This installs the `pharen` (for the compiler) and `phake` (a build/utility tool) commands so you can use them from anywhere.
 
-Optional: You can also run Pharen's test suite 
-
-
-
 ### Hello world {#hello-world}
 Open a text editor (any should work) and enter the following code:
 
 {% highlight clojure %}
+; This is a comment and won't show up
 (print "Hello, world!")
 {% endhighlight %}
 
-Save this in your server's document root directory as `hello.phn`. From inside this directory run the following command to compile it:
+Save this in your server's document root directory as _hello.phn_. From inside this directory run the following command to compile it:
 
 {% highlight bash %}
 pharen hello.phn
@@ -36,4 +36,81 @@ pharen hello.phn
 
 If you go to [http://localhost/hello.php]() you will see "Hello, world!" printed out. Very basic, but it shows the nitty-gritty details are done.
 
-###
+### More complex expressions {#complex-expressions}
+How about a little more practice? Go back to hello.phn and enter the following code:
+
+{% highlight clojure %}
+(def id ($ get "id"))
+(def clean-id (addslashes id))
+
+(print (. "Fetching page with id: " id))
+{% endhighlight %}
+
+Recompile with:
+{% highlight bash %}
+pharen hello.phn
+{% endhighlight %}
+
+Now try loading [http://localhost/hello.php?id=8](). The page should respond with "Fetching page with id: 8".
+
+### Form handling {#form-handling}
+We can now move on to the pastebin. Let's get the database structure over with by creating a table, run the following SQL in your database (through whatever db front-end you use, maybe PHPMyAdmin).
+
+{% highlight sql %}
+CREATE TABLE "pages" (
+  id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(255) UNIQUE,
+  contents TEXT
+);
+{% endhighlight %}
+
+Create a directory inside your server's document directory called `pharenpastebin`. All project files should from now on be placed inside here. Start by creating a new file called _new.phn_. Then use the following code:
+
+{% highlight clojure %}
+(require "sql")
+(require "html")
+
+(if (isset ($ post "submit"))
+  (do (sql-insert "pages" 
+                {"title" ($ post "title") ,
+                 "contents" ($ post "contents")})
+      (print "New page available <a href='/page?id='" (mysql-insert-id) ">here</a>"))
+  (print (html-form "post" ($ server "PHP_SELF")
+                    (html-textbox "title")
+                    (html-textarea "contents")
+                    (html-submit "submit"))))
+{% endhighlight %}
+
+Compile it from inside the `pharentodo` directory by running: 
+{% highlight bash %}
+pharen new.phn
+{% endhighlight %}
+
+Now go to [http://localhost/pharenpastebin/new.phn]. You will see a form. Enter anything you want (don't worry, the values will be automatically sanitized) and submit it. If everything works, you'll get a link. For now, that link won't work but keep this page open anyway while we fix this.
+
+### Dynamic pages {#dynamic-pages}
+Create a file called **page.phn** and enter the following code:
+
+{% highlight clojure %}
+(require "sql")
+(require "html")
+
+(if (isset ($ get "id"))
+  (let
+    (id ($ get "id")
+     row (sql-fetch-by-id "pages" id))
+
+    (print "<h2>" (:row "title") "</h2>"
+           "<p>" (:row "contents") "</p>"))
+  (print "Please provide an id."))
+{% endhighlight %}
+
+Compile this file. Go back to the open web page where you submitted the form and click the link. It should take you to the page generated by the above code.
+
+### What's next {#whats-next}
+That's it for this tutorial. By now you should have a feel programming in Pharen. Some things you can do from here:
+* Read the in-depth sections, if you haven't.
+* Add more features to the pastebin, maybe editing pages.
+* Learn about cooler features, like [macros](/reference.html#macros), or [tail recursion elimination](/reference.html#tre).
+* Tinker with the [Phantom web framework](http://github.com/scriptor/phantom).
+* [Contribute](/contribute.html) to Pharen.
