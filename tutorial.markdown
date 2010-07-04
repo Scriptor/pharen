@@ -12,7 +12,7 @@ This tutorial is somewhat Unix-oriented and requires knowledge of its command-li
 You will need a server that can handle PHP files and a text editor. If you want language integration you can set your editor to use a plugin for another Lisp. For example, I currently use VimClojure and have it treat Pharen (.phn) files as Clojure files.
 
 ### Getting set up {#set-up}
-First, get Pharen from the [download page](/download.html). Then open up a shell, cd into the directory the Pharen files are located and run:
+First, get Pharen from the [download page](/pharen/download.html). Then open up a shell, cd into the directory the Pharen files are located and run:
 
 {% highlight bash %}
 ./install.sh
@@ -161,6 +161,6 @@ Again, we separated markup-related code from the business logic.
 That's it for this tutorial. By now you should have a feel programming in Pharen. Some things you can do from here:
 * Read the in-depth sections, if you haven't.
 * Add more features to the pastebin, maybe editing pages.
-* Learn about cooler features, like [macros](/reference.html#macros), or [tail recursion elimination](/reference.html#tre).
+* Learn about cooler features, like [macros](/pharen/reference.html#macros), or [tail recursion elimination](/pharen/reference.html#tre).
 * Tinker with the [Phantom web framework](http://github.com/scriptor/phantom).
-* [Contribute](/contribute.html) to Pharen.
+* [Contribute](/pharen/contribute.html) to Pharen.
