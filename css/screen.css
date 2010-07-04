@@ -39,7 +39,6 @@ body {
 	padding-right: 8px;
 }
 #sidebar ul li:hover{
-	background-color: #FAFAFA;
 	border-left: 2px solid black;
 }
 #sidebar ul li a{
@@ -63,7 +62,10 @@ p{
 	display: block;
 }
 div.highlight{
+    padding: 4px;
 	margin: 15px;
+    margin-top: 5px;
+    border: 1px solid #F2F2F2;
 }
 div.code-left {
 	float: left;
@@ -77,4 +79,8 @@ div.code-right{
 }
 p, ul{
     font-size: 0.9em;
+}
+span.filename{
+    font-size: 0.8em;
+    color: #083;
 }

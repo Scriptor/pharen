@@ -28,7 +28,7 @@ Open a text editor (any should work) and enter the following code:
 (print "Hello, world!")
 {% endhighlight %}
 
-Save this in your server's document root directory as _hello.phn_. From inside this directory run the following command to compile it:
+Save this in your server's document root directory as `hello.phn`. From inside this directory run the following command to compile it:
 
 {% highlight bash %}
 pharen hello.phn
@@ -37,7 +37,7 @@ pharen hello.phn
 If you go to [http://localhost/hello.php]() you will see "Hello, world!" printed out. Very basic, but it shows the nitty-gritty details are done.
 
 ### More complex expressions {#complex-expressions}
-How about a little more practice? Go back to hello.phn and enter the following code:
+How about a little more practice? Go back to `hello.phn` and enter the following code:
 
 {% highlight clojure %}
 (def id ($ get "id"))
@@ -53,32 +53,49 @@ pharen hello.phn
 
 Now try loading [http://localhost/hello.php?id=8](). The page should respond with "Fetching page with id: 8".
 
-### Form handling {#form-handling}
-We can now move on to the pastebin. Let's get the database structure over with by creating a table, run the following SQL in your database (through whatever db front-end you use, maybe PHPMyAdmin).
-
-{% highlight sql %}
-CREATE TABLE "pages" (
-  id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-  title VARCHAR(255) UNIQUE,
-  contents TEXT
-);
-{% endhighlight %}
-
-Create a directory inside your server's document directory called `pharenpastebin`. All project files should from now on be placed inside here. Start by creating a new file called _new.phn_. Then use the following code:
+### Dynamic pages {#dynamic-pages}
+Let's use what we know to write something that will fetch pastes for our pastebin. Create a directory inside your server's document directory called `pharenpastebin`. All project files should from now on be placed inside here. Create a file called `paste.phn` and enter the following code:
 
 {% highlight clojure %}
 (require "sql")
 (require "html")
 
-(if (isset ($ post "submit"))
-  (do (sql-insert "pages" 
-                {"title" ($ post "title") ,
-                 "contents" ($ post "contents")})
-      (print "New page available <a href='/page?id='" (mysql-insert-id) ">here</a>"))
-  (print (html-form "post" ($ server "PHP_SELF")
-                    (html-textbox "title")
-                    (html-textarea "contents")
-                    (html-submit "submit"))))
+(sql-connect "your-username", "your-password", "pastebindb")
+
+(when (isset ($ get "id"))
+  (def row (sql-fetch-by-id "pages" ($ get "id")))
+  (print "<h2>" (:row "title") "</h2>"
+         "<p>" (:row "contents") "</p>"))
+{% endhighlight %}
+For now, the MySQL database is assumed. Make sure you replace your-username and your-password. You can either create a pastebindb database or use an existing one. Of course, we can't test this since there's nothing in the database. Let's fix that.
+
+### Form handling {#form-handling}
+Run the following SQL in your database (through whatever db front-end you use, maybe PHPMyAdmin).
+
+{% highlight sql %}
+CREATE TABLE "pages" (
+  id INT NOT NULL AUTO\_INCREMENT PRIMARY KEY,
+  title VARCHAR(255) UNIQUE,
+  contents TEXT
+);
+{% endhighlight %}
+
+Start by creating a new file called `new.phn`. Then use the following code:
+
+{% highlight clojure %}
+(require "sql")
+(require "html")
+
+(when (isset ($ post "submit"))
+  (sql-insert "pages" 
+              {"title" ($ post "title") ,
+               "contents" ($ post "contents")})
+  (print "Newly created page available <a href='/page?id='" (mysql-insert-id) ">here</a>"))
+
+(print (html-form "post" ($ server "PHP\_SELF")
+                  (html-textbox "title")
+                  (html-textarea "contents")
+                  (html-submit "submit")))
 {% endhighlight %}
 
 Compile it from inside the `pharentodo` directory by running: 
@@ -86,26 +103,59 @@ Compile it from inside the `pharentodo` directory by running:
 pharen new.phn
 {% endhighlight %}
 
-Now go to [http://localhost/pharenpastebin/new.phn]. You will see a form. Enter anything you want (don't worry, the values will be automatically sanitized) and submit it. If everything works, you'll get a link. For now, that link won't work but keep this page open anyway while we fix this.
-
-### Dynamic pages {#dynamic-pages}
-Create a file called **page.phn** and enter the following code:
-
-{% highlight clojure %}
-(require "sql")
-(require "html")
-
-(if (isset ($ get "id"))
-  (let
-    (id ($ get "id")
-     row (sql-fetch-by-id "pages" id))
-
-    (print "<h2>" (:row "title") "</h2>"
-           "<p>" (:row "contents") "</p>"))
-  (print "Please provide an id."))
-{% endhighlight %}
+Now go to [http://localhost/pharenpastebin/new.phn](). You will see a form. Enter anything you want (don't worry, the values will be automatically sanitized) and submit it. If everything works, you'll get a link. For now, that link won't work but keep this page open anyway while we fix this.
 
 Compile this file. Go back to the open web page where you submitted the form and click the link. It should take you to the page generated by the above code.
+
+### Throwing in a template {#template}
+We now have a functional application, but the code could use a little (okay, a *lot* of) work. For example, if we wanted to create an edit feature we would have to copy the form code from the creation feature. Let's create some template functions to deal with printing all the HTML. First, create a new file called `tpl.phn` and add the following code:
+
+{% highlight clojure %}
+(fn tpl (title contents)
+    (print "
+<html>
+  <head>
+    <title>" title "</title></head>
+  <body>
+    <h2>" title "</h2>
+    <p>"
+      contents
+    "</p>
+  </body>
+</html>"))
+{% endhighlight %}
+
+Compile this file. Now we'll use this function when fetching a paste.
+
+{% highlight clojure %}
+(require "tpl.php")
+(when (isset ($ get "id"))
+  (def row (sql-fetch-by-id "pages" ($ get "id")))
+  (tpl (:row "title") (:row "contents")))
+{% endhighlight %}
+
+All we did was write a function that deals will *all* the html. The original code only has to worry about providing the data. It's not quite MVC, but it's an improvement! Now let's do the same with `new.phn`. Change it to the following:
+
+{% highlight clojure %}
+(require "tpl.php")
+
+(fn form (status)
+  (tpl "New Paste" (. status "<br/>"
+          html-form "post" ($ server "PHP\_SELF")
+          (html-textbox "title")
+          (html-textarea "contents")
+          (html-submit "submit"))))
+
+(def status
+  (when (isset ($ post "submit"))
+    (sql-insert "pages" 
+                {"title" ($ post "title") ,
+                 "contents" ($ post "contents")})
+    (. "Newly created page available <a href='/page?id='" (mysql-insert-id) ">here</a>")))
+(form status)
+{% endhighlight %}
+
+Again, we separated markup-related code from the business logic.
 
 ### What's next {#whats-next}
 That's it for this tutorial. By now you should have a feel programming in Pharen. Some things you can do from here:
