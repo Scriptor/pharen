@@ -1,11 +1,14 @@
-(micro form (action code)
-    (. "<form action='" action "' method='POST'>"
-        code
-        "<br/>"
-        "<input type='submit' value='submit' name='submit'/></form>"))
+(fn html-form (method action &code)
+    (sprintf "<form action='%s' method='%s'>%s</form>" method action (implode "<br/>" code)))
 
-(micro textarea (id)
-    (. "<textarea id='" id "' name='" id "'></textarea>"))
+(fn html-label (id)
+  (sprintf "<label for='%s'>%s</label>" id id))
 
-(micro br ()
-    "<br/>")
+(fn html-textbox (id)
+  (sprintf "%s <br/> <input type='text' id='%s' name='%s'/>" (html-label id) id id))
+
+(fn html-textarea (id)
+    (sprintf "%s <br/> <textarea id='%s' name='%s'></textarea>" id))
+
+(fn html-submit (id)
+  (sprintf "%s <br/> <input type='submit' id='%s' name='%s' value='%s'/>" id id id))
