@@ -18,7 +18,7 @@ First, get Pharen from the [download page](/pharen/download.html). Then open up 
 ./install.sh
 {% endhighlight %}
 
-This installs the `pharen` (for the compiler) and `phake` (a build/utility tool) commands so you can use them from anywhere.
+This installs the `pharen` command so you can use it from anywhere.
 
 ### Hello world {#hello-world}
 Open a text editor (any should work) and enter the following code:
@@ -43,7 +43,9 @@ How about a little more practice? Go back to `hello.phn` and enter the following
 (def id ($ get "id"))
 (def clean-id (addslashes id))
 
-(print (. "Fetching page with id: " id))
+(if (< clean-id 0)
+  (print "Invalid id, cannot be less than 0.")
+  (print (. "Fetching page with id: " id)))
 {% endhighlight %}
 
 Recompile with:
@@ -58,9 +60,8 @@ Let's use what we know to write something that will fetch pastes for our pastebi
 
 {% highlight clojure %}
 (require "sql")
-(require "html")
 
-(sql-connect "your-username", "your-password", "pastebindb")
+(sql-connect "your-username" "your-password" "pastebindb")
 
 (when (isset ($ get "id"))
   (def row (sql-fetch-by-id "pages" ($ get "id")))
@@ -74,7 +75,7 @@ Run the following SQL in your database (through whatever db front-end you use, m
 
 {% highlight sql %}
 CREATE TABLE "pages" (
-  id INT NOT NULL AUTO\_INCREMENT PRIMARY KEY,
+  id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
   title VARCHAR(255) UNIQUE,
   contents TEXT
 );
@@ -90,9 +91,9 @@ Start by creating a new file called `new.phn`. Then use the following code:
   (sql-insert "pages" 
               {"title" ($ post "title") ,
                "contents" ($ post "contents")})
-  (print "Newly created page available <a href='/page?id='" (mysql-insert-id) ">here</a>"))
+  (print (html-link (. "/page?id=" (mysql-insert-id)) "New paste.")))
 
-(print (html-form "post" ($ server "PHP\_SELF")
+(print (html-form "post" ($ server "PHP_SELF")
                   (html-textbox "title")
                   (html-textarea "contents")
                   (html-submit "submit")))
@@ -112,23 +113,24 @@ We now have a functional application, but the code could use a little (okay, a *
 
 {% highlight clojure %}
 (fn tpl (title contents)
-    (print "
+    (sprintf "
 <html>
   <head>
-    <title>" title "</title></head>
+    <title>%s</title></head>
   <body>
-    <h2>" title "</h2>
-    <p>"
-      contents
-    "</p>
+    <h2>%s</h2>
+    <p>
+		%s
+	</p>
   </body>
-</html>"))
+</html>" title title contents))
 {% endhighlight %}
 
 Compile this file. Now we'll use this function when fetching a paste.
 
 {% highlight clojure %}
 (require "tpl.php")
+
 (when (isset ($ get "id"))
   (def row (sql-fetch-by-id "pages" ($ get "id")))
   (tpl (:row "title") (:row "contents")))
@@ -137,21 +139,23 @@ Compile this file. Now we'll use this function when fetching a paste.
 All we did was write a function that deals will *all* the html. The original code only has to worry about providing the data. It's not quite MVC, but it's an improvement! Now let's do the same with `new.phn`. Change it to the following:
 
 {% highlight clojure %}
+(require "html.php")
 (require "tpl.php")
 
 (fn form (status)
   (tpl "New Paste" (. status "<br/>"
-          html-form "post" ($ server "PHP\_SELF")
-          (html-textbox "title")
-          (html-textarea "contents")
-          (html-submit "submit"))))
+                      (html-form "post" ($ server "PHP_SELF")
+                                 (html-textbox "title")
+                                 (html-textarea "contents")
+                                 (html-submit "submit")))))
 
 (def status
   (when (isset ($ post "submit"))
     (sql-insert "pages" 
                 {"title" ($ post "title") ,
                  "contents" ($ post "contents")})
-    (. "Newly created page available <a href='/page?id='" (mysql-insert-id) ">here</a>")))
+    (html-link (. "/page?id=" (mysql-insert-id)) "here")))
+
 (form status)
 {% endhighlight %}
 
@@ -160,7 +164,6 @@ Again, we separated markup-related code from the business logic.
 ### What's next {#whats-next}
 That's it for this tutorial. By now you should have a feel programming in Pharen. Some things you can do from here:
 * Read the in-depth sections, if you haven't.
-* Add more features to the pastebin, maybe editing pages.
+* Add more features to the pastebin, maybe editing pastes.
 * Learn about cooler features, like [macros](/pharen/reference.html#macros), or [tail recursion elimination](/pharen/reference.html#tre).
-* Tinker with the [Phantom web framework](http://github.com/scriptor/phantom).
 * [Contribute](/pharen/contribute.html) to Pharen.
