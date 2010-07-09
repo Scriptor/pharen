@@ -51,13 +51,12 @@ h2{
 }
 h3{
 	font-size: 1em;
-	margin-bottom: 5px;
 }
 h4{
-    font-size: .8em;
+    font-size: 0.8em;
 }
 p{
-	margin-bottom: 10px;
+	margin-bottom: 15px;
 	clear: both;
 	display: block;
 }

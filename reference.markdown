@@ -157,8 +157,8 @@ Takes a test expression and two body expressions. If the test evaluates to true,
 
 {% highlight clojure %}
 (if (== 3 3)
-	(print "Cool, math still works.")
-	(print "Math no longer works..."))
+  (print "Cool, math still works.")
+  (print "Math no longer works..."))
 {% endhighlight %}
 
 Since `if` is just an expression, you can also embed it into other expressions. The following will have the same behavior as the above code:
