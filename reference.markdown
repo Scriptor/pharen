@@ -39,7 +39,6 @@ An expression is anything that returns a value. Everything in Pharen is an expre
 ### Infix Operators ### {#infix-operators}
 Infix operations, such as number addition and string concatenation, follow the looks-like-function-call rule.
 
-<div id='code-left'>
 {% highlight clojure %}
 ; Perform some math
 (+ 15
@@ -49,16 +48,9 @@ Infix operations, such as number addition and string concatenation, follow the l
 ; Join two strings
 (. "Hello, " "world!")
 {% endhighlight %}
-</div>
-<div id='code-right'>
-{% highlight perl %}
-15 + (4 * 5) + (10 - 3);
-"Hello, " . "world!";
-{% endhighlight %}
-</div>
 
 ### Defining variables ### {#defining-variables}
-To define a single variable at a time in the current scope, use the `def` construct.
+To define a single variable in the current scope, use the `def` construct.
 
 {% highlight clojure %}
 (def name "Arthur Dent")
@@ -77,7 +69,7 @@ To create one ore more variables inside an entirely new scope, use `let`.
 {% endhighlight %}
 
 ### Lists ### {#lists}
-Pharen's lists are sequences of items. They are the equivalent of arrays in PHP without explicitly set keys. Lists can contain any data type as well as hold different data types at the same time. For example, lists of strings, numbers, or strings *and* numbers are all valid. Unlike PHP, lists can be directly created using square brackets instead of the `array` construct used in PHP. Here are some examples of directly creating lists in their raw form, list literals.
+Pharen's lists are sequences of items. They are the equivalent of arrays in PHP without explicitly set keys. Lists can contain any data type. For example, lists of strings, numbers, or strings *and* numbers are all valid. Unlike PHP, lists are created using literals instead of the `array` construct.
 
 {% highlight clojure %}
 ; A list containing the numbers from one through 5
@@ -103,91 +95,244 @@ Ranges can also be defined with a step to go from one number to the next. The st
 {% endhighlight %}
 
 ### Dictionaries ### {#dictionaries}
-Dictionaries encapsulate the mapping side of PHP arrays. They work just as associative arrays work in PHP, a key (of type integer or string) can map to any value. The `dict` keyword starts the dicionary, followed by parentheses-enclosed pairs.
+Dictionaries encapsulate the mapping side of PHP arrays. They work just like associative arrays, a key (of type integer or string) can map to any value. They are created using braces.
 
-<div class='code-left'>
 {% highlight clojure %}
 ; A mapping of urls to actions in a web app
-(dict
-    ("/" "IndexController")
-    ("/blog" "BlogController")
-    ("/code" "CodeController"))
+{"/" "IndexController",
+ "/blog" "BlogController",
+ "/code" "CodeController"}
 {% endhighlight %}
-</div>
-<div class='code-right'>
-{% highlight php %}
-<?php
-array(
-    "/" => "IndexController",
-    "/blog" => "BlogController",
-    "/code" => "CodeController"
-);
-?>
-{% endhighlight %}
-</div>
+
+The commas act as white-space and make the code more readable, the code would be just as functional without them. `dict` simply looks at every two nodes inside it as a key-value pair. 
 
 Integer keys can be set explicitly, but the dictionary is still maintained in the order you define it in. 
 
-<div class='code-left'>
 {% highlight clojure %}
-(dict
-    (5 "Five")
-    (2 "Two")
-    (3 "Three"))
+{5 "Five",
+ 2 "Two",
+ 3 "Three"}
 {% endhighlight %}
-</div>
-<div class='code-right'>
-{% highlight php %}
-<?php
-array(
-    5 => "Five",
-    2 => "Two",
-    3 => "Three"
-);
-?>
-{% endhighlight %}
-</div>
 Iterating through and printing the values in this example would print "Five" "Two" "Three".
 
 ### Accessing elements from lists and dictionaries ### {#accessing-elements}
 Lists and dictionaries are accessed using the same form. Prefix the name of the collection with a colon and pass the index/key as an argument.
 
-<div class='code-left'>
 {% highlight clojure %}
 (def colors ["blue" "orange" "red" "green"])
-(def planets (dict
-    ("smallest" "Mercury")
-    ("gaseous" ["Jupiter" "Saturn" "Uranus" "Neptune"]))))
+(def planets
+    {"smallest" "Mercury",
+     "gaseous" ["Jupiter" "Saturn" "Uranus" "Neptune"]})
 
 (print (:colors 2))
 (print (:planets "smallest"))
 (print (:(:planets "gaseous") 0))
 {% endhighlight %}
-</div>
-<div class='code-right'>
-{% highlight php %}
-<?php
-$colors = array("blue", "orange", "red", "green");
-$planets = array(
-    "smallest" => "Mercury",
-    "gaseous" => array("Jupiter" "Saturn" "Uranus" "Neptune")
-);
-
-print $colors[2];
-print $planets["smallest"];
-print $planets["gaseous"][0];
-{% endhighlight %}
-</div>
-
 The above will print red, Mercury, and Jupiter. Notice the way accessing elements in embedded structures is done in the third print expression. Remember that since everything is an expression, you can think of `(:planets "gaseous")` as a function call that returns the value for the key "gaseous". This value happens to be a list, which is passed to the outer list access "function call", this one asking for the value at position 0.
 
 List access can also be done with literals, unlike in PHP.
 
 {% highlight clojure %}
-(print (:["blue" "orange" "red" "green"] 2))
+(print (:["blue" "orange" "green" "red"] 2))
 (print (:(dict
     ("red" "apple")
     ("green" "kiwki")) "green"))
 {% endhighlight %}
 
-This will print red and kiwi. While not always useful, this shows the extent of the everything-as-expression rule in Pharen. These literals are just expressions that return either a list or a dictionary, which is all the list access form needs. They could just as easily be replaced by variables or function calls, as long as those too return a list or a dictionary.
+This will print red and kiwi.
+
+### Superglobals ### {#superglobals}
+Pharen provides the `$` form to access superglobals such as $_POST and $_SERVER. It takes the kind of superglobal and the key to use as arguments.
+
+{% highlight clojure %}
+(def name ($ post "name"))
+(def php-self ($ server "PHP_SELF"))
+{% endhighlight %}
+
+### Special Forms ### {#special-forms}
+Pharen comes with a few special forms to form the basis for control structures. Unlike PHP's control structures, special forms still count as expressions.
+
+### If ## {#if}
+Takes a test expression and two body expressions. If the test evaluates to true, it runs the first body expression, if it is false, the second one will be run.
+
+{% highlight clojure %}
+(if (== 3 3)
+	(print "Cool, math still works.")
+	(print "Math no longer works..."))
+{% endhighlight %}
+
+Since `if` is just an expression, you can also embed it into other expressions. The following will have the same behavior as the above code:
+
+{% highlight clojure %}
+(print
+  (if (== 3 3)
+    "Cool, math still works."
+    "Math no longer works..."))
+{% endhighlight %}
+
+### Do ## {#do}
+The main limitation of `if` is that it only runs one expression. You can get around that with `do`, which combines a series of expressions into one.
+
+{% highlight clojure %}
+(if (== 3 3)
+  (do
+    (print "First expression.")
+    (print "Second expression."))
+  (print "Math no longer works..."))
+{% endhighlight %}
+
+### Cond ## {#cond}
+`cond` is Pharen's other built-in special form for conditionals. Unlike `if`, it can take any number of test expressions, and each test expression can take any number of body expressions.
+
+{% highlight clojure %}
+(cond
+	((== 1 3) (print "This can't be right."))
+	((== 2 3) (print "Nope, this shouldn't show up either."))
+	((== 3 3) (print "That works!")
+              (print "And here's another line!"))
+	(TRUE (print "Something must have gone wrong.")))
+{% endhighlight %}
+
+Notice that each test-body grouping is wrapped in parentheses. Also, `TRUE` is used as a catch-all whose linked body expressions will be run if all other test expressions fail.
+
+### When ## {#when}
+`when` gets a quick mention even though it's technically not built-in, instead, it's a [macro](#macro) that's defined in [lang.phn](#lang-phn). It takes one test expression and a series of body expressions. If the test returns true, everything in the body is evaluated, otherwise, the whole thing automatically returns false. `when` is best used in situations where you only need something to happen if the test expression is true while otherwise you don't care.
+
+{% highlight clojure %}
+(when (isset ($ post "submit"))
+  (print "The form was successfully submitted.")
+  (process-form-data))
+{% endhighlight %}
+
+We only want to do something if we detect a form submission, otherwise, the code simply moves on.
+
+### Functions ### {#functions}
+The `fn` form is used to create regular ol' lispy functions. The things that make Pharen's functions different from PHP's are:
+
+- The last evaluated expression will automatically be the return value of the function.
+- They are expressions, you can even embed them in function calls.
+- They are lexically scoped, variables declared in an outer function will be available to inner ones.
+- They can be nested inside each other without having to worry about evaluating the same function definition twice.
+
+{% highlight clojure %}
+(fn create-user (name password)
+  (mysql-query (sprintf "INSERT INTO users VALUES(%s, %s);" (hash-func name) (hash-func password)))
+  (printf "New user created with id:%s " (mysql-insert-id)))
+{% endhighlight %}
+
+Here is a more complex example showing the different ways you can stretch Pharen functions' features:
+
+{% highlight clojure %}
+(fn fact (n)
+  (fn fact-iter (n acc)
+     (if (<= n 0)
+       acc
+       (fact-iter (- n 1) (* acc n))))
+  (fact-iter n 1))
+{% endhighlight %}
+
+This is a factorial function that uses a nested "worker" function to take advantage of [tail recursion](#tre). The outer function's sole purpose is to provide `fact-iter` with a starting value.
+
+Since the `if` expression is the last (and only) expression in `fact-iter`, the Pharen compiler figures out that that's what it needs to return. `if` knows that when it's acting as the return expression, it actually needs to make sure either of its two body children are returned. The same happens when `fact-iter` is actually called inside the body of `fact`.
+
+#### More on Lexical Scope #### {#scope}
+Pharen follows [lexical scoping](http://en.wikipedia.org/wiki/Scope_\(programming\)#Lexical_scoping) rules like other lisps and unlike PHP. Formally, this means variables can only be accessed at any point at or inside the level it is defined. Practically, this means you can have access to variables created in an outer function from inside a nested function, as well as other useful tricks such as [closures](#closures).
+
+{% highlight clojure %}
+(fn outer (a)
+  (fn inner (b)
+    (+ a b))
+  (inner 3))
+(outer 4)
+{% endhighlight %}
+
+The above will print 7, since `a` is bound to 4 and `b` is bound to 3. Even though `a` is not defined inside the function called `inner`, it is still accessible because `inner` has access to it.
+
+#### Tail Recursion Elimination #### {#tre}
+In the above example, there is a good reason to create a nested function. Notice how the last thing fact-iter is doing is calling itself again, this is known as tail recursion. While normally recursion can be expensive memory-wise, the compiler optimizes this into a while loop. This is called tail recursion elimination (TRE). The result is equivalent to a non-optimized version, but uses constant memory, which frequently means it is faster.
+
+TRE is an important component of Pharen code since it emphasizes immutability and recursion. For example, Pharen's functions for dealing with dictionaries, `reduce-pairs` and `map-pairs` use this technique to maintain some efficiency.
+
+### Lambdas and Closures ### {#lambdas}
+Anonymous functions in Pharen are created using the `lambda` form. They are useful when you simply want to pass along a function as a parameter and don't need to give it a name.
+
+{% highlight clojure %}
+(map (lambda (x)
+             (* 2 x))
+     [1 2 3 4])
+{% endhighlight %}
+
+`map` takes a function and a list, calls the function with each item in the list, and returns a new list. So the above code simply returns a new list with double the values of the old one. A lambda keeps things simpler than having to worry about naming a function.
+
+#### Partial application #### {#partials}
+If the lambda syntax is too bulky and all you need to do is a simple computation, you can partially apply a function. This means you supply a function with fewer than than the minimum number of arguments. This results in the compiler creating another function that remembers those arguments already given and then takes any ungiven ones as its own parameters.
+
+It is best explained by an example, to rewrite the above code with partial application:
+
+{% highlight clojure %}
+(map (* 2) [1 2 3 4])
+{% endhighlight %}
+
+Since the `*` function needs at least two arguments but is only given one, the compiler creates a new function takes takes one more argument and multiplies that by two. That one more argument is provided from each item in the list.
+
+#### Splats #### {#splats}
+Sometimes functions need to have an arbitrary number of parameters. In PHP, this would require calling `func_get_args`. Pharen simplifies this by providing splats, created by prepending a parameter name with an ampersand. Notice how the `map` function above takes a list as the second parameter. If you want, you can create a wrapper function that instead takes any number of arguments:
+
+{% highlight clojure %}
+(fn my-map (f &xs)
+  (map f xs))
+{% endhighlight %}
+
+The first parameter is still a function name, but after that any others become part of an implicitly created variable called xs which is then available to you as a list.
+
+### Macros ### {#macros}
+With macros, unevaluated code can be used as if it was a data structure that could be processed and manipulated as needed. In Pharen, they are defined using `defmacro`. Macros are complex and will need much more practice than a couple of paragraphs and code samples.
+
+The first thing you need to understand is that when you call a macro, any arguments passed to it are *not* evaluated immediately. For example:
+
+{% highlight %}
+(some-fn (* 2 3))
+(some-macro (* 2 3))
+{% endhighlight %}
+
+With `some-fn`, the product of 2 and 3 is first calculated, then passed as an argument. With `some-macro`, `(* 2 3)` becomes a list with three elements, `*` and two numbers. This means the macro can choose what parameters to evaluate.
+
+{% highlight clojure %}
+(defmacro no-evaluation (expr)
+  (print "Nothing is evaluated."))
+(no-evaluation (exp 1000 1000))
+{% endhighlight %}
+
+Even though we are passing `no-evaluation` a very expensive computation, it will never be performed. All that happens is that a message will be printed if this code is compiled (macros are executed during compilation).
+
+The second thing to understand about macros is that not only can they take *in* unevaluated code, but they can *return* it as well. This can be done using the single-quote symbol: `'`.
+
+{% highlight clojure %}
+(defmacro square-10 ()
+  '(* 10 10))
+(square-10)
+{% endhighlight %}
+
+Quoting an expression is equivalent to parameters not being evaluated, except it is used inside the body of a macro while parameters are unevaluated by default. The call to `square-10` will be directly replace with `(* 10 10)` when this code is compiled. Normally something like this would be too simple to justify the complexities macros can cause, but it demonstrates the point.
+
+Let's create a simplified version of the [when](#when) construct mentioned above. It will take one test expression and one body expression, which will be evaluated if the test is true. Note that this would not be possible to make with a function since the body expression would be evaluated as soon as the function is called.
+
+{% highlight clojure %}
+(defmacro simple-when (test expr)
+  '(if ~test
+     ~expr
+     FALSE))
+{% endhighlight %}
+
+First, notice that the `if` expression is quoteable just as any other. Next, the unquote  symbol: `~`, is introduced. This is the opposite of quoting and forces the macro to evaluate an otherwise unevaluated parameter. We do not want to just return `test`, we want whatever is *inside* `test`.
+
+Finally, here is the full implementation of the when macro.
+
+{% highlight clojure %}
+(defmacro full-when (test &body)
+  '(if ~test
+     ~@body
+     FALSE))
+{% endhighlight %}
+
+Here, we combine splats with macros since when is supposed to take an arbitrary number of body expressions. Since a splat normally creates a list, we break the list up and splice each element in using the splice symbol: `@`. Since we still want the actual contents of `body`, we also have to unquote it.
