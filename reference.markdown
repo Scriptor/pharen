@@ -290,7 +290,7 @@ With macros, unevaluated code can be used as if it was a data structure that cou
 
 The first thing you need to understand is that when you call a macro, any arguments passed to it are *not* evaluated immediately. For example:
 
-{% highlight %}
+{% highlight clojure %}
 (some-fn (* 2 3))
 (some-macro (* 2 3))
 {% endhighlight %}
