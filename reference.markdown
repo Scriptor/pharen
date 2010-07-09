@@ -1,16 +1,15 @@
 ---
 layout: default
-title: Pharen Reference
+title: Pharen Language Reference
 ---
 
-## Pharen Reference ##
+## Pharen Language Reference ##
 ### Data Types and Basics ### {#data-types-and-basics}
 Since much of the reference relies on using code examples, the following list of points should be read to ensure the examples are fully understood.
 - Comments start with a semicolon and go to the end of the line.
-- Numbers are the same as in PHP. Integers, floats, and positive/negative numbers will work as they do in PHP.
-- Strings are always double-quoted and are equivalent to PHP's double-quoted strings. All escape characters
-as well as variable interpolation will work.
-- Variables do not have the `$` prefix as they do in PHP.
+- Numbers (integers, floats, and positive/negative numbers) work the same as in PHP.
+- Strings are always double-quoted and are equivalent to PHP's double-quoted strings. All escape characters will work.
+- Variables do not have the `$` prefix as they do in PHP (unless a variable is used as a function name).
 - Constants should not have any lower-case letters.
 - Dashes are legal characters in names, they are converted to underscores in the resulting PHP code.
 
@@ -24,16 +23,16 @@ SOME-CONSTANT
 {% endhighlight %}
 
 ### Expressions ### {#expressions}
-An expression is anything that returns a value. Everything in Pharen is an expression and every Pharen program is created by mixing and combining simpler expressions to create more sophisticated ones. The datatypes, variables, and constants mentioned above are some of the most basic expressions in Pharen and are called `atomic` values. On a higher level, Pharen follows two rules:
+An expression is anything that results in a value. Almost everything in Pharen is an expression and every Pharen program is created by mixing and combining simpler expressions to create more sophisticated ones. The datatypes, variables, and constants mentioned above are some of the most basic expressions in Pharen and are called `atomic` values. On a higher level, Pharen follows two rules:
 
-1. Every function call is an expression consisting of the function name and its arguments, all enclosed in parentheses.
-2. *Everything* looks like a function call, even if-statements and function definitions.
+- Every function call is an expression consisting of the function name and its arguments, all enclosed in parentheses.
+- *Everything* looks like a function call, even if-statements and function definitions.
 
 {% highlight clojure %}
-; Here's a basic function call, where my-function is called and passed a string and a variable
+; A basic function call, my-function is passed a string and a variable
 (my-function "argument 1" argument-2)
-; Since expressions return values, they can be used anywhere that atomic values can be used.
-(my-function (another-function "argument") argument-2)
+; Expressions can be used anywhere that atomic values can be used.
+(my-function (another-function "argument 1") argument-2)
 {% endhighlight %}
 
 ### Infix Operators ### {#infix-operators}
@@ -48,6 +47,9 @@ Infix operations, such as number addition and string concatenation, follow the l
 ; Join two strings
 (. "Hello, " "world!")
 {% endhighlight %}
+
+The full list of infix operators:
+"+", "-", "*", ".", "/", "and", "or", "=", "=&", "<", ">", "<=", ">=", "===", "==", "!=", "!=="
 
 ### Defining variables ### {#defining-variables}
 To define a single variable in the current scope, use the `def` construct.
@@ -126,11 +128,11 @@ Lists and dictionaries are accessed using the same form. Prefix the name of the 
 
 (print (:colors 2))
 (print (:planets "smallest"))
-(print (:(:planets "gaseous") 0))
+(print (:planets "gaseous" 0))
 {% endhighlight %}
-The above will print red, Mercury, and Jupiter. Notice the way accessing elements in embedded structures is done in the third print expression. Remember that since everything is an expression, you can think of `(:planets "gaseous")` as a function call that returns the value for the key "gaseous". This value happens to be a list, which is passed to the outer list access "function call", this one asking for the value at position 0.
+The above will print red, Mercury, and Jupiter. In the last line, multiple arguments are passed to access nested data. It is the equivalent of `$planets["gaseous"][0]` in PHP.
 
-List access can also be done with literals, unlike in PHP.
+List access can also be done directly on literals, unlike in PHP.
 
 {% highlight clojure %}
 (print (:["blue" "orange" "green" "red"] 2))
@@ -142,7 +144,7 @@ List access can also be done with literals, unlike in PHP.
 This will print red and kiwi.
 
 ### Superglobals ### {#superglobals}
-Pharen provides the `$` form to access superglobals such as $_POST and $_SERVER. It takes the kind of superglobal and the key to use as arguments.
+Pharen provides the `$` form to access superglobals such as $_POST and $_SERVER. It takes the type of superglobal and a key as arguments.
 
 {% highlight clojure %}
 (def name ($ post "name"))
@@ -152,7 +154,7 @@ Pharen provides the `$` form to access superglobals such as $_POST and $_SERVER.
 ### Special Forms ### {#special-forms}
 Pharen comes with a few special forms to form the basis for control structures. Unlike PHP's control structures, special forms still count as expressions.
 
-### If ## {#if}
+### If ### {#if}
 Takes a test expression and two body expressions. If the test evaluates to true, it runs the first body expression, if it is false, the second one will be run.
 
 {% highlight clojure %}
@@ -170,7 +172,7 @@ Since `if` is just an expression, you can also embed it into other expressions. 
     "Math no longer works..."))
 {% endhighlight %}
 
-### Do ## {#do}
+### Do ### {#do}
 The main limitation of `if` is that it only runs one expression. You can get around that with `do`, which combines a series of expressions into one.
 
 {% highlight clojure %}
@@ -181,16 +183,16 @@ The main limitation of `if` is that it only runs one expression. You can get aro
   (print "Math no longer works..."))
 {% endhighlight %}
 
-### Cond ## {#cond}
+### Cond ### {#cond}
 `cond` is Pharen's other built-in special form for conditionals. Unlike `if`, it can take any number of test expressions, and each test expression can take any number of body expressions.
 
 {% highlight clojure %}
 (cond
-	((== 1 3) (print "This can't be right."))
-	((== 2 3) (print "Nope, this shouldn't show up either."))
-	((== 3 3) (print "That works!")
-              (print "And here's another line!"))
-	(TRUE (print "Something must have gone wrong.")))
+  ((== 1 3) (print "This can't be right."))
+  ((== 2 3) (print "Nope, this shouldn't show up either."))
+  ((== 3 3) (print "That works!")
+            (print "And here's another line!"))
+  (TRUE (print "Something must have gone wrong.")))
 {% endhighlight %}
 
 Notice that each test-body grouping is wrapped in parentheses. Also, `TRUE` is used as a catch-all whose linked body expressions will be run if all other test expressions fail.
@@ -236,7 +238,7 @@ This is a factorial function that uses a nested "worker" function to take advant
 Since the `if` expression is the last (and only) expression in `fact-iter`, the Pharen compiler figures out that that's what it needs to return. `if` knows that when it's acting as the return expression, it actually needs to make sure either of its two body children are returned. The same happens when `fact-iter` is actually called inside the body of `fact`.
 
 #### More on Lexical Scope #### {#scope}
-Pharen follows [lexical scoping](http://en.wikipedia.org/wiki/Scope_\(programming\)#Lexical_scoping) rules like other lisps and unlike PHP. Formally, this means variables can only be accessed at any point at or inside the level it is defined. Practically, this means you can have access to variables created in an outer function from inside a nested function, as well as other useful tricks such as [closures](#closures).
+Pharen follows [lexical scoping](http://en.wikipedia.org/wiki/Scope_(programming\)#Lexical_scoping) rules like other lisps and unlike PHP. Formally, this means variables can only be accessed at any point at or inside the level it is defined. Practically, this means you can have access to variables created in an outer function from inside a nested function, as well as other useful tricks such as [closures](#closures).
 
 {% highlight clojure %}
 (fn outer (a)
