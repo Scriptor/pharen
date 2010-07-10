@@ -49,7 +49,7 @@ Infix operations, such as number addition and string concatenation, follow the l
 {% endhighlight %}
 
 The full list of infix operators:
-"+", "-", "*", ".", "/", "and", "or", "=", "=&", "<", ">", "<=", ">=", "===", "==", "!=", "!=="
+"+", "-", "\*", ".", "/", "and", "or", "=", "=&", "<", ">", "<=", ">=", "===", "==", "!=", "!=="
 
 ### Defining variables ### {#defining-variables}
 To define a single variable in the current scope, use the `def` construct.
@@ -238,7 +238,7 @@ This is a factorial function that uses a nested "worker" function to take advant
 Since the `if` expression is the last (and only) expression in `fact-iter`, the Pharen compiler figures out that that's what it needs to return. `if` knows that when it's acting as the return expression, it actually needs to make sure either of its two body children are returned. The same happens when `fact-iter` is actually called inside the body of `fact`.
 
 #### More on Lexical Scope #### {#scope}
-Pharen follows [lexical scoping](http://en.wikipedia.org/wiki/Scope_(programming\)#Lexical_scoping) rules like other lisps and unlike PHP. Formally, this means variables can only be accessed at any point at or inside the level it is defined. Practically, this means you can have access to variables created in an outer function from inside a nested function, as well as other useful tricks such as [closures](#closures).
+Pharen follows [lexical scoping](http://en.wikipedia.org/wiki/Scope_%28programming%29#Lexical_scoping) rules like other lisps and unlike PHP. Formally, this means variables can only be accessed at any point at or inside the level it is defined. Practically, this means you can have access to variables created in an outer function from inside a nested function, as well as other useful tricks such as [closures](#closures).
 
 {% highlight clojure %}
 (fn outer (a)
