@@ -845,7 +845,7 @@ class FuncDefNode extends SpecialForm{
             $body.
             $this->format_line("}").$this->format_line("");
 
-        if(!$this->is_partial && Node::$delay_tmp > 0){
+        if(Node::$delay_tmp > 0){
             Node::$delay_tmp--;
         }
         $code = Node::add_tmp($code);
