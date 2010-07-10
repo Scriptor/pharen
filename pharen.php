@@ -313,7 +313,7 @@ class Scope{
             return "";
         }
         $value = $this->bindings[$var_name]->compile();
-        return $this->owner->format_line('Lexical::$scopes["'.Node::$ns.'"]['.$this->id.'][\''.$var_name.'\'] =& '.$var_name.";");
+        return $this->owner->format_line_indent('Lexical::$scopes["'.Node::$ns.'"]['.$this->id.'][\''.$var_name.'\'] =& '.$var_name.";");
     }
 
     public function get_lexical_bindings(){
@@ -843,7 +843,7 @@ class FuncDefNode extends SpecialForm{
         $code = $this->format_line("function ".$this->name.$params."{").
             $lexings.
             $body.
-            $this->format_line("}");
+            $this->format_line("}").$this->format_line("");
 
         if(!$this->is_partial && Node::$delay_tmp > 0){
             Node::$delay_tmp--;
@@ -1377,7 +1377,6 @@ class BindingNode extends Node{
 
     public function __construct($parent){
         parent::__construct($parent);
-        $this->indent = $this->parent->indent;
     }
 
     public function compile_statement($return=False){
@@ -1399,6 +1398,7 @@ class BindingNode extends Node{
 
         $body = "";
         $last_line = "";
+
         if($return === True){
             $last_line = array_pop($this->children)->compile_return();
         }
