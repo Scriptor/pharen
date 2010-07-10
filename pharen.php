@@ -258,7 +258,7 @@ class FuncInfo{
             $var = new VariableNode($body, array(), "arg$x");
             $body->add_child($var);
         }
-        return array($function->compile().$this->format_line(""), $name);
+        return array($function->compile().$parent->format_line(""), $name);
     }
 
 }
@@ -612,7 +612,7 @@ class InfixNode extends Node{
 
     public function compile(){
         list($func_name, $args) = $this->get_compiled_func_args();
-        $func = new FuncInfo($func_name, $args);
+        $func = new FuncInfo($func_name, array_slice($this->children, 1));
         if($func->is_partial()){
             return $this->create_partial($func);
         }
