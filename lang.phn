@@ -41,16 +41,14 @@
     (reduce-pairs f ($f (each xs) acc) (rest xs))))
 
 (fn map (f xs)
-  (reduce 
-    (lambda (x acc) (cons ($f x) acc)) 
-    []
-    xs))
+  (reduce (lambda (x acc) (append ($f x) acc)) 
+          []
+          xs))
 
 (fn map-pairs (f pairs)
-  (reduce-pairs
-    (lambda (pair acc) (cons ($f (:pair 0) (:pair 1)) acc))
-    []
-    pairs))
+  (reduce-pairs (lambda (pair acc) (append ($f (:pair 0) (:pair 1)) acc))
+                []
+                pairs))
 
 (defmacro when (c &body)
   '(if ~c
