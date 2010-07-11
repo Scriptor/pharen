@@ -10,6 +10,7 @@ function proj($name, $attrs){
 	Lexical::$scopes["phake"][1] = array();
 	return "Do stuff with project info here";
 }
+
 compile_file((PHAKE_SYSTEM . "/phake.phn"));
 compile_file((PROJECT_SYSTEM . "/phakefile"));
 require((PROJECT_SYSTEM . "/phakefile.php"));

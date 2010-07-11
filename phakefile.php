@@ -11,4 +11,5 @@ proj("Pharen", array("description" => "Lisp -> PHP Compiler", "version" => "0.1.
 require((PROJECT_SYSTEM . "/examples/test/pharen_tests.php"));
 return TRUE;
 	}
+	
 ;
