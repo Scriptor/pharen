@@ -3,3 +3,4 @@
 (check TRUE TRUE)
 (check [1 2 3] [1 2 3])
 (check ["list" "of" "strings"] ["list" "of" "strings"])
+(check #strstr ["strstr", NULL])

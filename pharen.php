@@ -93,6 +93,9 @@ class ReaderMacroToken extends Token{
 class CommentToken extends Token{
 }
 
+class FuncValToken extends Token{
+}
+
 class Lexer{
     private $code;
     private $char;
@@ -180,7 +183,10 @@ class Lexer{
                 $this->tok = new ExplicitVarToken;
                 $this->state = "append";
             }else if($this->char == '&'){
-                $this->tok = new SplatToken();
+                $this->tok = new SplatToken;
+                $this->state = "append";
+            }else if($this->char == '#'){
+                $this->tok = new FuncValToken;
                 $this->state = "append";
             }else if($this->char == '~' or $this->char == "'" or $this->char == '@'){
                 $this->tok = new ReaderMacroToken($this->char);
@@ -521,14 +527,22 @@ class Node implements Iterator, ArrayAccess, Countable{
     public function get_compiled_func_args(){
         // Returns the compiled code for the function name and the arguments
         // in a function call.
+        Node::$tmp .= $this->format_line('$__tmpscopeid = NULL;');
         list($func_name_node, $args) = $this->split_children();
         if(!($func_name_node instanceof LeafNode)){
             $func_name = self::get_tmp_funcname_var();
             Node::$tmp .= $this->format_line($func_name." = ".$func_name_node->compile().";");
         }else{
-            $func_name = $func_name_node->compile();
+            if($func_name_node instanceof VariableNode){
+                $varname = $func_name_node->compile();
+                Node::$tmp .= $this->format_line('list($__tmpvarfuncname, $__tmpscopeid) = '.$varname.';');
+                $func_name = '$__tmpvarfuncname';
+            }else{
+                $func_name = $func_name_node->compile();
+            }
         }
         $args = $this->compile_args($args);
+        $args[] = '$__tmpscopeid';
         return array($func_name, $args);
     }
 
@@ -689,6 +703,14 @@ class LeafNode extends Node{
 
     public function compile(){
         return strlen($this->value) > 1 && !is_numeric($this->value[1]) ? str_replace('-', '_', $this->value) : $this->value;
+    }
+}
+
+class FuncValNode extends LeafNode{
+    
+    public function compile(){
+        $func_name = parent::compile();
+        return "array('$func_name', NULL)";
     }
 }
 
@@ -1449,6 +1471,7 @@ class Parser{
             "StringToken" => "StringNode",
             "NumberToken" => "LeafNode",
             "SplatToken" => "SplatNode",
+            "FuncValToken" => "FuncValNode",
             "UnquoteToken" => "UnquoteNode"
         );
 
