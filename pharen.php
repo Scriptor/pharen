@@ -302,7 +302,7 @@ class Scope{
     }
 
     public function get_lexical_binding($var_name, $id){
-        $value = 'Lexical::$scopes["'.Node::$ns.'"]['.$id.'][\''.$var_name.'\']';
+        $value = "Lexical::get_lexical_binding('".Node::$ns."', $id, '$var_name', isset(\$__closure_id)?\$__closure_id:0);";
         return "$var_name =& $value";
     }
 
@@ -311,7 +311,7 @@ class Scope{
     }
 
     public function init_lexical_scope(){
-        return $this->owner->format_line_indent('Lexical::$scopes["'.Node::$ns.'"]['.$this->id.'] = array();');
+        return $this->owner->format_line_indent('$__scope_id = Lexical::init_closure("'.Node::$ns.'", '.$this->id.');');
     }
 
     public function get_lexing($var_name){
@@ -319,7 +319,7 @@ class Scope{
             return "";
         }
         $value = $this->bindings[$var_name]->compile();
-        return $this->owner->format_line_indent('Lexical::$scopes["'.Node::$ns.'"]['.$this->id.'][\''.$var_name.'\'] =& '.$var_name.";");
+        return $this->owner->format_line_indent('Lexical::bind_lexing("'.Node::$ns."\", {$this->id}, '$var_name', $var_name);");
     }
 
     public function get_lexical_bindings(){
@@ -357,7 +357,8 @@ class Scope{
 }
 
 class Node implements Iterator, ArrayAccess, Countable{
-    static $delay_tmp = 0;
+    static $in_func = 0;
+    static $tmpfunc;
     static $prev_tmp;
     static $tmp;
     static $ns;
@@ -366,6 +367,7 @@ class Node implements Iterator, ArrayAccess, Countable{
     public $parent;
     public $children;
     public $return_flag = False;
+    public $has_variable_func = False;
     public $indent = Null;
     public $quoted;
     public $unquoted;
@@ -375,16 +377,24 @@ class Node implements Iterator, ArrayAccess, Countable{
     protected $value = "";
 
     static function add_tmp($code){
-        if(Node::$delay_tmp === 0){
-            $code = Node::$prev_tmp.Node::$tmp.$code;
-            Node::$prev_tmp = '';
-            Node::$tmp = '';
-        }
+        $code = Node::$prev_tmp.Node::$tmp.$code;
+        Node::$prev_tmp = '';
+        Node::$tmp = '';
+        return $code;
+    }
+
+    static function add_tmpfunc($code){
+        $code = Node::$tmpfunc.$code;
+        Node::$tmpfunc = '';
         return $code;
     }
 
     static function get_tmp_funcname_var(){
         return "\$__tmpfuncname".self::$tmp_funcname_var++;
+    }
+
+    static function next_scope_id(){
+        return self::$next_scope_id++;
     }
 
     public function __construct($parent=null){
@@ -527,26 +537,23 @@ class Node implements Iterator, ArrayAccess, Countable{
     public function get_compiled_func_args(){
         // Returns the compiled code for the function name and the arguments
         // in a function call.
-        Node::$tmp .= $this->format_line('$__tmpscopeid = NULL;');
         list($func_name_node, $args) = $this->split_children();
         if(!($func_name_node instanceof LeafNode)){
+            $this->has_variable_func = True;
             $func_name = self::get_tmp_funcname_var();
             Node::$tmp .= $this->format_line($func_name." = ".$func_name_node->compile().";");
         }else{
             if($func_name_node instanceof VariableNode){
-                $varname = $func_name_node->compile();
-                Node::$tmp .= $this->format_line('list($__tmpvarfuncname, $__tmpscopeid) = '.$varname.';');
-                $func_name = '$__tmpvarfuncname';
-            }else{
-                $func_name = $func_name_node->compile();
+                $this->has_variable_func = True;
             }
+            $func_name = $func_name_node->compile();
         }
         $args = $this->compile_args($args);
-        $args[] = '$__tmpscopeid';
         return array($func_name, $args);
     }
 
     public function create_partial($func){
+        $bt = debug_backtrace();
         list($tmp_func, $tmp_name) = $func->get_tmp_func($this->parent);
         Node::$tmp .= $tmp_func;
         return '"'.$tmp_name.'"';
@@ -579,9 +586,15 @@ class Node implements Iterator, ArrayAccess, Countable{
             return $this->create_partial($func);
         }
 
-        $args_string = implode(", ", $args);
 
-        return "$func_name($args_string)";
+        if($this->has_variable_func){
+            $args[] = $func_name."[1]";
+            $args_string = implode(", ", $args);
+            return "is_string($func_name)?$func_name($args_string):{$func_name}[0]($args_string)";
+        }else{
+            $args_string = implode(", ", $args);
+            return "$func_name($args_string)";
+        }
     }
 
     public function compile_statement($prefix=""){
@@ -627,7 +640,7 @@ class InfixNode extends Node{
     public function compile(){
         list($func_name, $args) = $this->get_compiled_func_args();
         $func = new FuncInfo($func_name, array_slice($this->children, 1));
-        if($func->is_partial()){
+        if(!$this->has_splice && $func->is_partial()){
             return $this->create_partial($func);
         }
         $code = implode(' '.$func_name.' ', $args);
@@ -665,6 +678,7 @@ class RootNode extends Node{
             $code .= $this->format_line("require_once('".COMPILER_SYSTEM."/lexical.php"."');");
         }
         $code .= $this->scope->init_namespace_scope();
+        $code .= $this->scope->init_lexical_scope();
         foreach($this->children as $child){
             $code .= $child->compile_statement();
         }
@@ -707,10 +721,9 @@ class LeafNode extends Node{
 }
 
 class FuncValNode extends LeafNode{
-    
+
     public function compile(){
-        $func_name = parent::compile();
-        return "array('$func_name', NULL)";
+        return '"'.parent::compile().'"';
     }
 }
 
@@ -729,7 +742,7 @@ class VariableNode extends LeafNode{
 
         if($scope->find_immediate($varname) !== False){
             return $varname;
-        }else if(($id = $scope->find($varname)) !== False){
+        }else if(($id = $scope->find($varname, False, False)) !== False){
             $scope->bind_lexical($varname, $id);
             return $varname;
         }else{
@@ -756,7 +769,7 @@ class SpecialForm extends Node{
     protected $body_index;
 
     public function compile_statement(){
-        return $this->compile();
+        return $this->compile_statement();
     }
 
     public function compile_body($lines=false, $prefix="", $return=False){
@@ -807,6 +820,10 @@ class FuncDefNode extends SpecialForm{
     }
 
     public function compile(){
+        return $this->compile_statement();
+    }
+
+    public function compile_statement(){
         $this->scope = $this->scope == Null ? new Scope($this) : $this->scope;
 
         $this->name = $this->children[1]->compile();
@@ -826,8 +843,8 @@ class FuncDefNode extends SpecialForm{
             $body .= $this->format_line("").$this->format_line_indent($param." = array_slice(func_get_args(), ".($params_count-1).");");
         }
 
-        Node::$delay_tmp++;
-        if(Node::$delay_tmp > 1){
+        Node::$in_func++;
+        if(Node::$in_func > 1){
             $this->decrease_indent();
         }
         if($this->is_tail_recursive($last_node)){
@@ -867,11 +884,14 @@ class FuncDefNode extends SpecialForm{
             $body.
             $this->format_line("}").$this->format_line("");
 
-        if(Node::$delay_tmp > 0){
-            Node::$delay_tmp--;
+        if(Node::$in_func > 1){
+            Node::$in_func--;
+            Node::$tmpfunc .= $code;
+            return $this->format_line("");
+        }else{
+            Node::$in_func--;
+            return Node::add_tmpfunc($code);
         }
-        $code = Node::add_tmp($code);
-        return $code;
     }
 
     public function is_tail_recursive($last_node){
@@ -893,7 +913,7 @@ class FuncDefNode extends SpecialForm{
     public function get_param_names($param_nodes){
         $varnames = array();
         foreach($param_nodes as $node){
-            $varnames[] = $node->compile();
+            $varnames[] = $node->compile(True);
         }
         return $varnames;
     }
@@ -917,6 +937,8 @@ class MacroNode extends FuncDefNode{
     static $macros = array();
     static $literals = array();
     static $next_literal_id = 0;
+    static $current_params;
+    static $ghosting = False;
 
     public $args;
     public $evaluated = False;
@@ -940,16 +962,22 @@ class MacroNode extends FuncDefNode{
         if($macronode->evaluated){
             return;
         }else{
-            eval($code);
+            eval(Node::add_tmpfunc($code));
             $macronode->evaluated = True;
         }
     }
 
     public function parent_compile(){
-        return parent::compile();
+        return parent::compile_statement();
     }
 
-    public function compile(){
+    public function compile_statement(){
+        self::$ghosting = True;
+        $this->parent_compile();
+        self::$current_params = array();
+        self::$ghosting = False;
+        Node::add_tmp('');
+
         $name = $this->children[1]->compile();
         $this->scope = new Scope($this);
         self::$macros[$name] = $this;
@@ -957,6 +985,7 @@ class MacroNode extends FuncDefNode{
     }
 
     public function bind_params($params){
+        self::$current_params = $params;
     }
 }
 
@@ -974,6 +1003,9 @@ class QuoteWrapper{
     }
 
     public function compile_return(){
+        $tmpfunc = Node::$tmpfunc;
+        MacroNode::$literals[$this->literal_id]->compile();
+        Node::$tmpfunc = $tmpfunc;
         return 'return MacroNode::$literals['.$this->literal_id.'];'."\n";
     }
 
@@ -1015,9 +1047,19 @@ class UnquoteWrapper{
             $unstring = True;
             $this->value = substr($this->value, 1);
         }
-        $code = $this->node->compile();
+        if($this->node instanceof VariableNode){
+            $code = $this->node->compile(True);
+        }else{
+            $code = $this->node->compile();
+        }
         if($this->node instanceof LeafNode){
-            $val = $this->get_scope()->find($code, True)->compile();
+            $lex = !in_array($code, MacroNode::$current_params);
+            $val_node = $this->get_scope()->find($code, True, $lex);
+            if(MacroNode::$ghosting){
+                $val = Null;
+            }else{
+                $val = $val_node->compile();
+            }
             if($unstring){
                 $val = trim($val, '"');
                 $this->value = '-'.$this->value;
@@ -1047,6 +1089,9 @@ class SpliceWrapper extends UnquoteWrapper{
     }
 
     public function get_exprs(){
+        if(MacroNode::$ghosting){
+            return array();
+        }
         if($this->as_collection){
             return $this->exprs;
         }else{
@@ -1066,6 +1111,9 @@ class SpliceWrapper extends UnquoteWrapper{
     }
 
     public function compile($prefix=""){
+        if(MacroNode::$ghosting){
+            return "";
+        }
         return $this->compile_exprs($this->get_exprs(), $prefix);
     }
 
@@ -1074,6 +1122,9 @@ class SpliceWrapper extends UnquoteWrapper{
     }
 
     public function compile_return(){
+        if(MacroNode::$ghosting){
+            return "";
+        }
         return $this->compile_exprs($this->get_exprs(), "", True);
     }
 }
@@ -1091,14 +1142,16 @@ class LambdaNode extends FuncDefNode{
         $name = self::get_next_name();
         $name_node = new LeafNode($this, array(), $name);
         array_splice($this->children, 1, 0, array($name_node));
+        $scopeid_node = new VariableNode($this, array(), "__closure_id");
+        $this->children[2]->children[] = $scopeid_node;
 
-        $code = parent::compile();
+        $code = parent::compile_statement();
         Node::$tmp .= $code.$this->format_line("");
-        return '"'.$name.'"';
+        return 'array("'.$name.'", Lexical::get_closure_id("'.Node::$ns.'", $__scope_id))';
     }
 
     public function compile_statement(){
-        return $this->format_line($this->compile().";");
+        return $this->format_statement($this->compile().";");
     }
 
     public function compile_return(){
@@ -1409,7 +1462,7 @@ class BindingNode extends Node{
         }
         $varnames = array();
         $code = "";
-        $lexings = "";
+        $lexings = $this->scope->init_lexical_scope();
         foreach($pairs as $pair_node){
             $varname = $pair_node[0]->compile();
             $varnames[] = $varname;
@@ -1470,8 +1523,8 @@ class Parser{
             "NameToken" => "VariableNode",
             "StringToken" => "StringNode",
             "NumberToken" => "LeafNode",
-            "SplatToken" => "SplatNode",
             "FuncValToken" => "FuncValNode",
+            "SplatToken" => "SplatNode",
             "UnquoteToken" => "UnquoteNode"
         );
 

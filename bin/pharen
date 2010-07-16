@@ -20,7 +20,7 @@ if(__FILE__ === realpath($_SERVER['SCRIPT_NAME'])){
     $php_code = "";
     $old_setting = isset(Flags::$flags['no-import-lang']) ? Flags::$flags['no-import-lang'] : False;
     Flags::$flags['no-import-lang'] = True;
-//    $lang_code = compile_file(COMPILER_SYSTEM . "/lang.phn");
+    $lang_code = compile_file(COMPILER_SYSTEM . "/lang.phn");
     Flags::$flags['no-import-lang'] = $old_setting;
     if(isset($_SERVER['REQUEST_METHOD'])){
         $php_code = $lang_code;

@@ -2,7 +2,7 @@
 require_once('/Applications/MAMP/htdocs/pharen/lang.php');
 Lexical::$scopes['test'] = array();
 function check($expr, $expected){
-	Lexical::$scopes["test"][1] = array();
+	Lexical::init_closure("test", 1);
 	if(($expr == $expected)){
 		return TRUE;
 	}
@@ -12,13 +12,15 @@ function check($expr, $expected){
 		return FALSE;
 	}
 }
+
 function describe($msg, $func){
-	Lexical::$scopes["test"][2] = array();
+	Lexical::init_closure("test", 2);
 	echo(("Running tests for: " . $msg . "\n"));
-	return $func();
+	return is_string($func)?$func($func[1]):$func[0]($func[1]);
 }
+
 function it($msg, $func){
-	Lexical::$scopes["test"][3] = array();
+	Lexical::init_closure("test", 3);
 	if($func){
 		return print(("Test passed:\t " . $msg . "\n"));
 	}
@@ -26,3 +28,4 @@ function it($msg, $func){
 		return print(("Test failed:\t " . $msg . "\n"));
 	}
 }
+

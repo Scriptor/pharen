@@ -1,8 +1,9 @@
 <?php
 require_once('/Applications/MAMP/htdocs/pharen/lang.php');
 Lexical::$scopes['path'] = array();
-function path__lambdafunc0($chunk, $acc){
-	Lexical::$scopes["path"][2] = array();
+	$__scope_id = Lexical::init_closure("path", 20);
+function path__lambdafunc2($chunk, $acc, $__closure_id){
+	$__scope_id = Lexical::init_closure("path", 22);
 	
 	 Null;
 	if(empty($chunk)){
@@ -22,16 +23,21 @@ function path__lambdafunc0($chunk, $acc){
 }
 
 function path_normalize_array($chunks){
-	Lexical::$scopes["path"][1] = array();
-	return reduce("path__lambdafunc0", array(), $chunks);
+	$__scope_id = Lexical::init_closure("path", 21);
+
+
+	return reduce(array("path__lambdafunc2", Lexical::get_closure_id("path", $__scope_id)), array(), $chunks);
 }
+
 function path_normalize($path){
-	Lexical::$scopes["path"][3] = array();
+	$__scope_id = Lexical::init_closure("path", 23);
 	return implode("/", path_normalize_array(explode("/", $path)));
 }
+
 function path_join($paths){
-	Lexical::$scopes["path"][4] = array();
+	$__scope_id = Lexical::init_closure("path", 24);
 
 	$paths = array_slice(func_get_args(), 0);
 	return path_normalize(implode("/", $paths));
 }
+
