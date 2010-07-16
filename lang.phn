@@ -41,7 +41,6 @@
     (reduce-pairs f ($f (each xs) acc) (rest xs))))
 
 (fn map (f xs)
-  (var-dump f)
   (reduce (lambda (x acc) (append ($f x) acc)) 
           []
           xs))

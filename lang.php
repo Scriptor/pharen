@@ -48,7 +48,7 @@ function append($x, $xs){
 
 function apply($f, $val){
 	$__scope_id = Lexical::init_closure("lang", 9);
-	return is_string($f)?$f($val, $f[1]):$f[0]($val, $f[1]);
+	return is_string($f)?$f($val):$f[0]($val, $f[1]);
 }
 
 function reduce($f, $acc, $xs){
@@ -58,7 +58,7 @@ function reduce($f, $acc, $xs){
 				return $acc;
 		}
 		$__tailrecursetmp0 = $f;
-		$__tailrecursetmp1 = is_string($f)?$f(first($xs), $acc, $f[1]):$f[0](first($xs), $acc, $f[1]);
+		$__tailrecursetmp1 = is_string($f)?$f(first($xs), $acc):$f[0](first($xs), $acc, $f[1]);
 		$__tailrecursetmp2 = rest($xs);
 		$f = $__tailrecursetmp0;
 		$acc = $__tailrecursetmp1;
@@ -73,7 +73,7 @@ function reduce_pairs($f, $acc, $xs){
 				return $acc;
 		}
 		$__tailrecursetmp0 = $f;
-		$__tailrecursetmp1 = is_string($f)?$f(each($xs), $acc, $f[1]):$f[0](each($xs), $acc, $f[1]);
+		$__tailrecursetmp1 = is_string($f)?$f(each($xs), $acc):$f[0](each($xs), $acc, $f[1]);
 		$__tailrecursetmp2 = rest($xs);
 		$f = $__tailrecursetmp0;
 		$acc = $__tailrecursetmp1;
@@ -84,13 +84,12 @@ function reduce_pairs($f, $acc, $xs){
 function lang__lambdafunc0($x, $acc, $__closure_id){
 	$__scope_id = Lexical::init_closure("lang", 13);
 	$f =& Lexical::get_lexical_binding('lang', 12, '$f', isset($__closure_id)?$__closure_id:0);;
-	return append(is_string($f)?$f($x, $f[1]):$f[0]($x, $f[1]), $acc);
+	return append(is_string($f)?$f($x):$f[0]($x, $f[1]), $acc);
 }
 
 function map($f, $xs){
 	$__scope_id = Lexical::init_closure("lang", 12);
 	Lexical::bind_lexing("lang", 12, '$f', $f);
-	var_dump($f);
 
 
 	return reduce(array("lang__lambdafunc0", Lexical::get_closure_id("lang", $__scope_id)), array(), $xs);
@@ -99,7 +98,7 @@ function map($f, $xs){
 function lang__lambdafunc1($pair, $acc, $__closure_id){
 	$__scope_id = Lexical::init_closure("lang", 15);
 	$f =& Lexical::get_lexical_binding('lang', 14, '$f', isset($__closure_id)?$__closure_id:0);;
-	return append(is_string($f)?$f($pair[0], $pair[1], $f[1]):$f[0]($pair[0], $pair[1], $f[1]), $acc);
+	return append(is_string($f)?$f($pair[0], $pair[1]):$f[0]($pair[0], $pair[1], $f[1]), $acc);
 }
 
 function map_pairs($f, $pairs){
