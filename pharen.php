@@ -1433,6 +1433,10 @@ class ListNode extends LiteralNode{
         $el2 = $this->children[1]->compile();
         return intval($el2) - intval($el1);
     }
+
+    public function compile_return(){
+        return $this->format_statement("return ".$this->compile().";");
+    }
 }
 
 class DefNode extends Node{
@@ -1700,9 +1704,12 @@ class Flags{
     static $flags = array();
 }
 
-function set_flag($arg){
-    $flag = substr($arg, 2);
-    Flags::$flags[$flag] = True;
+function set_flag($flag, $setting=True){
+    Flags::$flags[$flag] = $setting;
+}
+
+function unset_flag($flag){
+    Flags::$flags[$flag] = False;
 }
 
 function compile_file($fname, $output_dir=Null){
@@ -1727,3 +1734,8 @@ function compile($code, $root=Null){
     $phpcode = $node_tree->compile();
     return $phpcode;
 }
+
+$old_setting = isset(Flags::$flags['no-import-lang']) ? Flags::$flags['no-import-lang'] : False;
+set_flag("no-import-lang");
+$lang_code = compile_file(COMPILER_SYSTEM . "/lang.phn");
+set_flag("no-import-lang", $old_setting);

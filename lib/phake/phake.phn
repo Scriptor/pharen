@@ -8,14 +8,40 @@
 (fn proj (name attrs)
   "Do stuff with project info here")
 
+(fn project-path (f)
+  (. PROJECT-SYSTEM f))
+
+(fn is-real-dir (dir)
+  (and (!== "." dir) (!== ".." dir) (is-dir dir)))
+
+(fn compile-with-flag (flag file)
+  (set-flag flag)
+  (compile-file file)
+  (unset-flag flag))
+
+(fn is-phn (f)
+  (and (isset (:(pathinfo f) "extension"))
+       (== (:(pathinfo f) "extension") "phn")))
+
+(fn compile-dir (dir)
+  (filter 
+    #is-phn
+    (lambda (f)
+            (def file (path-join dir f))
+            (if (is-real-dir file)
+              (compile-dir file)
+              (and (compile-file file (dirname file)) (print (. "Compile: " file "\n")))))
+    (scandir dir 1)))
+
+
 (defmacro task (name desc &body)
   '(fn ~-name () 
      (print (. "Running " ~name ": " ~desc "\n"))
       ~@body))
 
-(compile-file (. PHAKE-SYSTEM "/phake.phn"))
-(compile-file (. PROJECT-SYSTEM "/phakefile"))
-(require (. PROJECT-SYSTEM "/phakefile.php"))
+(compile-with-flag "executable" (project-path "/lib/phake/phake.phn"))
+(compile-file (project-path "/phakefile"))
+(require (project-path "/phakefile.php"))
 
 (if (> (count argv) 1)
   ((:argv 1))
