@@ -95,17 +95,48 @@ function map($f, $xs){
 	return reduce(array("lang__lambdafunc0", Lexical::get_closure_id("lang", $__scope_id)), array(), $xs);
 }
 
-function lang__lambdafunc1($pair, $acc, $__closure_id){
+function lang__lambdafunc1($x, $__closure_id){
 	$__scope_id = Lexical::init_closure("lang", 15);
-	$f =& Lexical::get_lexical_binding('lang', 14, '$f', isset($__closure_id)?$__closure_id:0);;
+	$f1 =& Lexical::get_lexical_binding('lang', 14, '$f1', isset($__closure_id)?$__closure_id:0);;
+	$f2 =& Lexical::get_lexical_binding('lang', 14, '$f2', isset($__closure_id)?$__closure_id:0);;
+	return when(is_string($f1)?$f1($x):$f1[0]($x, $f1[1]), is_string($f2)?$f2($x):$f2[0]($x, $f2[1]));
+}
+
+function filter($f1, $f2, $xs){
+	$__scope_id = Lexical::init_closure("lang", 14);
+	Lexical::bind_lexing("lang", 14, '$f1', $f1);
+	Lexical::bind_lexing("lang", 14, '$f2', $f2);
+
+
+	return map(array("lang__lambdafunc1", Lexical::get_closure_id("lang", $__scope_id)), $xs);
+}
+
+function for_n($x, $f, $acc){
+	$__scope_id = Lexical::init_closure("lang", 16);
+	while(1){
+		if((0 == $x)){
+				return $acc;
+		}
+		$__tailrecursetmp0 = ($x - 1);
+		$__tailrecursetmp1 = $f;
+		$__tailrecursetmp2 = is_string($f)?$f($acc):$f[0]($acc, $f[1]);
+		$x = $__tailrecursetmp0;
+		$f = $__tailrecursetmp1;
+		$acc = $__tailrecursetmp2;
+	}
+}
+
+function lang__lambdafunc2($pair, $acc, $__closure_id){
+	$__scope_id = Lexical::init_closure("lang", 18);
+	$f =& Lexical::get_lexical_binding('lang', 17, '$f', isset($__closure_id)?$__closure_id:0);;
 	return append(is_string($f)?$f($pair[0], $pair[1]):$f[0]($pair[0], $pair[1], $f[1]), $acc);
 }
 
 function map_pairs($f, $pairs){
-	$__scope_id = Lexical::init_closure("lang", 14);
-	Lexical::bind_lexing("lang", 14, '$f', $f);
+	$__scope_id = Lexical::init_closure("lang", 17);
+	Lexical::bind_lexing("lang", 17, '$f', $f);
 
 
-	return reduce_pairs(array("lang__lambdafunc1", Lexical::get_closure_id("lang", $__scope_id)), array(), $pairs);
+	return reduce_pairs(array("lang__lambdafunc2", Lexical::get_closure_id("lang", $__scope_id)), array(), $pairs);
 }
 

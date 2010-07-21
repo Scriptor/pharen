@@ -45,6 +45,17 @@
           []
           xs))
 
+(fn filter (f1 f2 xs)
+  (map (lambda (x)
+               (when ($f1 x)
+                 ($f2 x)))
+       xs))
+
+(fn for-n (x f acc)
+  (if (== 0 x)
+    acc
+    (for-n (- x 1) f ($f acc))))
+
 (fn map-pairs (f pairs)
   (reduce-pairs (lambda (pair acc) (append ($f (:pair 0) (:pair 1)) acc))
                 []
