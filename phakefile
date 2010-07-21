@@ -2,6 +2,11 @@
     {"description" "Lisp -> PHP Compiler"
      "version" "0.1.5"})
 
-(task "test" "Run tests for Pharen compiler"
-      (require (. PROJECT-SYSTEM "/examples/test/pharen_tests.php"))
+(task "build" "Compiling all project files written in Pharen"
+      (compile-dir (project-path "/lib/"))
+      (compile-with-flag "no-import-lang" "lang.phn")
+      (compile-with-flag "executable" (project-path "/lib/phake/phake.phn")))
+
+(task "test" "Running tests for Pharen compiler"
+      (require (project-path "/examples/test/pharen_tests.php"))
       TRUE)
