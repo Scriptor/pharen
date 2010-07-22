@@ -1408,12 +1408,11 @@ class ListNode extends LiteralNode{
             $first = intval($this->children[0]->compile());
             $end = intval(last($this->children)->compile());
 
-            $vals = array();
-            for($x=$first; $x<=$end; $x+=$step){
-                $vals[] = $x;
+            if($step == 1){
+                return "range($first, $end)";
+            }else{
+                return "range($first, $end, $step)";
             }
-            return "array(".implode(', ', $vals).")";
-
         }
         return "array".parent::compile();
     }
