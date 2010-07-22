@@ -3,9 +3,7 @@
      "version" "0.1.5"})
 
 (task "build" "Compiling all project files written in Pharen"
-      (compile-dir (project-path "/lib/"))
-      (compile-with-flag "no-import-lang" "lang.phn")
-      (compile-with-flag "executable" (project-path "/lib/phake/phake.phn")))
+      (compile-dir (project-path "/lib/")))
 
 (task "test" "Running tests for Pharen compiler"
       (require (project-path "/examples/test/pharen_tests.php"))
