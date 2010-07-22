@@ -1,4 +1,3 @@
-#! /usr/bin/env php
 <?php
 require_once('/Applications/MAMP/htdocs/pharen/lang.php');
 Lexical::$scopes['sql'] = array();
