@@ -11,8 +11,8 @@
 (fn project-path (f)
   (. PROJECT-SYSTEM f))
 
-(fn is-real-dir (dir)
-  (and (!== "." dir) (!== ".." dir) (is-dir dir)))
+(fn not-dots (dir)
+  (and (!== "." dir) (!== ".." dir)))
 
 (fn compile-with-flag (flag file)
   (set-flag flag)
@@ -24,13 +24,12 @@
        (== (:(pathinfo f) "extension") "phn")))
 
 (fn compile-dir (dir)
-  (filter 
-    #is-phn
+  (map 
     (lambda (f)
             (def file (path-join dir f))
-            (if (is-real-dir file)
-              (compile-dir file)
-              (and (compile-file file (dirname file)) (print (. "Compile: " file "\n")))))
+            (cond
+              ((and (not-dots f) (is-dir file)) (compile-dir file))
+              ((is-phn file) (and (compile-file file (dirname file)) (print (. "Compile: " file "\n"))))))
     (scandir dir 1)))
 
 
