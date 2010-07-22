@@ -668,7 +668,7 @@ class RootNode extends Node{
 
     public function compile(){
         $code = "";
-        if(isset(Flags::$flags['executable'])){
+        if(isset(Flags::$flags['executable']) && Flags::$flags['executable']){
             $code .= $this->format_line("#! /usr/bin/env php");
         }
 
