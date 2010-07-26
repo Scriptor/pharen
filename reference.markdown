@@ -62,9 +62,8 @@ To define a single variable in the current scope, use the `def` construct.
 To create one ore more variables inside an entirely new scope, use `let`.
 
 {% highlight clojure %}
-(let (
-    (full-name "Arthur Dent")
-    (answer 42))
+(let [full-name "Arthur Dent",
+      answer 42]
 
     (print (. "Full name: " full-name))
     (print (. "Answer: " answer)))
@@ -122,15 +121,14 @@ Lists and dictionaries are accessed using the same form. Prefix the name of the 
 
 {% highlight clojure %}
 (def colors ["blue" "orange" "red" "green"])
-(def planets
-    {"smallest" "Mercury",
-     "gaseous" ["Jupiter" "Saturn" "Uranus" "Neptune"]})
+(def planets {"smallest" "Mercury",
+              "gaseous" ["Jupiter" "Saturn" "Uranus" "Neptune"]})
 
 (print (:colors 2))
 (print (:planets "smallest"))
 (print (:planets "gaseous" 0))
 {% endhighlight %}
-The above will print red, Mercury, and Jupiter. In the last line, multiple arguments are passed to access nested data. It is the equivalent of `$planets["gaseous"][0]` in PHP.
+The above will print red, Mercury, and Jupiter. In the last line, multiple arguments are passed to access nested elements. It is the equivalent of `$planets["gaseous"][0]` in PHP.
 
 List access can also be done directly on literals, unlike in PHP.
 
@@ -198,7 +196,7 @@ The main limitation of `if` is that it only runs one expression. You can get aro
 Notice that each test-body grouping is wrapped in parentheses. Also, `TRUE` is used as a catch-all whose linked body expressions will be run if all other test expressions fail.
 
 ### When ## {#when}
-`when` gets a quick mention even though it's technically not built-in, instead, it's a [macro](#macro) that's defined in [lang.phn](#lang-phn). It takes one test expression and a series of body expressions. If the test returns true, everything in the body is evaluated, otherwise, the whole thing automatically returns false. `when` is best used in situations where you only need something to happen if the test expression is true while otherwise you don't care.
+`when` gets a quick mention even though it's technically not built-in, instead, it's a [macro](#macro) that's defined in [lang.phn](/pharen/lang). It takes one test expression and a series of body expressions. If the test returns true, everything in the body is evaluated, otherwise, the whole thing automatically returns false. `when` is best used in situations where you only need something to happen if the test expression is true while otherwise you don't care.
 
 {% highlight clojure %}
 (when (isset ($ post "submit"))
