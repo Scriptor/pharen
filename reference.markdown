@@ -235,6 +235,11 @@ This is a factorial function that uses a nested "worker" function to take advant
 
 Since the `if` expression is the last (and only) expression in `fact-iter`, the Pharen compiler figures out that that's what it needs to return. `if` knows that when it's acting as the return expression, it actually needs to make sure either of its two body children are returned. The same happens when `fact-iter` is actually called inside the body of `fact`.
 
+#### Tail Recursion Elimination #### {#tre}
+In the above example, there is a good reason to create a nested function. Notice how the last thing fact-iter is doing is calling itself again, this is known as tail recursion. While normally recursion can be expensive memory-wise, the compiler optimizes this into a while loop. This is called tail recursion elimination (TRE). The result is equivalent to a non-optimized version, but uses constant memory, which frequently means it is faster.
+
+TRE is an important component of Pharen code since it emphasizes immutability and recursion. For example, Pharen's functions for dealing with dictionaries, `reduce-pairs` and `map-pairs` use this technique to maintain some efficiency.
+
 #### More on Lexical Scope #### {#scope}
 Pharen follows [lexical scoping](http://en.wikipedia.org/wiki/Scope_%28programming%29#Lexical_scoping) rules like other lisps and unlike PHP. Formally, this means variables can only be accessed at any point at or inside the level it is defined. Practically, this means you can have access to variables created in an outer function from inside a nested function, as well as other useful tricks such as [closures](#closures).
 
@@ -246,12 +251,7 @@ Pharen follows [lexical scoping](http://en.wikipedia.org/wiki/Scope_%28programmi
 (outer 4)
 {% endhighlight %}
 
-The above will print 7, since `a` is bound to 4 and `b` is bound to 3. Even though `a` is not defined inside the function called `inner`, it is still accessible because `inner` has access to it.
-
-#### Tail Recursion Elimination #### {#tre}
-In the above example, there is a good reason to create a nested function. Notice how the last thing fact-iter is doing is calling itself again, this is known as tail recursion. While normally recursion can be expensive memory-wise, the compiler optimizes this into a while loop. This is called tail recursion elimination (TRE). The result is equivalent to a non-optimized version, but uses constant memory, which frequently means it is faster.
-
-TRE is an important component of Pharen code since it emphasizes immutability and recursion. For example, Pharen's functions for dealing with dictionaries, `reduce-pairs` and `map-pairs` use this technique to maintain some efficiency.
+The above will print 7, since `a` is bound to 4 and `b` is bound to 3. Even though `a` is not defined inside the function called `inner`, it is still accessible because `inner` is in the same lexical scope
 
 ### Lambdas and Closures ### {#lambdas}
 Anonymous functions in Pharen are created using the `lambda` form. They are useful when you simply want to pass along a function as a parameter and don't need to give it a name.
@@ -262,7 +262,7 @@ Anonymous functions in Pharen are created using the `lambda` form. They are usef
      [1 2 3 4])
 {% endhighlight %}
 
-`map` takes a function and a list, calls the function with each item in the list, and returns a new list. So the above code simply returns a new list with double the values of the old one. A lambda keeps things simpler than having to worry about naming a function.
+`map` takes a function and a list, calls the function with each item in the list, and returns a new list. So the above code simply returns a new list with double the values of the old one. A lambda keeps things simpler than having to worry about naming a function. Additionally, when combined with lexical scope anonymous functions can enclose lexically scoped variables at the time of its creation. Say
 
 #### Partial application #### {#partials}
 If the lambda syntax is too bulky and all you need to do is a simple computation, you can partially apply a function. This means you supply a function with fewer than than the minimum number of arguments. This results in the compiler creating another function that remembers those arguments already given and then takes any ungiven ones as its own parameters.
@@ -324,7 +324,7 @@ Let's create a simplified version of the [when](#when) construct mentioned above
      FALSE))
 {% endhighlight %}
 
-First, notice that the `if` expression is quoteable just as any other. Next, the unquote  symbol: `~`, is introduced. This is the opposite of quoting and forces the macro to evaluate an otherwise unevaluated parameter. We do not want to just return `test`, we want whatever is *inside* `test`.
+First, notice that the `if` expression is quotable just as any other. Next, the unquote  symbol: `~`, is introduced. This is the opposite of quoting and forces the macro to evaluate an otherwise unevaluated parameter. We do not want to just return `test`, we want whatever is *inside* `test`.
 
 Finally, here is the full implementation of the when macro.
 
