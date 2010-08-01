@@ -143,64 +143,6 @@ Most of the html-* functions behave as you would expect. `html-link` takes a URL
 
 After that's all done, we check to see if the current request is a form submission. If it is, we call the `sql-insert` function and it pass it a table name along with a dictionary containing values for the 'title' and 'contents' fields. The values are retrieved from `$_POST` data using the `$` form. Dictionaries are key-value pairs, similar to associative arrays in PHP where you explicitly set the keys. [More on dictionaries](/pharen/reference.html#dictionaries).
 
-### Throwing in a template {#template}
-We now have a functional application, but the code could use a little (okay, a *lot* of) work. For example, we are only outputting HTML fragments instead of a whole HTML document. Although we could `require` an external template file we will keep using Pharen for demonstration purposes. Create and compile the following file.
-
-{% highlight clojure %}
-; pastebin/tpl.phn
-(fn tpl (contents)
-    (sprintf "
-<html>
-  <head></head>
-  <body>
-	%s
-  </body>
-</html>"contents))
-{% endhighlight %}
-
-Now, we'll use this function to wrap the the result of the print-paste function from earlier. Edit the 'paste.phn' file to this:
-
-{% highlight clojure %}
-; pastebin/paste.phn
-(require "html.php")
-(require "tpl.php")
-
-(fn print-paste (paste)
-  (. "<h2>" (:paste "title") "</h2>"
-     "<p>" (:paste "contents") "</p>"))
-
-(if (isset ($ get "id"))
-  (tpl (print-paste (sql-fetch-by-id "pages" ($ get "id"))))
-  (print "No paste id provided."))
-{% endhighlight %}
-
-All we did was write a function that deals will *all* the html. The original code only has to worry about providing the data. It's not quite an MVC framework, but it's an improvement! Now let's do the same with `new.phn`. Change it to the following:
-
-{% highlight clojure %}
-; pastebin/new.phn
-(require "html.php")
-(require "tpl.php")
-
-(fn form (status)
-  (tpl "New Paste" 
-       (. status "<br/>"
-          (html-form "post" ($ server "PHP_SELF")
-          (html-textbox "title")
-          (html-textarea "contents")
-          (html-submit "submit")))))
-
-(def status
-  (when (isset ($ post "submit"))
-    (sql-insert "pages" 
-                {"title" ($ post "title") ,
-                 "contents" ($ post "contents")})
-    (html-link (. "/page?id=" (mysql-insert-id)) "here")))
-
-(form status)
-{% endhighlight %}
-
-Again, we separated markup-related code from the business logic.
-
 ### What's next {#whats-next}
 That's it for this tutorial. By now you should have a feel programming in Pharen. Some things you can do from here:
 * Read the in-depth sections, if you haven't.
