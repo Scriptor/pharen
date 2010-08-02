@@ -149,6 +149,24 @@ Pharen provides the `$` form to access superglobals such as $_POST and $_SERVER.
 (def php-self ($ server "PHP_SELF"))
 {% endhighlight %}
 
+### Variables as Functions ### {#variables-as-functions}
+In PHP, it's possible to use a variable name where you would use a function name, as in `$foo("bar");`, the same can be done in Pharen, as long as you keep the `$` prefix:
+
+{% highlight clojure %}
+(def func "implode")
+($func ["hello" " " "world"])
+{% endhighlight %}
+
+This will call the implode function on the array.
+
+#### Function Name Literals #### {#function-name-literals}
+Most of the time strings work fine when you need to pass around a function name, like in the example above. However, Pharen will not convert dashes to underscores inside strings. If you wanted to pass the function `my-function` as an argument as a string, you would have to use `"my_function"`. Since this can look inconsistent, Pharen provides the `#` prefix. The following two lines are equivalent:
+
+{% highlight clojure %}
+(array-map "my_function" [1 2 3 4])
+(array-map #my-function [1 2 3 4])
+{% endhighlight %}
+
 ### Special Forms ### {#special-forms}
 Pharen comes with a few special forms to form the basis for control structures. Unlike PHP's control structures, special forms still count as expressions.
 
