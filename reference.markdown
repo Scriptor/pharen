@@ -265,7 +265,7 @@ Anonymous functions in Pharen are created using the `lambda` form. They are usef
 `map` takes a function and a list, calls the function with each item in the list, and returns a new list. So the above code simply returns a new list with double the values of the old one. A lambda keeps things simpler than having to worry about naming a function. Additionally, when combined with lexical scope anonymous functions can enclose lexically scoped variables at the time of its creation. Say
 
 #### Partial application #### {#partials}
-If the lambda syntax is too bulky and all you need to do is a simple computation, you can partially apply a function. This means you supply a function with fewer than than the minimum number of arguments. This results in the compiler creating another function that remembers those arguments already given and then takes any ungiven ones as its own parameters.
+If the lambda syntax is too bulky and all you need to do is a simple computation, you can partially apply a function. This means you call a function with fewer than than the minimum number of arguments. The compiler creates another function that remembers the arguments already given and then takes any ungiven ones as its own parameters.
 
 It is best explained by an example, to rewrite the above code with partial application:
 
@@ -273,7 +273,7 @@ It is best explained by an example, to rewrite the above code with partial appli
 (map (* 2) [1 2 3 4])
 {% endhighlight %}
 
-Since the `*` function needs at least two arguments but is only given one, the compiler creates a new function takes takes one more argument and multiplies that by two. That one more argument is provided from each item in the list.
+Since the `*` function needs at least two arguments but is only passed the '2', the compiler creates a new function takes takes one more argument and multiplies that by 2. That one more argument is provided by `map` from each item in the list.
 
 #### Splats #### {#splats}
 Sometimes functions need to have an arbitrary number of parameters. In PHP, this would require calling `func_get_args`. Pharen simplifies this by providing splats, created by prepending a parameter name with an ampersand. Notice how the `map` function above takes a list as the second parameter. If you want, you can create a wrapper function that instead takes any number of arguments:

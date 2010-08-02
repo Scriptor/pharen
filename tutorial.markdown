@@ -4,18 +4,18 @@ title: Pharen Tutorial
 ---
 
 ### About this tutorial{#goal}
-The goal of this tutorial is to get started with Pharen by writing a bare-bones pastebin. Each section will be split into a code-centered portion followed by a more in-depth look. You can initially skip the in-depth stuff to get something up and running fast, then come back later if you want to understand more.
+This tutorial will you get started with Pharen by writing a bare-bones pastebin. Each section is split into a code-centered portion and a more in-depth explanation. Every code sample starts with a comment containing the filename the code should go in. You can initially skip the in-depth stuff to get something up and running fast, then read the rest later.
 
 ### Prerequisites {#prerequisites}
 This tutorial is somewhat Unix-oriented and requires knowledge of its command-line. For now, there is no installation script for Windows. However, most of it is platform-agnostic.
 
-You will need a server that can handle PHP files and a text editor. If you want language integration you can set your editor to use a plugin for another Lisp. For example, I currently use VimClojure and have it treat Pharen (.phn) files as Clojure files.
+You will need a text editor and a server that can handle PHP files. If you want language integration you can set your editor to use a plugin for another Lisp. For example, I currently use VimClojure and have it treat Pharen (.phn) files as Clojure files.
 
 ### Getting set up {#set-up}
 First, get Pharen from the [download page](/pharen/download.html). Then open up a shell, cd into the directory the Pharen files are located and run:
 
 {% highlight bash %}
-./install.sh
+$ sudo ./install.sh
 {% endhighlight %}
 
 This installs the `pharen` command so you can use it from anywhere.
@@ -32,10 +32,10 @@ Open a text editor (any should work) and enter the following code:
 Save this in your server's document root directory as `hello.phn`. From inside this directory run the following command to compile it:
 
 {% highlight bash %}
-pharen hello.phn
+$ pharen hello.phn
 {% endhighlight %}
 
-If you go to [http://localhost/hello.php](http://localhost/hello.php)  you will see "Hello, world!" printed out. Very basic, but it shows the nitty-gritty details are done.
+If you start your server and go to [http://localhost/hello.php](http://localhost/hello.php)  you will see "Hello, world!" printed out. Very basic, but it gets the nitty-gritty details are done.
 
 **In depth**: `pharen` invokes the Pharen compiler, which can then take in any number of files and compiles them in order. For now, the compiler expects Pharen files to either have the .phn extension or no extension at all. Output files use the original name but with the .php extension.
 
@@ -55,24 +55,24 @@ How about a little more practice? Go back to `hello.phn` and enter the following
 
 Recompile with:
 {% highlight bash %}
-pharen hello.phn
+$ pharen hello.phn
 {% endhighlight %}
 
 Now try loading [http://localhost/hello.php?id=8](http://localhost/hello.php?id=8). The page should respond with "Fetching page with id: 8".
 
-**In depth**: The first line defines a variable using `def`, notice how even variable creation looks like a regular function call, with the first parameter as the name and the second as the value. `def` also puts the current variable in the lexical scope and can be accessed from functions and manually created scopes nested inside. [More on creating variables](/pharen/reference.html#defining-variables).
+**In depth**: The first line defines a variable using `def`, notice how even variable creation looks like a regular function call, with the first argument as the variable's name and the second as the value. `def` also puts the current variable in the lexical scope and can be accessed from functions and manually created nested scopes nested. [More on creating variables](/pharen/reference.html#defining-variables).
 
-`$` is a special shortcut for accessing superglobals, the first parameter is which superglobal to use, while the second is the index. [More on superglobals](/pharen/reference.html#superglobals).
+`$` is a special shortcut for accessing superglobals, the first parameter is which superglobal to use (GET in this case), while the second is the index. [More on superglobals](/pharen/reference.html#superglobals).
 
-Pharen's if expressions work slightly differently from PHP's if statements (although that's what they're compiled into). They take one condition and two body expressions. If the condition is true, the first body expression is run, if the condition is False, the second body expression is run. [More on if expressions](/pharen/reference.html#if).
+Pharen's `if` expressions work slightly differently from PHP's if statements (although that is what they are compiled into). They take one condition and two body expressions. If the condition is true, the first body expression is run, if the condition is false, the second body expression is run. [More on if expressions](/pharen/reference.html#if).
 
-The last new facet introduced here is inside the condition, with the comparison operator: `<`. Infix operators such as those for math (+, -, /, \*) and comparison (<, <=, ==, !=, etc...) are treated like function names in Pharen. This means that in the above code, `(intval id)` is checked to see if it's less than 0. [More on infix operators](/pharen/reference.html#infix-operators).
+The last new facet introduced here is how comparison and string concatenation are done. Infix operators such as those for math (+, -, /, \*) and comparison (<, <=, ==, !=, etc...) and string concatenation are treated like function names in Pharen. This means that in the above code, `(intval id)` is checked to see if it's less than 0 while the second print expression concatenates a string with the variable `id`. [More on infix operators](/pharen/reference.html#infix-operators).
 
 ### Dynamic pages {#dynamic-pages}
 Let's use what we know to write something that will fetch pastes for our pastebin. Create a directory inside your server's document directory called `pastebin`. All project files should from now on be placed inside here. Create a file called `paste.phn` and enter the following code:
 
 {% highlight clojure %}
-pastebin/paste.phn
+; pastebin/paste.phn
 (require "sql.php")
 
 (sql-connect "your-username" "your-password" "pastebindb")
@@ -145,7 +145,7 @@ After that's all done, we check to see if the current request is a form submissi
 
 ### What's next {#whats-next}
 That's it for this tutorial. By now you should have a feel programming in Pharen. Some things you can do from here:
-* Read the in-depth sections, if you haven't.
+* Read the in-depth sections to better understand the code.
 * Add more features to the pastebin, maybe editing pastes.
 * Learn about cooler features, like [macros](/pharen/reference.html#macros), or [tail recursion elimination](/pharen/reference.html#tre).
 * [Contribute](/pharen/contribute.html) to Pharen.
