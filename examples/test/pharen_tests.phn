@@ -24,4 +24,4 @@
 
   (describe "Pharen"
       (lambda ()
-          (map "run_test" tests))))
+          (map #run-test tests))))
