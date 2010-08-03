@@ -18,4 +18,5 @@
   (mysql-query (sprintf "INSERT INTO %s (%s) VALUES (%s);"
                       (mysql-real-escape-string table)
                       (sql-cols pairs)
-                      (sql-vals pairs))))
+                      (sql-vals pairs)))
+  (mysql-insert-id))
