@@ -6,5 +6,6 @@
       (compile-dir (project-path "/lib/")))
 
 (task "test" "Running tests for Pharen compiler"
+      (compile-file (project-path "/examples/test/pharen_tests.phn"))
       (require (project-path "/examples/test/pharen_tests.php"))
       TRUE)
