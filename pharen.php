@@ -579,6 +579,12 @@ class Node implements Iterator, ArrayAccess, Countable{
             $unevaluated_args = array_slice($this->children,1 );
             MacroNode::evaluate($func_name, $unevaluated_args);
 
+            foreach($unevaluated_args as $key=>$arg){
+                if($arg instanceof LeafNode && !($arg instanceof StringNode)){
+                    $unevaluated_args[$key] = $arg->compile();
+                }
+            }
+
             $expanded = call_user_func_array($func_name, $unevaluated_args);
             if($expanded instanceof QuoteWrapper){
                 return $expanded->compile();
@@ -590,7 +596,6 @@ class Node implements Iterator, ArrayAccess, Countable{
         }else if(!$this->has_splice && $func->is_partial()){
             return $this->create_partial($func);
         }
-
 
         if($this->has_variable_func){
             $args_string = implode(", ", $args);
@@ -683,6 +688,7 @@ class RootNode extends Node{
         }else if(Flags::$flags['no-import-lang'] == True){
             $code .= $this->format_line("require_once('".COMPILER_SYSTEM."/lexical.php"."');");
         }
+
         $code .= $this->scope->init_namespace_scope();
         $code .= $this->scope->init_lexical_scope();
         foreach($this->children as $child){
