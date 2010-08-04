@@ -12,7 +12,11 @@ class Lexical{
     }
 
     public static function get_closure_id($ns, $id){
-        return count(self::$scopes[$ns][$id])-1;
+        if($id === Null){
+            return Null;
+        }else{
+            return count(self::$scopes[$ns][$id])-1;
+        }
     }
 
     public static function bind_lexing($ns, $id, $var, &$val){

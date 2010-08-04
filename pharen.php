@@ -317,14 +317,20 @@ class Scope{
     }
 
     public function init_lexical_scope(){
-        return $this->owner->format_line_indent('$__scope_id = Lexical::init_closure("'.Node::$ns.'", '.$this->id.');');
+        if(count($this->lexically_needed) === 0){
+            return "\n";
+        }else{
+            return $this->owner->format_line_indent('$__scope_id = Lexical::init_closure("'.Node::$ns.'", '.$this->id.');');
+        }
     }
 
-    public function get_lexing($var_name){
+    public function get_lexing($var_name, $force=False){
+        if($force){
+            $this->lexically_needed[$var_name] = True;
+        }
         if(!isset($this->lexically_needed[$var_name])){
             return "";
         }
-        $value = $this->bindings[$var_name]->compile();
         return $this->owner->format_line_indent('Lexical::bind_lexing("'.Node::$ns."\", {$this->id}, '$var_name', $var_name);");
     }
 
@@ -561,7 +567,6 @@ class Node implements Iterator, ArrayAccess, Countable{
     }
 
     public function create_partial($func){
-        $bt = debug_backtrace();
         list($tmp_func, $tmp_name) = $func->get_tmp_func($this->parent);
         Node::$tmp .= $tmp_func;
         return '"'.$tmp_name.'"';
@@ -690,10 +695,11 @@ class RootNode extends Node{
         }
 
         $code .= $this->scope->init_namespace_scope();
-        $code .= $this->scope->init_lexical_scope();
+        $body = "";
         foreach($this->children as $child){
-            $code .= $child->compile_statement();
+            $body .= $child->compile_statement();
         }
+        $code .= $this->scope->init_lexical_scope().$body;
         return $code;
     }
 
@@ -986,8 +992,9 @@ class MacroNode extends FuncDefNode{
 
     public function parent_compile(){
         MacroNode::$rescope_vars = True;
-        return parent::compile_statement();
+        $code = parent::compile_statement();
         MacroNode::$rescope_vars = False;
+        return $code;
     }
 
     public function compile_statement(){
@@ -1174,7 +1181,12 @@ class LambdaNode extends FuncDefNode{
 
         $code = parent::compile_statement();
         Node::$tmp .= $code.$this->format_line("");
-        return 'array("'.$name.'", Lexical::get_closure_id("'.Node::$ns.'", $__scope_id))';
+        if(count($this->parent->get_scope()->lexically_needed) === 0){
+            $scope_id_str = 'Null';
+        }else{
+            $scope_id_str = '$__scope_id';
+        }
+        return 'array("'.$name.'", Lexical::get_closure_id("'.Node::$ns.'", '.$scope_id_str.'))';
     }
 
     public function compile_statement(){
@@ -1471,10 +1483,10 @@ class DefNode extends Node{
         $varname = $this->children[1]->compile();
 
         $this->scope->bind($varname, $this->children[2]);
-        $code = $this->scope->get_binding($varname);
-        $code .= $this->scope->get_lexing($varname);
+        $code = $this->format_statement($this->scope->get_binding($varname), $prefix);
+        $code .= $this->scope->get_lexing($varname, True);
 
-        return $this->format_statement($code, $prefix);
+        return $code;
     }
 }
 
@@ -1492,7 +1504,6 @@ class BindingNode extends Node{
         }
         $varnames = array();
         $code = "";
-        $lexings = $this->scope->init_lexical_scope();
         foreach($pairs as $pair_node){
             $varname = $pair_node[0]->compile();
             $varnames[] = $varname;
@@ -1511,6 +1522,7 @@ class BindingNode extends Node{
             $body .= $line->compile_statement();
         }
 
+        $lexings = $this->scope->init_lexical_scope();
         foreach($varnames as $varname){
             $lexings .= $scope->get_lexing($varname);
         }
@@ -1762,5 +1774,5 @@ function compile($code, $root=Null){
 
 $old_setting = isset(Flags::$flags['no-import-lang']) ? Flags::$flags['no-import-lang'] : False;
 set_flag("no-import-lang");
-$lang_code = compile_file(COMPILER_SYSTEM . "/lang.phn");
+#$lang_code = compile_file(COMPILER_SYSTEM . "/lang.phn");
 set_flag("no-import-lang", $old_setting);
