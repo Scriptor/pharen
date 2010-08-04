@@ -271,6 +271,7 @@ class FuncInfo{
 
 class Scope{
     public static $scope_id = 0;
+    public static $scopes = array();
 
     public $owner;
     public $bindings = array();
@@ -281,6 +282,7 @@ class Scope{
     public function __construct($owner){
         $this->owner = $owner;
         $this->id = self::$scope_id++;
+        self::$scopes[$this->id] = $this;
     }
 
     public function bind($var_name, $value_node){
@@ -298,6 +300,10 @@ class Scope{
 
     public function get_binding($var_name){
         $value = $this->bindings[$var_name]->compile();
+
+        if(MacroNode::$rescope_vars){
+            Node::$post_tmp .= $this->owner->format_line_indent("Scope::\$scopes['{$this->id}']->bindings['$var_name'] = $var_name;");
+        }
         return $this->owner->indent."$var_name = $value;";
     }
 
@@ -361,6 +367,7 @@ class Node implements Iterator, ArrayAccess, Countable{
     static $tmpfunc;
     static $prev_tmp;
     static $tmp;
+    static $post_tmp;
     static $ns;
     static $tmp_funcname_var=0;
 
@@ -377,9 +384,10 @@ class Node implements Iterator, ArrayAccess, Countable{
     protected $value = "";
 
     static function add_tmp($code){
-        $code = Node::$prev_tmp.Node::$tmp.$code;
+        $code = Node::$prev_tmp.Node::$tmp.$code.Node::$post_tmp;
         Node::$prev_tmp = '';
         Node::$tmp = '';
+        Node::$post_tmp = '';
         return $code;
     }
 
@@ -709,6 +717,10 @@ class LeafNode extends Node{
         $this->value = $value;
     }
 
+    public function __toString(){
+        return $this->value;
+    }
+
     public function get_last_func_call(){
         return $this;
     }
@@ -937,6 +949,7 @@ class MacroNode extends FuncDefNode{
     static $next_literal_id = 0;
     static $current_params;
     static $ghosting = False;
+    static $rescope_vars = False;
 
     public $args;
     public $evaluated = False;
@@ -966,7 +979,9 @@ class MacroNode extends FuncDefNode{
     }
 
     public function parent_compile(){
+        MacroNode::$rescope_vars = True;
         return parent::compile_statement();
+        MacroNode::$rescope_vars = False;
     }
 
     public function compile_statement(){
@@ -1056,7 +1071,15 @@ class UnquoteWrapper{
             if(MacroNode::$ghosting){
                 $val = Null;
             }else{
-                $val = $val_node->compile();
+                if(is_object($val_node)){
+                    $val = $val_node->compile();
+                }else{
+                    if(is_string($val_node)){
+                        $val = '"'.$val_node.'"';
+                    }else{
+                        $val = $val_node;
+                    }
+                }
             }
             if($unstring){
                 $val = trim($val, '"');
