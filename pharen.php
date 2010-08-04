@@ -570,10 +570,7 @@ class Node implements Iterator, ArrayAccess, Countable{
         }else if(MacroNode::is_macro($func_name)){
             $unevaluated_args = array_slice($this->children,1 );
             MacroNode::evaluate($func_name, $unevaluated_args);
-            foreach($unevaluated_args as $key=>$val){
-                if($val instanceof LeafNode)
-                    $unevaluated_args[$key] = $val->compile();
-            }
+
             $expanded = call_user_func_array($func_name, $unevaluated_args);
             if($expanded instanceof QuoteWrapper){
                 return $expanded->compile();
