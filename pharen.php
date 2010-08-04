@@ -723,10 +723,6 @@ class LeafNode extends Node{
         $this->value = $value;
     }
 
-    public function __toString(){
-        return $this->value;
-    }
-
     public function get_last_func_call(){
         return $this;
     }
@@ -775,6 +771,10 @@ class SplatNode extends VariableNode{
 }
 
 class StringNode extends LeafNode{
+
+    public function __toString(){
+        return $this->value;
+    }
 
     public function compile(){
         return '"'.$this->value.'"';
