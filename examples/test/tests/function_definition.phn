@@ -21,6 +21,11 @@
         "bar"))
 (check (if-inside FALSE) "bar")
 
+(fn default-val-arg (a [b "bar"])
+  b)
+(check (default-val-arg NULL) "bar")
+(check (default-val-arg NULL "foo") "foo")
+
 (fn fact (n)
   (if (== n 0)
     1
