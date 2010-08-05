@@ -228,7 +228,19 @@ class FuncInfo{
     }
 
     public function is_partial(){
-        return $this->func && count($this->args_given) < count($this->func->params);
+        return $this->func && count($this->args_given) < $this->get_num_args_needed();
+    }
+
+    public function get_num_args_needed(){
+        $num = 0;
+        foreach($this->func->params as $param){
+            if(!($param instanceof ListNode)){
+                $num++;
+            }else{
+                break;
+            }
+        }
+        return $num;
     }
 
     public function get_tmp_func($parent){
@@ -750,6 +762,7 @@ class VariableNode extends LeafNode{
     public function compile($in_binding=False){
         $scope = $this->get_scope();
         $varname = '$'.parent::compile();
+
         if($in_binding){
             return $varname;
         }
@@ -852,16 +865,15 @@ class FuncDefNode extends SpecialForm{
         self::$functions[$this->name] = $this;
         $this->params = $this->children[2]->children;
 
-        $varnames = $this->get_param_names($this->params);
-        $this->bind_params($varnames);
-        $params = $this->children[2]->compile();
-
+        $params = $this->get_param_names($this->params);
+        $params_string = $this->build_params_string($params);
+        $this->bind_params($params);
         list($body_nodes, $last_node) = $this->split_body_last();
 
         $body = "";
         $params_count = count($this->params);
         if($params_count > 0 && $this->params[$params_count-1] instanceof SplatNode){
-            $param = $varnames[$params_count-1];
+            $param = $params[$params_count-1];
             $body .= $this->format_line("").$this->format_line_indent($param." = array_slice(func_get_args(), ".($params_count-1).");");
         }
 
@@ -899,9 +911,9 @@ class FuncDefNode extends SpecialForm{
             $body .= $last;
         }
         $body = $this->scope->get_lexical_bindings().$body;
-        $lexings = $this->get_param_lexings($varnames);
+        $lexings = $this->get_param_lexings($params);
 
-        $code = $this->format_line("function ".$this->name.$params."{").
+        $code = $this->format_line("function ".$this->name.$params_string."{").
             $lexings.
             $body.
             $this->format_line("}").$this->format_line("");
@@ -927,24 +939,49 @@ class FuncDefNode extends SpecialForm{
     public function get_param_lexings($varnames){
         $lexings = $this->scope->init_lexical_scope();
         foreach($varnames as $varname){
+            if(is_array($varname)){
+                $varname = $varname[0];
+            }
             $lexings .= $this->scope->get_lexing($varname);
         }
         return $lexings;
     }
 
     public function get_param_names($param_nodes){
-        $varnames = array();
+        $params = array();
         foreach($param_nodes as $node){
-            $varnames[] = $node->compile(True);
+            if($node instanceof VariableNode){
+                $params[] = $node->compile(True);
+            }else if($node instanceof ListNode){
+                $params[] = array($node->children[0]->compile(True), $node->children[1]);
+            }
         }
-        return $varnames;
+        return $params;
     }
 
     public function bind_params($params){
-        $scope = $this->get_scope();
-        foreach($params as $param){
-            $scope->bind($param, new EmptyNode($this));
+        array_walk($params, array($this, "bind_param"));
+    }
+
+    public function bind_param($param){
+        if(is_array($param)){
+            $this->scope->bind($param[0], $param[1]);
+        }else{
+            $this->scope->bind($param, new EmptyNode($this));
         }
+    }
+
+    public function build_params_string($params){
+        return '('.ltrim(array_reduce($params, array($this, "add_param")), ",").')';
+    }
+
+    public function add_param($params, $param){
+        if(is_array($param)){
+            $params .= ", ".$param[0].'='.$param[1]->compile();
+        }else{
+            $params .= ", $param";
+        }
+        return $params;
     }
 
     public function split_body_tail(){
@@ -1012,6 +1049,7 @@ class MacroNode extends FuncDefNode{
 
     public function bind_params($params){
         self::$current_params = $params;
+        return parent::build_params_string($params);
     }
 }
 
@@ -1774,5 +1812,5 @@ function compile($code, $root=Null){
 
 $old_setting = isset(Flags::$flags['no-import-lang']) ? Flags::$flags['no-import-lang'] : False;
 set_flag("no-import-lang");
-#$lang_code = compile_file(COMPILER_SYSTEM . "/lang.phn");
+$lang_code = compile_file(COMPILER_SYSTEM . "/lang.phn");
 set_flag("no-import-lang", $old_setting);
