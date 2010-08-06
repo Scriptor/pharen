@@ -584,7 +584,7 @@ class Node implements Iterator, ArrayAccess, Countable{
         return '"'.$tmp_name.'"';
     }
 
-    public function compile(){
+    public function compile($is_statement=False){
         $scope = $this->get_scope();
         list($func_name, $args) = $this->get_compiled_func_args();
 
@@ -604,7 +604,11 @@ class Node implements Iterator, ArrayAccess, Countable{
 
             $expanded = call_user_func_array($func_name, $unevaluated_args);
             if($expanded instanceof QuoteWrapper){
-                return $expanded->compile();
+                if($is_statement){
+                    return $expanded->compile_statement();
+                }else{
+                    return $expanded->compile();
+                }
             }else if(is_string($expanded)){
                 return '"'.$expanded.'"';
             }else{
@@ -626,7 +630,7 @@ class Node implements Iterator, ArrayAccess, Countable{
     }
 
     public function compile_statement($prefix=""){
-        return $this->format_statement($this->compile().";", $prefix);
+        return $this->format_statement($this->compile(True).";", $prefix);
     }
 
     public function compile_return($prefix=""){
