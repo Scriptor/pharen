@@ -3,14 +3,15 @@ require_once('/Applications/MAMP/htdocs/pharen/lang.php');
 Lexical::$scopes['test'] = array();
 
 function check($expr, $expected){
-	$__scope_id = Lexical::init_closure("test", 13);
+	$__scope_id = Lexical::init_closure("test", 40);
 	if(($expr == $expected)){
 		return TRUE;
 	}
 	else{
 		$bt = debug_backtrace();
-	Lexical::bind_lexing("test", 13, '$bt', $bt);
-		error("Test failed on line: ", $bt[0]["line"], " in ", $bt[0]["file"]);
+	Lexical::bind_lexing("test", 40, '$bt', $bt);
+		error_log(("Test failed on line: " . $bt[0]["line"] . " in " . $bt[0]["file"]));
+;
 		return FALSE;
 	}
 }

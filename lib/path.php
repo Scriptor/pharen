@@ -2,7 +2,7 @@
 require_once('/Applications/MAMP/htdocs/pharen/lang.php');
 Lexical::$scopes['path'] = array();
 
-function path__lambdafunc2($chunk, $acc, $__closure_id){
+function path__lambdafunc4($chunk, $acc, $__closure_id){
 
 	
 	 Null;
@@ -26,7 +26,7 @@ function path_normalize_array($chunks){
 
 
 
-	return reduce(array("path__lambdafunc2", Lexical::get_closure_id("path", Null)), array(), $chunks);
+	return reduce(array("path__lambdafunc4", Lexical::get_closure_id("path", Null)), array(), $chunks);
 }
 
 function path_normalize($path){
