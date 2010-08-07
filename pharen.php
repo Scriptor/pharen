@@ -593,7 +593,7 @@ class Node implements Iterator, ArrayAccess, Countable{
             $micro = MicroNode::get_micro($func_name);
             return $micro->get_body(array_slice($this->children, 1), $this->indent);
         }else if(MacroNode::is_macro($func_name)){
-            $unevaluated_args = array_slice($this->children,1 );
+            $unevaluated_args = array_slice($this->children, 1);
             MacroNode::evaluate($func_name, $unevaluated_args);
 
             foreach($unevaluated_args as $key=>$arg){
@@ -1024,6 +1024,7 @@ class MacroNode extends FuncDefNode{
         }
         $code = $macronode->parent_compile();
         if($macronode->evaluated){
+            Node::add_tmpfunc('');
             return;
         }else{
             eval(Node::add_tmpfunc($code));
