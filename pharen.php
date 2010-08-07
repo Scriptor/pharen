@@ -976,7 +976,7 @@ class FuncDefNode extends SpecialForm{
     }
 
     public function build_params_string($params){
-        return '('.ltrim(array_reduce($params, array($this, "add_param")), ",").')';
+        return '('.ltrim(array_reduce($params, array($this, "add_param")), ", ").')';
     }
 
     public function add_param($params, $param){
