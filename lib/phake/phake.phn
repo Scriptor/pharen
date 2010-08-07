@@ -19,17 +19,21 @@
   (compile-file file)
   (unset-flag flag))
 
+(fn compile-except (except file [output-dir NULL])
+  (when (!== except file)
+    (compile-file file)))
+
 (fn is-phn (f)
   (and (isset (:(pathinfo f) "extension"))
        (== (:(pathinfo f) "extension") "phn")))
 
-(fn compile-dir (dir)
+(fn compile-dir (dir [compile-func #compile-file])
   (map 
     (lambda (f)
             (def file (path-join dir f))
             (cond
-              ((and (not-dots f) (is-dir file)) (compile-dir file))
-              ((is-phn file) (and (compile-file file (dirname file)) (print (. "Compile: " file "\n"))))))
+              ((and (not-dots f) (is-dir file)) (compile-dir file compile-func))
+              ((is-phn file) (and ($compile-func file (dirname file)) (print (. "Compile: " file "\n"))))))
     (scandir dir 1)))
 
 
