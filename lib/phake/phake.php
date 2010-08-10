@@ -32,7 +32,6 @@ function compile_with_flag($flag, $file){
 
 function compile_except($except, $file, $output_dir=NULL){
 
-	print(("Except: " . $except . " " . $file . "\n"));
 
 $__condtmpvar4 = Null;
 if(($except !== $file)){
