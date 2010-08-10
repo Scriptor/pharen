@@ -1,5 +1,5 @@
 (fn html-form (method action &code)
-    (sprintf "<form action='%s' method='%s'>%s</form>" method action (implode "<br/>" code)))
+    (sprintf "<form action='%s' method='%s'>%s</form>" action method (implode "<br/>" code)))
 
 (fn html-label (id)
   (sprintf "<label for='%s'>%s</label>" id id))
@@ -8,7 +8,7 @@
   (sprintf "%s <br/> <input type='text' id='%s' name='%s'/>" (html-label id) id id))
 
 (fn html-textarea (id)
-    (sprintf "%s <br/> <textarea id='%s' name='%s'></textarea>" id))
+    (sprintf "%s <br/> <textarea id='%s' name='%s'></textarea>" (html-label id) id id))
 
 (fn html-submit (id)
-  (sprintf "%s <br/> <input type='submit' id='%s' name='%s' value='%s'/>" id id id))
+  (sprintf "%s <br/> <input type='submit' id='%s' name='%s' value='%s'/>" (html-label id) id id id))

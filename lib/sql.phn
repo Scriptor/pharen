@@ -6,7 +6,7 @@
   (implode ", " (array-values pairs)))
 
 (fn sql-cols (pairs)
-  (implode ", " (array-keys paris)))
+  (implode ", " (array-keys pairs)))
 
 (fn sql-fetch-by-id (table id)
   (def query (sprintf "SELECT * FROM %s WHERE id=%s;"
