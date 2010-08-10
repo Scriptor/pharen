@@ -289,6 +289,8 @@ class Scope{
     public $bindings = array();
     public $lexical_bindings = array();
     public $lexically_needed = array();
+    public $lex_vars = False;
+    public $virtual=False;
     public $id;
 
     public function __construct($owner){
@@ -316,7 +318,7 @@ class Scope{
         if(MacroNode::$rescope_vars){
             Node::$post_tmp .= $this->owner->format_line_indent("Scope::\$scopes['{$this->id}']->bindings['$var_name'] = $var_name;");
         }
-        return $this->owner->indent."$var_name = $value;";
+        return "$var_name = $value;";
     }
 
     public function get_lexical_binding($var_name, $id){
@@ -354,18 +356,24 @@ class Scope{
         return $code;
     }
 
-    public function find($var_name, $return_value=False){
+    public function find($var_name, $return_value=False, $from_virtual=False){
         if($var_name[0] != '$'){
             $var_name = '$'.$var_name;
         }
+
         if(!array_key_exists($var_name, $this->bindings)){
             if($this->owner->parent !== Null){
-                return $this->owner->parent->get_scope()->find($var_name, $return_value);
+                return $this->owner->parent->get_scope()->find($var_name, $return_value, $this->virtual);
             }else{
                 return False;
             }
         }
-        $this->lexically_needed[$var_name] = True;
+
+        if(!$from_virtual){
+            // When the scope below this is not a virtual scope such as a let binding
+            $this->lexically_needed[$var_name] = True;
+        }
+
         if($return_value){
             return $this->bindings[$var_name];
         }
@@ -767,17 +775,13 @@ class VariableNode extends LeafNode{
         $scope = $this->get_scope();
         $varname = '$'.parent::compile();
 
-        if($in_binding){
-            return $varname;
-        }
-
-        if($varname[1] == '$'){
+        if($in_binding or $varname[1] == '$'){
             return $varname;
         }
 
         if($scope->find_immediate($varname) !== False){
             return $varname;
-        }else if(($id = $scope->find($varname, False, False)) !== False){
+        }else if(($id = $scope->find($varname, False, False)) !== False && !$scope->virtual){
             $scope->bind_lexical($varname, $id);
             return $varname;
         }else{
@@ -1543,6 +1547,8 @@ class BindingNode extends Node{
 
     public function compile_statement($return=False){
         $scope = $this->scope = new Scope($this);
+        $scope->virtual = True;
+
         $pairs = $this->children[1]->children;
         if(!($pairs[0] instanceof ListNode)){
             $pairs = array_chunk($pairs, 2);
