@@ -2,36 +2,30 @@
 <?php
 require_once('/Applications/MAMP/htdocs/pharen/lang.php');
 Lexical::$scopes['phake'] = array();
-
 require_once("path.php");
 define("PHAKE_SYSTEM", realpath(dirname(__FILE__)));
 define("PHAREN_SYSTEM", path_join(PHAKE_SYSTEM, "../.."));
 define("PROJECT_SYSTEM", getcwd());
 require_once((PHAREN_SYSTEM . "/pharen.php"));
 function proj($name, $attrs){
-
 	return "Do stuff with project info here";
 }
 
 function project_path($f){
-
 	return (PROJECT_SYSTEM . $f);
 }
 
 function not_dots($dir){
-
 	return (("." !== $dir) and (".." !== $dir));
 }
 
 function compile_with_flag($flag, $file){
-
 	set_flag($flag);
 	compile_file($file);
 	return unset_flag($flag);
 }
 
 function compile_except($except, $file, $output_dir=NULL){
-
 
 $__condtmpvar4 = Null;
 if(($except !== $file)){
@@ -44,7 +38,6 @@ $__condtmpvar4 = FALSE;
 }
 
 function is_phn($f){
-
 $__listAcessTmpVar0 = pathinfo($f);
 $__listAcessTmpVar1 = pathinfo($f);
 	return (isset($__listAcessTmpVar0["extension"]) and ($__listAcessTmpVar1["extension"] == "phn"));

@@ -332,7 +332,7 @@ class Scope{
 
     public function init_lexical_scope(){
         if(count($this->lexically_needed) === 0){
-            return "\n";
+            return "";
         }else{
             return $this->owner->format_line_indent('$__scope_id = Lexical::init_closure("'.Node::$ns.'", '.$this->id.');');
         }
@@ -1413,9 +1413,9 @@ class DictNode extends Node{
         if($pairs[0][0] === Null){
             $pairs = array_chunk($pairs, 2);
         }
+
         $mappings = array();
         $code = "";
-
         foreach($pairs as $pair){
             $key = $pair[0]->compile();
             $value = $pair[1]->compile();
@@ -1577,7 +1577,7 @@ class BindingNode extends Node{
         foreach($varnames as $varname){
             $lexings .= $scope->get_lexing($varname);
         }
-        return $this->scope->get_lexical_bindings().$code.$this->format_line("").$lexings.$this->format_line("").$body.$last_line;
+        return $this->scope->get_lexical_bindings().$code.$lexings.$body.$last_line;
     }
 
     public function compile_return(){
