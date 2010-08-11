@@ -12,3 +12,6 @@
 
 (fn html-submit (id)
   (sprintf "%s <br/> <input type='submit' id='%s' name='%s' value='%s'/>" (html-label id) id id id))
+
+(fn html-link (url text)
+  (sprintf "<a href='%s'>%s</a>" url text))
