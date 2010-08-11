@@ -2,8 +2,14 @@
   (mysql-connect "localhost" user pass)
   (mysql-select-db db))
 
+(fn sql-quote (v)
+  (let [val (mysql-real-escape-string v)]
+    (if (is-string val)
+      (. "'" val "'")
+      val)))
+
 (fn sql-vals (pairs)
-  (implode ", " (array-values pairs)))
+  (implode ", " (map #sql-quote (array-values pairs))))
 
 (fn sql-cols (pairs)
   (implode ", " (array-keys pairs)))
@@ -15,8 +21,8 @@
   (mysql-fetch-assoc (mysql-query query)))
 
 (fn sql-insert (table pairs)
-  (mysql-query (sprintf "INSERT INTO %s (%s) VALUES (%s);"
+  (or (mysql-query (sprintf "INSERT INTO %s (%s) VALUES (%s);"
                       (mysql-real-escape-string table)
                       (sql-cols pairs)
-                      (sql-vals pairs)))
+                      (sql-vals pairs))) (print (mysql-error)))
   (mysql-insert-id))
