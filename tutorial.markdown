@@ -4,7 +4,7 @@ title: Pharen Tutorial
 ---
 
 ### About this tutorial{#goal}
-This tutorial will you get started with Pharen by writing a bare-bones pastebin. Each section is split into a code-centered portion and a more in-depth explanation. Every code sample starts with a comment containing the filename the code should go in. You can initially skip the in-depth stuff to get something up and running fast, then read the rest later.
+This tutorial will you get started with Pharen by writing a bare-bones pastebin. Each section is split into a code-centered portion and a more in-depth explanation. Every code sample starts with a comment containing the filename the code should go in. You can initially skip the in-depth stuff to get something up and running fast, then read the rest later. The finished code for the pastebin is available [on Github](http://github.com/scriptor/pastebin).
 
 ### Prerequisites {#prerequisites}
 This tutorial is somewhat Unix-oriented and requires knowledge of its command-line. For now, there is no installation script for Windows. However, most of it is platform-agnostic.
@@ -96,7 +96,7 @@ The `if` expression is fairly straightforward, it fetches the paste if an id is 
 Run the following SQL in your database (through whatever db front-end you use, maybe PHPMyAdmin).
 
 {% highlight sql %}
-CREATE TABLE "pages" (
+CREATE TABLE pages (
   id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
   title VARCHAR(255) UNIQUE,
   contents TEXT
@@ -107,8 +107,8 @@ Start by creating a new file called `new.phn`. Then use the following code:
 
 {% highlight clojure %}
 ; pastebin/new.phn
-(require "sql")
-(require "html")
+(require "sql.php")
+(require "html.php")
 
 (fn print-paste-link (id)
   (html-link (. "/page?id=" id) "New paste"))
