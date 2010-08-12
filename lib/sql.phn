@@ -21,8 +21,8 @@
   (mysql-fetch-assoc (mysql-query query)))
 
 (fn sql-insert (table pairs)
-  (or (mysql-query (sprintf "INSERT INTO %s (%s) VALUES (%s);"
+  (mysql-query (sprintf "INSERT INTO %s (%s) VALUES (%s);"
                       (mysql-real-escape-string table)
                       (sql-cols pairs)
-                      (sql-vals pairs))) (print (mysql-error)))
+                      (sql-vals pairs)))
   (mysql-insert-id))
