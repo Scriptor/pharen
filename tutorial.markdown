@@ -77,6 +77,10 @@ Let's use what we know to write something that will fetch pastes for our pastebi
 
 (sql-connect "your-username" "your-password" "pastebindb")
 
+(fn print-paste (paste)
+  (print (. "<h2>" (:paste "title") "</h2>"
+     "<p>" (:paste "contents") "</p>")))
+
 (if (isset ($ get "id"))
   (print-paste (sql-fetch-by-id "pastes" ($ get "id")))
   (print "No paste id provided."))
@@ -98,7 +102,7 @@ Run the following SQL in your database (through whatever db front-end you use, m
 {% highlight sql %}
 CREATE TABLE pages (
   id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-  title VARCHAR(255) UNIQUE,
+  title VARCHAR(255),
   contents TEXT
 );
 {% endhighlight %}
@@ -111,7 +115,7 @@ Start by creating a new file called `new.phn`. Then use the following code:
 (require "html.php")
 
 (fn print-paste-link (id)
-  (html-link (. "/page?id=" id) "New paste"))
+  (print (html-link (. "/page?id=" id) "New paste")))
 
 (fn print-paste-form ()
   (print (html-form "post" ($ server "PHP_SELF")
