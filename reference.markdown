@@ -304,4 +304,65 @@ Sometimes functions need to have an arbitrary number of parameters. In PHP, this
 The first parameter is still a function name, but after that any others become part of an implicitly created variable called xs which is then available to you as a list.
 
 ### Macros ### {#macros}
-With macros, unevaluated code can be used as if it was a data structure that could be processed and manipulated as needed. In Pharen, they are defined using `defmacro`.
+Note: The following assumes some knowledge of how macros work. For something beginner-oriented, read the [macro tutorial](/pharen/macro-tutorial.html).
+
+With macros, unevaluated code can be used as if it was a data structure that could be processed and manipulated as needed. In Pharen, they are defined using `defmacro`. Calls to macros are processed at compile-time.
+
+{% highlight clojure %}
+(defmacro hello ()
+  (print "Hello, world!"))
+(hello)
+{% endhighlight %}
+
+Generated code: blank.
+
+The above code will print "Hello, world!" *when compiled*.
+
+#### Quoting #### {#quoting}
+To quote a chunk of code so that it can be returned by a macro, use the single-quote: `'` character.
+
+{% highlight clojure %}
+(defmacro hello-2 ()
+  '(print "Hello, world!"))
+(hello-2)
+{% endhighlight %}
+
+Generated Pharen code: `(print "Hello, world!")`
+
+#### Unquoting #### {#unquoting}
+To unquote a value, use the tilde: `~` character.
+
+{% highlight clojure %}
+(defmacro greet (name)
+  '(print (. "Hello, " ~name "!")))
+(greet "Arthur")
+{% endhighlight %}
+
+Generated Pharen code: `(print  (. "Hello, " "Arthur" "!"))`
+
+#### Splicing #### {#splicing}
+When unquoting lists, we may want to break the list up and directly splice its contents into the code.
+This can be done with the at-sign: `@` character. Let's write a macro that takes a bunch of arguments and generates a list of them.
+
+{% highlight clojure %}
+(defmacro make-list (&args)
+  '[~@names])
+(make-list 1 2 3 4 5)
+{% endhighlight %}
+
+Generated Pharen code: `[1 2 3 4 5]`.
+
+Notice how the `make-list` function uses a splat for its parameter. Splats and splicing often go hand-in-hand when working with macros.
+
+#### Unstring #### {#unstring}
+By default, strings, when unquoted inside a quoted piece of code, will compile down to regular double-quote-enclosed strings. For example, when we called the greet macro from above, the generated quote put `"Arthur"` in double-quotes since it is a string. To remove the quotes, use the dash: `-` character (in combination with the tilde for unquoting). For example, say we need to use the value passed to the macro as the function name in a function call:
+
+{% highlight clojure %}
+(defmacro call (f &args)
+  '(~-f ~@args))
+(call "foo" "bar" 1)
+{% endhighlight %}
+
+Generated Pharen code: `(foo "bar" 1)`
+
+If we had not use unstring on `f`, we would have gotten `("foo" "bar" 1)`.
