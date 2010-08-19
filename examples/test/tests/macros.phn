@@ -5,6 +5,11 @@
 (check (simple-macro-test 5) 25)
 (check (simple-macro-test 15) "15 is too big!")
 
+(defmacro nested-leaf-test (l)
+  (def n (:l 1))
+  n)
+(check (nested-leaf-test (foo 1)) 1)
+
 (defmacro fn-generator-test (nm value)
   '(fn ~-nm ()
      (def stuff "foo")
