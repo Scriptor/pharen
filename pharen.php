@@ -401,7 +401,9 @@ class Node implements Iterator, ArrayAccess, Countable{
     public $children;
     public $return_flag = False;
     public $has_variable_func = False;
+    public $in_macro;
     public $indent = Null;
+
     public $quoted;
     public $unquoted;
     public $has_splice;
@@ -466,7 +468,17 @@ class Node implements Iterator, ArrayAccess, Countable{
     }
 
     public function offsetGet($offset){
-        return isset($this->children[$offset]) ? $this->children[$offset] : Null;
+        if(isset($this->children[$offset])){
+            $node = $this->children[$offset];
+            if($node instanceof LeafNode){
+                return $node->typify();
+            }else{
+                $node->is_macro = True;
+                return $node;
+            }
+        }else{
+            return Null;
+        }
     }
 
     public function offsetSet($offset, $value){
@@ -605,8 +617,10 @@ class Node implements Iterator, ArrayAccess, Countable{
             MacroNode::evaluate($func_name, $unevaluated_args);
 
             foreach($unevaluated_args as $key=>$arg){
-                if($arg instanceof LeafNode && !($arg instanceof StringNode)){
-                    $unevaluated_args[$key] = $arg->compile();
+                if($arg instanceof LeafNode){
+                    $unevaluated_args[$key] = $arg->typify();
+                }else{
+                    $arg->in_macro = True;
                 }
             }
 
@@ -751,6 +765,15 @@ class LeafNode extends Node{
         parent::__construct($parent);
         $this->children = Null;
         $this->value = $value;
+    }
+
+    public function typify(){
+        $val = $this->compile();
+        if(is_numeric($val)){
+            return strpos($val, '.') === False ? intval($val) : floatval($val);
+        }else{
+            return $val;
+        }
     }
 
     public function get_last_func_call(){
