@@ -860,6 +860,23 @@ class SpecialForm extends Node{
         return $body;
     }
 
+    public function get_body_nodes(){
+        $body = clone $this;
+        array_pop($body->children);
+        foreach($body->children as $c){
+            $c->parent = $body;
+        }
+        return array($body);
+    }
+
+    public function get_last_expr(){
+        return $this->children[count($this->children)-1];
+    }
+
+    public function get_last_func_call(){
+        return $this->get_last_expr()->get_last_func_call();
+    }
+
     public function split_body_last(){
         $len = count($this->children);
         $body = array_slice($this->children, $this->body_index, $len - ($this->body_index + 1));
@@ -923,7 +940,11 @@ class FuncDefNode extends SpecialForm{
             $while_last_node->increase_indent();
             $body .= $while_last_node->compile_return();
 
-            $new_param_values = array_slice($last_expr->children, 1);
+            foreach($last_expr->get_body_nodes() as $n){
+                $body .= $n->compile_statement();
+            }
+
+            $new_param_values = array_slice($last_expr->get_last_expr()->children, 1);
             $params_len = count($new_param_values);
             for($x=0; $x<$params_len; $x++){
                 $val_node = $new_param_values[$x];
@@ -1016,7 +1037,7 @@ class FuncDefNode extends SpecialForm{
     }
 
     public function split_body_tail(){
-        list($body_nodes, $last) = parent::split_body_last($this->children);
+        list($body_nodes, $last) = parent::split_body_last();
         $body_nodes = array_merge($body_nodes, $last->get_body_nodes());
         $last = $last->get_last_expr();
         return array($body_nodes, $last);
@@ -1302,15 +1323,6 @@ class CondNode extends SpecialForm{
     public function get_last_func_call(){
         $len = count($this->children);
         return $this->children[$len-1]->children[1]->get_last_func_call();
-    }
-
-    public function get_body_nodes(){
-        $body = clone $this;
-        array_pop($body->children);
-        foreach($body->children as $c){
-            $c->parent = $body;
-        }
-        return array($body);
     }
 
     public function get_last_expr(){
