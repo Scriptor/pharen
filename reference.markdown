@@ -355,14 +355,14 @@ Generated Pharen code: `[1 2 3 4 5]`.
 Notice how the `make-list` function uses a splat for its parameter. Splats and splicing often go hand-in-hand when working with macros.
 
 #### Unstring #### {#unstring}
-By default, strings, when unquoted inside a quoted piece of code, will compile down to regular double-quote-enclosed strings. For example, when we called the greet macro from above, the generated quote put `"Arthur"` in double-quotes since it is a string. To remove the quotes, use the dash: `-` character (in combination with the tilde for unquoting). For example, say we need to use the value passed to the macro as the function name in a function call:
+By default, strings, when unquoted inside a quoted piece of code, will compile down to regular double-quote-enclosed strings. For example, when we called the greet macro from above, the generated quote put `"Arthur"` in double-quotes since it is a string. To remove the quotes, use the dash: `-` character (in combination with the tilde for unquoting). For example, say we need to use the value passed to the macro as the name for a new function:
 
 {% highlight clojure %}
-(defmacro call (f &args)
-  '(~-f ~@args))
-(call "foo" "bar" 1)
+(defmacro new-fn (name)
+  '(fn ~-name (print "Hello, world!")))
+(new-fn "print-hello")
 {% endhighlight %}
 
-Generated Pharen code: `(foo "bar" 1)`
+Generated Pharen code: `(fn print-hello (print "Hello, world!"))`
 
-If we had not use unstring on `f`, we would have gotten `("foo" "bar" 1)`.
+If we had not used unstring on `name`, we would have gotten `(fn "print-hello" (print "Hello, world!"))`.
