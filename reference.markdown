@@ -17,7 +17,6 @@ Since much of the reference relies on using code examples, the following list of
 ; All comments are one-line comments
 1 2.0 -3
 "Simple string with a newline.\n"
-"String with a $variable."
 myvariable function-name2
 SOME-CONSTANT
 {% endhighlight %}
