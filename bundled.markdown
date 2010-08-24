@@ -7,7 +7,7 @@ This page documents some of the libraries that come bundled with a Pharen instal
 
 Function signatures use the following format:
 
-(function-name *type1* arg1 *type2* arg2 ...) 
+(function-name *type1* arg1 *type2* arg2 [optional-arg default-value] ...) 
 
 ### lang.phn ### {#lang.phn}
 `lang.phn` is automatically included in every Pharen file unless it is compiled with the --no-import-lang option. In the future, this may be dropped, but for now it can be handy. It provides some functions designed to make functional programming easier:
@@ -18,9 +18,9 @@ Function signatures use the following format:
 Returns the first element in a list
 
 #### first-pair #### {#first-pair}
-(first *dictionary* xs)
+(first-pair *dictionary* xs)
 
-Returns the first element in a dictionary.
+Returns a 2-element list containing the key and value of the first element in a dictionary
 
 #### rest #### {#rest}
 (rest *list|dictionary* xs)
@@ -60,7 +60,7 @@ Call `f` while passing it with each element of `xs` and the current value for `a
 #### reduce-pairs #### {#reduce-pairs}
 (reduce-pairs *string* f *any* acc *dictionary* xs)
 
-Similar to `reduce`, but works on dictionaries instead.
+Similar to `reduce`, but works on dictionaries instead. The function passed to it should take two parameters, one for the key and one for the value.
 
 #### map #### {#map}
 (map *string* f *list* xs)
@@ -70,7 +70,7 @@ Calls `f` on each element of `xs` and uses the return values to create a new lis
 #### map-pairs #### {#map-pairs}
 (map-pairs *string* f *dictionary* xs)
 
-Similar to `map`, but takes in and returns a dictionary instead.
+Similar to `map`, but takes in and returns a dictionary instead. The function passed to it should take two arguments, one for the key and one for the value.
 
 #### filter #### {#filter}
 (filter *string* f *list* xs)
@@ -78,11 +78,11 @@ Similar to `map`, but takes in and returns a dictionary instead.
 Takes a list and calls a function on each element. If the function returns true, the element is added to the returned list.
 
 ### phake ### {#phake}
-Phake is Pharen's ad-hoc build system. It is not very featureful, but has enough to automate some basic tasks, all using Pharen as the scripting language. Create a file called `phakefile` in the project directory and create some tasks using the `task` macro. Then, from inside the project directory, run `phake your-task`, replacing `your-task` with whichever one you want to run. Here is a simple example:
+Phake is Pharen's ad-hoc build system. It is not very featureful yet, but has enough to automate some basic tasks, all using Pharen as the scripting language. Create a file called `phakefile` in the project directory and create some tasks using the `task` macro. Then, from inside the project directory, run `phake your-task`, replacing `your-task` with whichever one you want to run. Here is a simple example:
 
 {% highlight clojure %}
 (task "example" "An example task."
-      (print "This is part of the task's body. Everything in the body is run when the task is run."))
+      (print "This is part of the task's body, it is run when the task is run."))
 
 (task "compile" "Compile a file."
       (compile-file (project-path "/myfile.phn")))
@@ -90,7 +90,7 @@ Phake is Pharen's ad-hoc build system. It is not very featureful, but has enough
 
 Save this file as `phakefile` in any directory. Then, from inside that directory on the command line run `phake example`. It will first print out `Running example: An example task`. This initialization message comes from the first and second arguments to `task`. Any arguments after that are part of the body, which is run after the initialization.
 
-The second task in the code gives a taste of what Phake would actually be used for. When this task is run, it will look for a file called `myfile.phn` in the project directory and compile it (using the Pharen compiler). The `compile-file` function simply takes a file path and compiles it. It is actually used by the main compiler itself. `project-path` takes a path and prepends the path to the current project's directory to it. It then returns an absolute path to the file.
+The second task in the code gives a taste of what Phake would actually be used for. When this task is run, it will look for a file called `myfile.phn` in the project directory and compile it (using the Pharen compiler). The `compile-file` function simply takes a file path and compiles it. It is actually used by the main compiler itself. `project-path` takes a string and prepends the path of the current project's directory to the string. It then returns an absolute path to the file.
 
 For a somewhat more realistic example of a phakefile, check out [the one Pharen uses](http://github.com/Scriptor/pharen/blob/master/phakefile).
 
@@ -119,4 +119,4 @@ Compiles a Pharen file. If an `output-dir` is provided, the generated PHP code w
 #### compile-except #### {#compile-except}
 (compile-except *string* except *string* file *string* \[output-dir NULL\])
 
-Compiles the Pharen script at path `file` unless it matches the path `except`. A handy use for this is first creating a partial by only supplying the `except` path. Then, this partial can be used by `compile-dir` to compile all files except a certain one. `compile-except` also takes an optional argument specifying an output directory.
+Compiles the Pharen script at path `file` unless it matches the path `except`. A handy use for this is first creating a partial by only supplying the `except` argument. Then, this partial can be used by `compile-dir` as the compile function to use and compile all files except a certain one. `compile-except` also takes an optional argument specifying an output directory.
