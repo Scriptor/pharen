@@ -7,11 +7,12 @@ title: Pharen Language Reference
 ### Data Types and Basics ### {#data-types-and-basics}
 Since much of the reference relies on using code examples, the following list of points should be read to ensure the examples are fully understood.
 - Comments start with a semicolon and go to the end of the line.
-- Numbers (integers, floats, and positive/negative numbers) work the same as in PHP.
-- Strings are always double-quoted and are equivalent to PHP's double-quoted strings. All escape characters will work.
+- Numbers (integers, floats, and positive/negative numbers) work as they do in PHP.
+- Strings are always double-quoted and are equivalent to PHP's double-quoted strings. All escape characters will work, and a double-quote inside a string can be escaped as well.
 - Variables do not have the `$` prefix as they do in PHP (unless a variable is used as a function name).
 - Constants should not have any lower-case letters.
 - Dashes are legal characters in names, they are converted to underscores in the resulting PHP code.
+- Commas are just syntax sugar and are equivalent to whitespace. Replacing a comma with any type of whitespace would not change the code.
 
 {% highlight clojure %}
 ; All comments are one-line comments
@@ -28,7 +29,7 @@ An expression is anything that results in a value. Almost everything in Pharen i
 - *Everything* looks like a function call, even if-statements and function definitions.
 
 {% highlight clojure %}
-; A basic function call, my-function is passed a string and a variable
+; A basic function call: my-function is passed a string and a variable
 (my-function "argument 1" argument-2)
 ; Expressions can be used anywhere that atomic values can be used.
 (my-function (another-function "argument 1") argument-2)
@@ -68,8 +69,10 @@ To create one ore more variables inside an entirely new scope, use `let`.
     (print (. "Answer: " answer)))
 {% endhighlight %}
 
+Note that the variable-value pairs for `let` are stored in a [list](#lists). Since `let` is a built-in, the list syntax is mainly used to distinguish it from the other code, it does not actually create a new list that you could use.
+
 ### Lists ### {#lists}
-Pharen's lists are sequences of items. They are the equivalent of arrays in PHP without explicitly set keys. Lists can contain any data type. For example, lists of strings, numbers, or strings *and* numbers are all valid. Unlike PHP, lists are created using literals instead of the `array` construct.
+Pharen's lists are sequences of items. They are the equivalent of arrays without explicitly set keys in PHP. Lists can contain any data type. For example, lists of strings, numbers, or strings *and* numbers are all valid. Unlike PHP, lists have their own vector literal syntax instead of using the `array` construct.
 
 {% highlight clojure %}
 ; A list containing the numbers from one through 5
