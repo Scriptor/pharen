@@ -22,10 +22,17 @@ body {
 	width: 60%;
 	float: left;
 }
-#content ul{
+#content ul,ol{
 	padding-left: 3%;
+}
+#content ul{
 	list-style-type: square;
 }
+#content ul li,ol li{
+	font-size: 0.9em;
+	margin-bottom: 3px;
+}
+
 #sidebar {
 	width: 15%;
 	margin-right: 3%;
@@ -37,6 +44,7 @@ body {
 	list-style: none;
 }
 #sidebar ul li{
+	font-size: 0.9em;
 	border-left: 2px solid #999;
 	padding: 6px 6px;
 	padding-right: 8px;
@@ -79,7 +87,4 @@ div.code-right{
 	padding-left: 15px;
 	border-left: 1px solid #DDD;
     margin-right: -400px;
-}
-ul{
-	font-size: 0.92em;
 }
