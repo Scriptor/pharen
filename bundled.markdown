@@ -7,7 +7,7 @@ This page documents some of the libraries that come bundled with a Pharen instal
 
 Function signatures use the following format:
 
-(function-name *type1* arg1 *type2* arg2 [optional-arg default-value] ...) 
+(function-name *type1* arg1 *type2* arg2 \[optional-arg default-value\] ...) 
 
 ### lang.phn ### {#lang.phn}
 `lang.phn` is automatically included in every Pharen file unless it is compiled with the --no-import-lang option. In the future, this may be dropped, but for now it can be handy. It provides some functions designed to make functional programming easier:
@@ -104,7 +104,7 @@ Creates a task that can be run from the command-line using the `phake` tool. By 
 #### project-path #### {#project-path}
 (project-path *string* f)
 
-Builds an absolute path to a resource inside the project directory by prepending the project's path to the resource's path. For example, if your project was located in `/projects/example', calling `(project-path "/file")` would return `/projects/example/file`.
+Builds an absolute path to a resource inside the project directory by prepending the project's path to the resource's path. For example, if your project was located in `/projects/example`, calling `(project-path "/file")` would return `/projects/example/file`.
 
 #### compile-dir #### {#compile-dir}
 (compile-dir *string* dir *string* \[compile-func #compile-file\])
