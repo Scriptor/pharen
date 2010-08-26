@@ -57,11 +57,13 @@
           []
           xs))
 
-(fn filter (f1 f2 xs)
-  (map (lambda (x)
-               (when ($f1 x)
-                 ($f2 x)))
-       xs))
+(fn filter (f1 xs)
+  (reduce (lambda (x acc)
+                  (if (f1 x)
+                    (cons x acc)
+                    acc))
+          []
+          xs))
 
 (fn for-n (x f acc)
   (if (== 0 x)
