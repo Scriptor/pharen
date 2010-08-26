@@ -3,7 +3,7 @@
      "version" "0.1.5"})
 
 (task "build" "Compiling all project files written in Pharen"
-      (compile-dir (project-path "/lib/") (compile-except (project-path "/lib/phake/phake.phn"))))
+      (compile-dir (project-path "/lib/") (compile-except [(project-path "/lib/phake/phake.phn")])))
 
 (task "test" "Running tests for Pharen compiler"
       (compile-file (project-path "/examples/test/pharen_tests.phn"))
