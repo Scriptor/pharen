@@ -25,10 +25,10 @@ function compile_with_flag($flag, $file){
 	return unset_flag($flag);
 }
 
-function compile_except($except, $file, $output_dir=NULL){
+function compile_except($excepts, $file, $output_dir=NULL){
 
 $__condtmpvar4 = Null;
-if(($except !== $file)){
+if(!(in_array($file, $excepts))){
 	$__condtmpvar4 = compile_file($file);
 }
 else{
@@ -44,11 +44,11 @@ $__listAcessTmpVar1 = pathinfo($f);
 }
 
 function phake__lambdafunc3($f, $__closure_id){
-	$__scope_id = Lexical::init_closure("phake", 31);
-	$dir =& Lexical::get_lexical_binding('phake', 30, '$dir', isset($__closure_id)?$__closure_id:0);;
-	$compile_func =& Lexical::get_lexical_binding('phake', 30, '$compile_func', isset($__closure_id)?$__closure_id:0);;
+	$__scope_id = Lexical::init_closure("phake", 33);
+	$dir =& Lexical::get_lexical_binding('phake', 32, '$dir', isset($__closure_id)?$__closure_id:0);;
+	$compile_func =& Lexical::get_lexical_binding('phake', 32, '$compile_func', isset($__closure_id)?$__closure_id:0);;
 	$file = path_join($dir, $f);
-	Lexical::bind_lexing("phake", 31, '$file', $file);
+	Lexical::bind_lexing("phake", 33, '$file', $file);
 	
 	 Null;
 	if((not_dots($f) and is_dir($file))){
@@ -60,9 +60,9 @@ function phake__lambdafunc3($f, $__closure_id){
 }
 
 function compile_dir($dir, $compile_func="compile_file"){
-	$__scope_id = Lexical::init_closure("phake", 30);
-	Lexical::bind_lexing("phake", 30, '$dir', $dir);
-	Lexical::bind_lexing("phake", 30, '$compile_func', $compile_func);
+	$__scope_id = Lexical::init_closure("phake", 32);
+	Lexical::bind_lexing("phake", 32, '$dir', $dir);
+	Lexical::bind_lexing("phake", 32, '$compile_func', $compile_func);
 
 
 	return map(array("phake__lambdafunc3", Lexical::get_closure_id("phake", $__scope_id)), scandir($dir, 1));

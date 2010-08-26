@@ -19,8 +19,8 @@
   (compile-file file)
   (unset-flag flag))
 
-(fn compile-except (except file [output-dir NULL])
-  (when (!== except file)
+(fn compile-except (excepts file [output-dir NULL])
+  (when (not (in-array file excepts))
     (compile-file file)))
 
 (fn is-phn (f)
