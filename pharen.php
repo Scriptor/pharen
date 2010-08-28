@@ -1279,11 +1279,17 @@ class LambdaNode extends FuncDefNode{
     public function compile(){
         $name = self::get_next_name();
         $name_node = new LeafNode($this, array(), $name);
+
         array_splice($this->children, 1, 0, array($name_node));
         $scopeid_node = new VariableNode($this, array(), "__closure_id");
         $this->children[2]->children[] = $scopeid_node;
 
         $code = parent::compile_statement();
+        if(MacroNode::$ghosting){
+            array_splice($this->children, 1, 1);
+            array_pop($this->children[1]->children);
+        }
+
         Node::$tmp .= $code.$this->format_line("");
         if(count($this->parent->get_scope()->lexically_needed) === 0){
             $scope_id_str = 'Null';
