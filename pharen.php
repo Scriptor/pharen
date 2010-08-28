@@ -1211,11 +1211,13 @@ class UnquoteWrapper{
 class SpliceWrapper extends UnquoteWrapper{
     public $as_collection = False;
     public $exprs;
+    public $children;
 
     public function __construct($wrapped, $as_collection=False){
         if($as_collection){
             $this->as_collection = True;
             $this->exprs = $wrapped;
+            $this->children &= $this->exprs;
         }else{
             $this->node = $wrapped;
         }
