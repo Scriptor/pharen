@@ -1006,7 +1006,7 @@ class FuncDefNode extends SpecialForm{
     public function get_param_names($param_nodes){
         $params = array();
         foreach($param_nodes as $node){
-            if($node instanceof VariableNode){
+            if($node instanceof VariableNode || $node instanceof UnquoteWrapper){
                 $params[] = $node->compile(True);
             }else if($node instanceof ListNode){
                 $params[] = array($node->children[0]->compile(True), $node->children[1]);
