@@ -1252,7 +1252,7 @@ class SpliceWrapper extends UnquoteWrapper{
         if(MacroNode::$ghosting){
             return "";
         }
-        return $this->compile_exprs($this->get_exprs(), $prefix);
+        return $this->compile_exprs($this->get_exprs(), $prefix, __FUNCTION__);
     }
 
     public function compile_statement($prefix=""){
@@ -1263,7 +1263,7 @@ class SpliceWrapper extends UnquoteWrapper{
         if(MacroNode::$ghosting){
             return "";
         }
-        return $this->compile_exprs($this->get_exprs(), "", True);
+        return $this->compile_exprs($this->get_exprs(), "", __FUNCTION__, True);
     }
 }
 
