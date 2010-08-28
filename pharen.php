@@ -351,7 +351,7 @@ class Scope{
     public function get_lexical_bindings(){
         $code = "";
         foreach($this->lexical_bindings as $var_name=>$id){
-            $code .= $this->owner->format_line_indent($this->get_lexical_binding($var_name, $id).";");
+            $code .= $this->owner->format_line_indent($this->get_lexical_binding($var_name, $id));
         }
         return $code;
     }
@@ -631,7 +631,7 @@ class Node implements Iterator, ArrayAccess, Countable{
             $expanded = call_user_func_array($func_name, $unevaluated_args);
             if($expanded instanceof QuoteWrapper){
                 if($is_statement){
-                    return $expanded->compile_statement();
+                    return trim($expanded->compile_statement(), ";\n");
                 }else{
                     return $expanded->compile();
                 }
@@ -1300,12 +1300,12 @@ class LambdaNode extends FuncDefNode{
     }
 
     public function compile_statement(){
-        return $this->format_statement($this->compile().";");
+        return $this->format_statement($this->compile());
     }
 
     public function compile_return(){
         // Indent because FuncDefNode decreases an indent
-        return $this->format_line_indent("return ".$this->compile().";");
+        return $this->format_line_indent("return ".$this->compile());
     }
 }
 
