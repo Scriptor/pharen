@@ -1126,7 +1126,9 @@ class QuoteWrapper{
     public function compile_return(){
         $tmpfunc = Node::$tmpfunc;
         // Only compile to put any variables in scope
-        MacroNode::$literals[$this->literal_id]->compile();
+        MacroNode::$ghosting = True;
+        MacroNode::$literals[$this->literal_id]->node->compile_return();
+        MacroNode::$ghosting = False;
         Node::$tmpfunc = $tmpfunc;
         Node::add_tmp('');
         return 'return MacroNode::$literals['.$this->literal_id.'];'."\n";
