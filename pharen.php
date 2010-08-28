@@ -1235,13 +1235,16 @@ class SpliceWrapper extends UnquoteWrapper{
         }
     }
 
-    private function compile_exprs($exprs, $prefix="", $return=False){
+    private function compile_exprs($exprs, $prefix="", $f="compile_statement", $return=False){
         $code = "";
         $last = array_pop($exprs);
         foreach($exprs as $expr){
-            $code .= $expr->compile_statement();
+            $code .= $expr->$f();
+            if($f != "compile_statement"){
+                $code .= ", ";
+            }
         }
-        $code .= $return ? $last->compile_return() : $last->compile_statement($prefix);
+        $code .= $return ? $last->compile_return() : $last->$f($prefix);
         return $code;
     }
 
