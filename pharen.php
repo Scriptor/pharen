@@ -537,6 +537,10 @@ class Node implements Iterator, ArrayAccess, Countable{
         $this->scope = $scope;
     }
 
+    public function get_exprs(){
+        return $this->children;
+    }
+
     protected function split_children(){
         return array($this->children[0], array_slice($this->children, 1));
     }
