@@ -1441,11 +1441,11 @@ class DictNode extends Node{
 
     public function compile(){
         // Use an offset when using the (dict... notation for dictionaries
-        $offset = ($this->children[0] instanceof LeafNode and $this->children[0]->value === "dict") ? 1 : 0;
+        $offset = (count($this->children) > 0 and $this->children[0] instanceof LeafNode and $this->children[0]->value === "dict") ? 1 : 0;
         $pairs = array_slice($this->children, $offset);
 
         // Code uses the paren-less syntax for dictionaries, so break it up into pairs
-        if($pairs[0][0] === Null){
+        if(count($pairs) > 0 && $pairs[0][0] === Null){
             $pairs = array_chunk($pairs, 2);
         }
 
