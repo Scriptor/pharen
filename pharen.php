@@ -351,7 +351,7 @@ class Scope{
     public function get_lexical_bindings(){
         $code = "";
         foreach($this->lexical_bindings as $var_name=>$id){
-            $code .= $this->owner->format_line_indent($this->get_lexical_binding($var_name, $id));
+            $code .= $this->owner->format_line_indent($this->get_lexical_binding($var_name, $id).';');
         }
         return $code;
     }
@@ -384,7 +384,13 @@ class Scope{
         if($var_name[0] != '$'){
             $var_name = '$'.$var_name;
         }
-        return array_key_exists($var_name, $this->bindings) ? $this->bindings[$var_name] : False;
+        $result = array_key_exists($var_name, $this->bindings) ? $this->bindings[$var_name] : False;
+        if($result === False && $this->virtual && $this->owner->parent !== Null){
+            $parent_scope = $this->owner->parent->get_scope();
+            return $parent_scope->find_immediate($var_name);
+        }else{
+            return $result;
+        }
     }
 }
 
@@ -808,7 +814,7 @@ class VariableNode extends LeafNode{
 
         if($scope->find_immediate($varname) !== False){
             return $varname;
-        }else if(($id = $scope->find($varname, False, False)) !== False && !$scope->virtual){
+        }else if(($id = $scope->find($varname, False, False)) !== False){
             $scope->bind_lexical($varname, $id);
             return $varname;
         }else{
