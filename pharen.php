@@ -1291,10 +1291,6 @@ class LambdaNode extends FuncDefNode{
         $this->children[2]->children[] = $scopeid_node;
 
         $code = parent::compile_statement();
-        if(MacroNode::$ghosting){
-            array_splice($this->children, 1, 1);
-            array_pop($this->children[1]->children);
-        }
 
         Node::$tmp .= $code.$this->format_line("");
         if(count($this->parent->get_scope()->lexically_needed) === 0){
@@ -1302,6 +1298,9 @@ class LambdaNode extends FuncDefNode{
         }else{
             $scope_id_str = '$__scope_id';
         }
+
+        array_splice($this->children, 1, 1);
+        array_pop($this->children[1]->children);
         return 'array("'.$name.'", Lexical::get_closure_id("'.Node::$ns.'", '.$scope_id_str.'))';
     }
 
@@ -1883,5 +1882,5 @@ function compile($code, $root=Null){
 
 $old_setting = isset(Flags::$flags['no-import-lang']) ? Flags::$flags['no-import-lang'] : False;
 set_flag("no-import-lang");
-$lang_code = compile_file(COMPILER_SYSTEM . "/lang.phn");
+//$lang_code = compile_file(COMPILER_SYSTEM . "/lang.phn");
 set_flag("no-import-lang", $old_setting);
