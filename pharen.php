@@ -1271,6 +1271,11 @@ class SpliceWrapper extends UnquoteWrapper{
         }
         return $this->compile_exprs($this->get_exprs(), "", __FUNCTION__, True);
     }
+
+    public function get_last_func_call(){
+        $exprs = $this->get_exprs();
+        return ($count = count($exprs)) > 0 ? $exprs[count($exprs)-1] : new EmptyNode($this->node->parent);
+    }
 }
 
 class LambdaNode extends FuncDefNode{
