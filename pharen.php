@@ -1246,7 +1246,7 @@ class SpliceWrapper extends UnquoteWrapper{
         $last = array_pop($exprs);
         foreach($exprs as $expr){
             $code .= $expr->$f();
-            if($f != "compile_statement"){
+            if($f == 'compile'){
                 $code .= ", ";
             }
         }
