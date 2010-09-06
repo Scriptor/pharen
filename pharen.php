@@ -1888,5 +1888,5 @@ function compile($code, $root=Null){
 
 $old_setting = isset(Flags::$flags['no-import-lang']) ? Flags::$flags['no-import-lang'] : False;
 set_flag("no-import-lang");
-//$lang_code = compile_file(COMPILER_SYSTEM . "/lang.phn");
+$lang_code = compile_file(COMPILER_SYSTEM . "/lang.phn");
 set_flag("no-import-lang", $old_setting);
