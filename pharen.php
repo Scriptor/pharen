@@ -1263,7 +1263,7 @@ class SpliceWrapper extends UnquoteWrapper{
     }
 
     public function compile_statement($prefix=""){
-        return $this->compile($prefix);
+        return $this->compile_exprs($this->get_exprs(), $prefix, __FUNCTION__);
     }
 
     public function compile_return(){
