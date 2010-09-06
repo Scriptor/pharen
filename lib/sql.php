@@ -25,14 +25,14 @@ function sql_cols($pairs){
 }
 
 function sql_fetch_by_id($table, $id){
-	$__scope_id = Lexical::init_closure("sql", 29);
+	$__scope_id = Lexical::init_closure("sql", 52);
 	$query = sprintf("SELECT * FROM %s WHERE id=%s;", mysql_real_escape_string($table), mysql_real_escape_string($id));
-	Lexical::bind_lexing("sql", 29, '$query', $query);
+	Lexical::bind_lexing("sql", 52, '$query', $query);
 	return mysql_fetch_assoc(mysql_query($query));
 }
 
 function sql_insert($table, $pairs){
-	mysql_query(sprintf("INSERT INTO %s (%s) VALUES (%s);", mysql_real_escape_string($table), sql_cols($pairs), sql_vals($pairs))) or print(mysql_error());
+	mysql_query(sprintf("INSERT INTO %s (%s) VALUES (%s);", mysql_real_escape_string($table), sql_cols($pairs), sql_vals($pairs)));
 	return mysql_insert_id();
 }
 
