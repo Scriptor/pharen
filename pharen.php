@@ -114,7 +114,7 @@ class Lexer{
         if($c <= 1)
             return False;
 
-        $prev_tok = $this->toks[$c-2];
+        $prev_tok = $this->toks[$c-1];
         return $prev_tok instanceof OpenParenToken || $prev_tok instanceof ReaderMacroToken;
     }
 
