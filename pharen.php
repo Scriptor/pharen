@@ -738,6 +738,10 @@ class RootNode extends Node{
         $this->indent = "";
     }
 
+    public function format_line_indent($code, $prefix=""){
+        return $this->format_line($code, $prefix);
+    }
+
     public function compile(){
         $code = "";
         if(isset(Flags::$flags['executable']) && Flags::$flags['executable']){
