@@ -109,6 +109,15 @@ class Lexer{
         $this->code = trim($code);
     }
 
+    public function in_sexpr_opening(){
+        $c = count($this->toks);
+        if($c <= 1)
+            return False;
+
+        $prev_tok = $this->toks[$c-2];
+        return $prev_tok instanceof OpenParenToken || $prev_tok instanceof ReaderMacroToken;
+    }
+
     public function lex(){
         for($this->i=0;$this->i<strlen($this->code);$this->i++){
             $this->get_char();
@@ -177,9 +186,9 @@ class Lexer{
             }else if($this->char == '"'){
                 $this->tok = new StringToken;
                 $this->state = "string";
-            }else if($this->code[$this->i-1] == "(" && $this->char == ':'){
+            }else if($this->in_sexpr_opening() && $this->char == ':'){
                 $this->tok = new ListAccessToken;
-            }else if($this->code[$this->i-1] == "(" && $this->char == '$' && trim($this->code[$this->i+1]) != ""){
+            }else if($this->in_sexpr_opening() && $this->char == '$' && trim($this->code[$this->i+1]) != ""){
                 $this->tok = new ExplicitVarToken;
                 $this->state = "append";
             }else if($this->char == '&'){
