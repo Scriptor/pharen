@@ -1447,8 +1447,9 @@ class ListAccessNode extends Node{
     static $tmp_var = 0;
 
     public function compile(){
-        if($this->children[0] instanceof LeafNode){
-            $varname = $this->children[0]->compile();
+        $list_name_node = $this->children[0];
+        if($list_name_node instanceof LeafNode){
+            $varname = $list_name_node->compile();
         }else{
             $varname = '$__listAcessTmpVar'.self::$tmp_var++;
             Node::$tmp .= $varname.' = '.$this->children[0]->compile().";\n";
@@ -1741,7 +1742,7 @@ class Parser{
             if($i+1 < count($this->tokens)){
                 $lookahead = $this->tokens[$i+1];
             }
-            $node;
+            
             if($tok instanceof OpenParenToken or $tok instanceof OpenBracketToken or $tok instanceof OpenBraceToken){
                 $expected_state = $this->get_expected($state);
                 if($this->is_literal($expected_state)){
