@@ -631,7 +631,7 @@ class Node implements Iterator, ArrayAccess, Countable{
         if(MicroNode::is_micro($func_name)){
             $micro = MicroNode::get_micro($func_name);
             return $micro->get_body(array_slice($this->children, 1), $this->indent);
-        }else if(MacroNode::is_macro($func_name)){
+        }else if(MacroNode::is_macro($func_name) && !MacroNode::$ghosting){
             $unevaluated_args = array_slice($this->children, 1);
             MacroNode::evaluate($func_name, $unevaluated_args);
 
