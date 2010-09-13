@@ -1075,6 +1075,7 @@ class MacroNode extends FuncDefNode{
     static $literals = array();
     static $next_literal_id = 0;
     static $current_params;
+    static $ghost_num = 0;
     static $ghosting = False;
     static $rescope_vars = False;
 
@@ -1083,6 +1084,18 @@ class MacroNode extends FuncDefNode{
 
     static function is_macro($name){
         return isset(self::$macros[$name]);
+    }
+
+    static function upghost(){
+        self::$ghost_num++;
+        self::$ghosting = True;
+    }
+
+    static function downghost(){
+        self::$ghost_num--;
+        if(self::$ghost_num === 0){
+            self::$ghosting = False;
+        }
     }
 
     static function evaluate($name, $args){
@@ -1114,10 +1127,10 @@ class MacroNode extends FuncDefNode{
     }
 
     public function compile_statement(){
-        self::$ghosting = True;
+        self::upghost();
         $this->parent_compile();
         self::$current_params = array();
-        self::$ghosting = False;
+        self::downghost();
         Node::add_tmp('');
 
         $name = $this->children[1]->compile();
@@ -1148,9 +1161,9 @@ class QuoteWrapper{
     public function compile_return(){
         $tmpfunc = Node::$tmpfunc;
         // Only compile to put any variables in scope
-        MacroNode::$ghosting = True;
+        MacroNode::upghost();
         MacroNode::$literals[$this->literal_id]->node->compile_return();
-        MacroNode::$ghosting = False;
+        MacroNode::downghost();
         Node::$tmpfunc = $tmpfunc;
         Node::add_tmp('');
         return 'return MacroNode::$literals['.$this->literal_id.'];'."\n";
