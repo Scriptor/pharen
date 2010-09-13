@@ -794,6 +794,8 @@ class LeafNode extends Node{
         $val = $this->compile();
         if(is_numeric($val)){
             return strpos($val, '.') === False ? intval($val) : floatval($val);
+        }else if(strstr($val, '"')){
+            return str_replace('"', '', $val);
         }else{
             return $val;
         }
