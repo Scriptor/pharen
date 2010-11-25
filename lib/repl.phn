@@ -1,0 +1,20 @@
+(require_once "path.php")
+(define "REPL_SYSTEM" (realpath (dirname __FILE__)))
+(define "PHAREN_SYSTEM" (path-join REPL-SYSTEM "../"))
+
+(require-once (. PHAREN_SYSTEM "/pharen.php"))
+
+(fn readl ()
+  (trim (fgets STDIN)))
+(fn evaluate (code)
+  (eval (. "?>" (compile code))))
+
+(fn work ()
+  (let [code (readl)])
+  (if (== code "quit")
+    (exit 0)
+    (do
+      (fwrite STDOUT (. (evaluate code) "\n" ))
+      (work))))
+
+(work)
