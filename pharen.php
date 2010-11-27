@@ -1369,7 +1369,7 @@ class LambdaNode extends FuncDefNode{
 
     public function compile_return(){
         // Indent because FuncDefNode decreases an indent
-        return $this->format_line_indent("return ".$this->compile());
+        return $this->format_line_indent("return ".$this->compile().";");
     }
 }
 
