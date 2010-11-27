@@ -10,6 +10,7 @@
   (eval (. "?>" (compile code))))
 
 (fn work ()
+  (fwrite STDOUT "pharen> ")
   (let [code (readl)])
   (if (== code "quit")
     (exit 0)

@@ -15,6 +15,7 @@ function evaluate($code){
 
 function work(){
 	while(1){
+		fwrite(STDOUT, "pharen> ");
 		$code = readl();
 		if(($code == "quit")){
 				return exit(0);
