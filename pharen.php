@@ -856,6 +856,32 @@ class StringNode extends LeafNode{
     }
 }
 
+class InstantiationNode extends Node{
+
+    public function compile(){
+        $class_name = $this->children[1]->compile();
+        $arg_nodes = array_slice($this->children, 2);
+        $args = $this->compile_args($arg_nodes);
+
+        $args_string = implode(", ", $args);
+        return "new $class_name($args_string)";
+    }
+}
+
+class MethodCallNode extends Node{
+
+    public function compile(){
+        $obj_varname = $this->children[1]->compile();
+        $method_name = $this->children[2]->compile();
+        $arg_nodes = array_slice($this->children, 3);
+        $args = $this->compile_args($arg_nodes);
+
+        $args_string = implode(", ", $args);
+        return $obj_varname."->"."$method_name($args_string)";
+    }
+}
+        
+
 class SpecialForm extends Node{
     protected $body_index;
 
@@ -1743,7 +1769,9 @@ class Parser{
             "defmacro" => array("MacroNode", "LeafNode", "LeafNode", "LiteralNode", self::$values),
             "quote" => array("LiteralNode", "LeafNode", self::$values),
             "unquote" => array("UnquoteNode", "LeafNode", self::$values),
-            "each_pair" => array("EachPairNode", "LeafNode", "VariableNode", "LiteralNode", self::$value)
+            "each_pair" => array("EachPairNode", "LeafNode", "VariableNode", "LiteralNode", self::$value),
+            "->" => array("MethodCallNode", self::$value, self::$value, "LeafNode", self::$values),
+            "new" => array("InstantiationNode", "LeafNode", "LeafNode", self::$values)
         );
         
         $this->tokens = $tokens;
