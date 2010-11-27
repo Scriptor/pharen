@@ -2,13 +2,13 @@
 require_once('/Applications/MAMP/htdocs/pharen/lang.php');
 Lexical::$scopes['test'] = array();
 function check($expr, $expected){
-	$__scope_id = Lexical::init_closure("test", 43);
+	$__scope_id = Lexical::init_closure("test", 44);
 	if(($expr == $expected)){
 		return TRUE;
 	}
 	else{
 		$bt = debug_backtrace();
-	Lexical::bind_lexing("test", 43, '$bt', $bt);
+	Lexical::bind_lexing("test", 44, '$bt', $bt);
 		error_log(("Test failed on line: " . $bt[0]["line"] . " in " . $bt[0]["file"]));
 		return FALSE;
 	}

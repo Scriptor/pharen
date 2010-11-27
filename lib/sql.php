@@ -25,9 +25,9 @@ function sql_cols($pairs){
 }
 
 function sql_fetch_by_id($table, $id){
-	$__scope_id = Lexical::init_closure("sql", 52);
+	$__scope_id = Lexical::init_closure("sql", 53);
 	$query = sprintf("SELECT * FROM %s WHERE id=%s;", mysql_real_escape_string($table), mysql_real_escape_string($id));
-	Lexical::bind_lexing("sql", 52, '$query', $query);
+	Lexical::bind_lexing("sql", 53, '$query', $query);
 	return mysql_fetch_assoc(mysql_query($query));
 }
 
