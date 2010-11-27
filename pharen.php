@@ -659,13 +659,12 @@ class Node implements Iterator, ArrayAccess, Countable{
             return $this->create_partial($func);
         }
 
+        $args_string = implode(", ", $args);
         if($this->has_variable_func){
-            $args_string = implode(", ", $args);
             $args[] = $func_name."[1]";
             $closure_args_string = implode(", ", $args);
             return "is_string($func_name)?$func_name($args_string):{$func_name}[0]($closure_args_string)";
         }else{
-            $args_string = implode(", ", $args);
             return "$func_name($args_string)";
         }
     }
