@@ -1404,6 +1404,17 @@ class DoNode extends SpecialForm{
     }
 }
 
+class ClassNode extends SpecialForm{
+    public $body_index = 2;
+
+    public function compile_statement(){
+        $class_name = $this->children[1]->compile();
+        $body = $this->compile_body();
+        return $this->format_line("class $class_name{").$body.$this->format_line("}");
+    }
+}
+
+
 class CondNode extends SpecialForm{
     static $tmp_num = 0;
 
