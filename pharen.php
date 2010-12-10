@@ -1675,6 +1675,11 @@ class DefNode extends Node{
 
         return $code;
     }
+
+    public function compile_return(){
+        return $this->compile_statement("return ");
+    }
+
 }
 
 class BindingNode extends Node{
