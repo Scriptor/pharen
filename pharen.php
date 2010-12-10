@@ -1791,7 +1791,9 @@ class Parser{
             "unquote" => array("UnquoteNode", "LeafNode", self::$values),
             "each_pair" => array("EachPairNode", "LeafNode", "VariableNode", "LiteralNode", self::$value),
             "->" => array("MethodCallNode", self::$value, self::$value, "LeafNode", self::$values),
-            "new" => array("InstantiationNode", "LeafNode", "LeafNode", self::$values)
+            "$>" => array("FieldAccessNode", self::$value, self::$value, "LeafNode"),
+            "new" => array("InstantiationNode", "LeafNode", "LeafNode", self::$values),
+            "class" => array("ClassNode", "LeafNode", "LeafNode", self::$values)
         );
         
         $this->tokens = $tokens;
