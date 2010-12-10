@@ -188,7 +188,8 @@ class Lexer{
                 $this->state = "string";
             }else if($this->in_sexpr_opening() && $this->char == ':'){
                 $this->tok = new ListAccessToken;
-            }else if($this->in_sexpr_opening() && $this->char == '$' && trim($this->code[$this->i+1]) != ""){
+            }else if($this->in_sexpr_opening() && $this->char == '$' 
+                && $this->code[$this->i+1] != ">" && trim($this->code[$this->i+1]) != ""){
                 $this->tok = new ExplicitVarToken;
                 $this->state = "append";
             }else if($this->char == '&'){
@@ -879,7 +880,16 @@ class MethodCallNode extends Node{
         return $obj_varname."->"."$method_name($args_string)";
     }
 }
-        
+
+class FieldAccessNode extends Node{
+
+    public function compile(){
+        $obj_varname = $this->children[1]->compile();
+        $field_name = $this->children[2]->compile();
+
+        return $obj_varname."->".$field_name;
+    }
+}
 
 class SpecialForm extends Node{
     protected $body_index;
