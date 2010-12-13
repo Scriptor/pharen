@@ -1326,7 +1326,7 @@ class SpliceWrapper extends UnquoteWrapper{
         if(MacroNode::$ghosting){
             return "";
         }
-        return $this->compile_exprs($this->get_exprs(), "", __FUNCTION__, True);
+        return $this->compile_exprs($this->get_exprs(), "", "compile_statement", True);
     }
 
     public function get_last_func_call(){
@@ -1407,7 +1407,7 @@ class ClassNode extends SpecialForm{
     }
 }
 
-class AccessModifierNode extends Node{
+class AccessModifierNode extends SpecialForm{
     public $body_index = 2;
 
     public function __construct($parent){
