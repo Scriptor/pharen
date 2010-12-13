@@ -959,7 +959,7 @@ class FuncDefNode extends SpecialForm{
         return $this->compile_statement();
     }
 
-    public function compile_statement(){
+    public function compile_statement($prefix=""){
         $this->scope = $this->scope == Null ? new Scope($this) : $this->scope;
 
         $this->name = $this->children[1]->compile();
@@ -1018,7 +1018,7 @@ class FuncDefNode extends SpecialForm{
         $body = $this->scope->get_lexical_bindings().$body;
         $lexings = $this->get_param_lexings($params);
 
-        $code = $this->format_line("function ".$this->name.$params_string."{").
+        $code = $this->format_line("function ".$this->name.$params_string."{", $prefix).
             $lexings.
             $body.
             $this->format_line("}").$this->format_line("");
