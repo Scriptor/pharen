@@ -1414,6 +1414,21 @@ class ClassNode extends SpecialForm{
     }
 }
 
+class AccessModifierNode extends SpecialForm{
+    public $body_index = 2;
+
+    public function __construct($parent){
+        parent::__construct($parent);
+        $this->indent = $this->parent->indent;
+    }
+
+    public function compile_statement(){
+        $access_modifier = $this->children[1]->compile();
+        $code = $this->compile_body(false, $access_modifier." ");
+        return $code;
+    }
+}
+
 
 class CondNode extends SpecialForm{
     static $tmp_num = 0;
@@ -1798,7 +1813,8 @@ class Parser{
             "->" => array("MethodCallNode", self::$value, self::$value, "LeafNode", self::$values),
             "$>" => array("FieldAccessNode", self::$value, self::$value, "LeafNode"),
             "new" => array("InstantiationNode", "LeafNode", "LeafNode", self::$values),
-            "class" => array("ClassNode", "LeafNode", "LeafNode", self::$values)
+            "class" => array("ClassNode", "LeafNode", "LeafNode", self::$values),
+            "access" => array("AccessModifierNode", "LeafNode", "LeafNode", self::$values)
         );
         
         $this->tokens = $tokens;
