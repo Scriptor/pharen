@@ -1414,7 +1414,7 @@ class ClassNode extends SpecialForm{
     }
 }
 
-class AccessModifierNode extends SpecialForm{
+class AccessModifierNode extends Node{
     public $body_index = 2;
 
     public function __construct($parent){
@@ -1697,6 +1697,16 @@ class DefNode extends Node{
 
 }
 
+class LocalNode extends Node{
+
+    public function compile(){
+        $varname = $this->children[1]->compile();
+        $value = $this->children[2]->compile();
+
+        return $varname." = ".$value;
+    }
+}
+
 class BindingNode extends Node{
 
     public function __construct($parent){
@@ -1802,6 +1812,7 @@ class Parser{
             "if" => array("LispyIfNode", "LeafNode", self::$value, self::$value, self::$value),
             "$" => array("SuperGlobalNode", "LeafNode", "LeafNode", self::$value),
             "def" => array("DefNode", "LeafNode", "VariableNode", self::$value),
+            "local" => array("LocalNode", "LeafNode", "VariableNode", self::$value),
             "let" => array("BindingNode", self::$list_form, array(self::$value)),
             "dict" => array("DictNode", "LeafNode", array(self::$value)),
             "dict-literal" => array("DictNode", array(self::$value)),
