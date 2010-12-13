@@ -1,6 +1,9 @@
 (def name "Arthur Dent")
 (check name "Arthur Dent")
 
+(local job "Jedi Masta")
+(check job "Jedi Masta")
+
 (let
   [question NULL
    answer (* 6 9)]
