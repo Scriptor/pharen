@@ -871,12 +871,16 @@ class MethodCallNode extends Node{
 
     public function compile(){
         $obj_varname = $this->children[1]->compile();
-        $method_name = $this->children[2]->compile();
-        $arg_nodes = array_slice($this->children, 3);
-        $args = $this->compile_args($arg_nodes);
-
-        $args_string = implode(", ", $args);
-        return $obj_varname."->"."$method_name($args_string)";
+        $node_chain = array_slice($this->children, 2);
+        $chain = array();
+        foreach($node_chain as $node){
+            if($node instanceof VariableNode){
+                $chain []= substr($node->compile(), 1); // $ sign not needed for field access
+            }else{
+                $chain []= $node->compile();
+            }
+        }
+        return $obj_varname."->".implode("->", $chain);
     }
 }
 
@@ -1810,7 +1814,7 @@ class Parser{
             "quote" => array("LiteralNode", "LeafNode", self::$values),
             "unquote" => array("UnquoteNode", "LeafNode", self::$values),
             "each_pair" => array("EachPairNode", "LeafNode", "VariableNode", "LiteralNode", self::$value),
-            "->" => array("MethodCallNode", self::$value, self::$value, "LeafNode", self::$values),
+            "->" => array("MethodCallNode", "LeafNode", self::$values),
             "new" => array("InstantiationNode", "LeafNode", "LeafNode", self::$values),
             "class" => array("ClassNode", "LeafNode", "LeafNode", self::$values),
             "access" => array("AccessModifierNode", "LeafNode", "LeafNode", self::$values)
