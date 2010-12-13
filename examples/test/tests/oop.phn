@@ -1,0 +1,11 @@
+(class User
+       (access public (local name ""))
+
+       (access public (fn __construct (name)
+         (def (-> this name) name)))
+
+       (access public (fn get-name ()
+         (-> this name))))
+
+(local my-obj (new User "Julian"))
+(check (-> my-obj (get-name)) "Julian")

@@ -19,7 +19,8 @@
         "if",
         "function_definition",
         "lambdas",
-        "macros"
+        "macros",
+        "oop"
     ]]
 
   (describe "Pharen"
