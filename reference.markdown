@@ -305,6 +305,61 @@ Sometimes functions need to have an arbitrary number of parameters. In PHP, this
 
 The first parameter is still a function name, but after that any others become part of an implicitly created variable called xs which is then available to you as a list.
 
+### Object Integration ### {#object-integration}
+At present, Pharen supports most, though not all, of PHP's object-oriented features.
+
+#### Classes #### {#classes}
+To create a class use the `class` form, any code for that class can then go inside it.
+
+{% highlight clojure %}
+(class User
+  (fn my-method (arg)
+    "This method belongs to class 'User'"))
+{% endhighlight %}
+
+Notice that the code for `my-method` will compile as a regular function definition inside the class definition for `User`. Since PHP allows that, `my-method` automatically becomes a method of `User`. It just works out!
+
+#### Access Modifiers #### {#access-modifiers}
+Methods without any modifiers (private, public, etc.) will just default to being public. Also, fields placed inside the class *must* have either an access modifier or start with `var` in PHP. Support for this is provided by Pharen's `access` form, which takes a modifier and a code expression.
+
+{% highlight clojure %}
+(class User
+  (access public (local name ""))
+  
+  (access public (fn __construct (name)
+    ; Constructors are also made with regular function code
+    )
+
+  (access public (fn my-method (arg)
+    "This public method belongs to class 'User'")))
+{% endhighlight %}
+
+All `access` does is place the modifier provided in front of the code expression. This is why you still need `local` for the field variable. Also in the above example we showed that you can create a constructor for a class just as you would create any other method.
+
+#### Instantiation #### {#instantiation}
+To make new instances of a class use the `new` form.
+
+{% highlight clojure %}
+(local santa (new User "Kris Kringle"))
+{% endhighlight %}
+
+The first argument to `new` is the class name, any remaining arguments are passed to the constructor.
+
+#### Method Calls and Accessing Fields #### {#method-calls-and-accessing-fields}
+All method calls and accesses to fields of an object are done with the `->` form.
+
+{% highlight clojure %}
+(-> santa (my-method "gifts!"))
+{% endhighlight %}
+
+The actual method call is still wrapped in parentheses like regular function calls. Although this adds some clutter, it makes it really easy to chain method calls:
+
+{% highlight clojure %}
+(-> some-object (method1) (method2) (method3))
+{% endhighlight %}
+
+Side note: The above code probably looks very verbose compared to the PHP equivalents. The syntax choices were done to increase flexibility. This is why there is an `access` form instead of a separate ones for each different modifier. The good news is that with [macros](#macros) it should be straightforward to create a set of macros to make the code more succinct. This will come soon :)
+
 ### Macros ### {#macros}
 Note: The following assumes some knowledge of how macros work. For something beginner-oriented, read the [macro tutorial](/pharen/macro-tutorial.html).
 
