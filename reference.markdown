@@ -403,7 +403,7 @@ This can be done with the at-sign: `@` character. Let's write a macro that takes
 
 {% highlight clojure %}
 (defmacro make-list (&args)
-  '[~@names])
+  '[~@args])
 (make-list 1 2 3 4 5)
 {% endhighlight %}
 
@@ -416,8 +416,8 @@ By default, strings, when unquoted inside a quoted piece of code, will compile d
 
 {% highlight clojure %}
 (defmacro new-fn (name)
-  '(fn ~-name (print "Hello, world!")))
-(new-fn "print-hello")
+  '(fn ~-name () (print "Hello, world!")))
+(new-fn #print-hello)
 {% endhighlight %}
 
 Generated Pharen code: `(fn print-hello (print "Hello, world!"))`
