@@ -726,6 +726,10 @@ class InfixNode extends Node{
         $code = substr($code, 1, -1).";";
         return $this->format_statement($code, $prefix);
     }
+
+    public function compile_return($prefix=""){
+        return $this->compile_statement("return ");
+    }
 }
 
 class RootNode extends Node{
