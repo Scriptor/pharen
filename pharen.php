@@ -663,7 +663,7 @@ class Node implements Iterator, ArrayAccess, Countable{
         if($this->has_variable_func){
             $args[] = $func_name."[1]";
             $closure_args_string = implode(", ", $args);
-            return "is_string($func_name)?$func_name($args_string):{$func_name}[0]($closure_args_string)";
+            return "(is_string($func_name)?$func_name($args_string):{$func_name}[0]($closure_args_string))";
         }else{
             return "$func_name($args_string)";
         }
