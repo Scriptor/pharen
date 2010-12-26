@@ -1359,7 +1359,8 @@ class LambdaNode extends FuncDefNode{
         $code = parent::compile_statement();
 
         Node::$tmp .= $code.$this->format_line("");
-        if(count($this->parent->get_scope()->lexically_needed) === 0){
+        $scope = $this->parent->get_scope();
+        if(count($scope->lexically_needed) === 0 || $scope->owner instanceof MacroNode){
             $scope_id_str = 'Null';
         }else{
             $scope_id_str = '$__scope_id';
