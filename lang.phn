@@ -47,6 +47,11 @@
     acc
     (reduce f ($f (first xs) acc) (rest xs))))
 
+(fn reduce-concat (new-val-func xs)
+  (reduce (lambda (val acc)
+                  (. acc ($new-val-func val)))
+          "" xs))
+
 (fn reduce-pairs (f acc xs)
   (if (empty xs)
     acc
