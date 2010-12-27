@@ -1,7 +1,6 @@
 <?php
 require_once('/Applications/MAMP/htdocs/pharen/lexical.php');
 Lexical::$scopes['lang'] = array();
-$__scope_id = Lexical::init_closure("lang", 0);
 define("SYSTEM", dirname(__FILE__));
 require_once((SYSTEM . "/lexical.php"));
 define("LIB_PATH", (SYSTEM . "/lib/"));
@@ -138,8 +137,21 @@ function map_pairs($f, $pairs){
 	return reduce_pairs(array("lang__lambdafunc3", Lexical::get_closure_id("lang", $__scope_id)), array(), $pairs);
 }
 
-$multis = array();
-Lexical::bind_lexing("lang", 0, '$multis', $multis);
+class MultiManager{
+	static $multis = array();
+	static function matching_multi_exists($multi_name, $serialized_args){
+		return isset(self::$multis[$multi_name][$serialized_args]);
+	}
+	
+	static function get_matching_multi($multi_name, $serialized_args){
+		return self::$multis[$multi_name][$serialized_args];
+	}
+	
+	static function set_multi($multi_name, $pattern, $f){
+		return self::$multis[$multi_name][$pattern] = $f;
+	}
+	
+}
 function lang__lambdafunc4($val, $__closure_id){
 	
 	 Null;
@@ -179,10 +191,9 @@ function multi_serialize_pattern($pattern){
 }
 
 function get_multi($name, $args){
-		$multis =& Lexical::get_lexical_binding('lang', 0, '$multis', isset($__closure_id)?$__closure_id:0);;
 	$serialized_args = multi_serialize_args($args);
-	if(isset($multis[$name][$serialized_args])){
-		return $multis[$name][$serialized_args];
+	if(MultiManager::matching_multi_exists($name, $serialized_args)){
+		return MultiManager::get_matching_multi($name, $serialized_args);
 	}
 	else{
 		return "No matching pattern";

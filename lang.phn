@@ -80,7 +80,19 @@
                 []
                 pairs))
 
-(def multis {})
+(class MultiManager
+       (access static (local multis {}))
+
+       (access static (fn matching-multi-exists (multi-name serialized-args)
+                        (isset (:: self (:multis multi-name serialized-args)))))
+
+       (access static (fn get-matching-multi (multi-name serialized-args)
+                        (:: self (:multis multi-name serialized-args))))
+
+       (access static (fn set-multi (multi-name pattern f)
+                        (= (:: self (:multis multi-name pattern)) f))))
+
+
 
 (fn multi-serialize-args (vals)
   (reduce-concat (lambda (val)
@@ -98,8 +110,8 @@
 
 (fn get-multi (name args)
   (let [serialized-args (multi-serialize-args args)]
-    (if (isset (:multis name serialized-args))
-      (:multis name serialized-args)
+    (if (:: MultiManager (matching-multi-exists name serialized-args))
+      (:: MultiManager (get-matching-multi name serialized-args))
       "No matching pattern")))
 
 (defmacro defmulti (nm args)
@@ -107,4 +119,4 @@
      ((get-multi ~nm (func-get-args)) ~@args)))
 
 (defmacro defmethod (name pattern args &body)
-  '(= (:multis ~name (multi-serialize-pattern ~pattern)) (lambda (a) ~@body)))
+  '(:: MultiManager (set-multi ~name (multi-serialize-pattern ~pattern) (lambda (a) ~@body))))
