@@ -872,7 +872,6 @@ class InstantiationNode extends Node{
 }
 
 class MethodCallNode extends Node{
-    public $operator = "->";
 
     public function compile(){
         $obj_varname = $this->children[1]->compile();
@@ -885,7 +884,7 @@ class MethodCallNode extends Node{
                 $chain []= $node->compile();
             }
         }
-        return $obj_varname.$operator.implode($operator, $chain);
+        return $obj_varname."->".implode("->", $chain);
     }
 }
 
