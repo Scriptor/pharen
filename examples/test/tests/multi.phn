@@ -1,0 +1,8 @@
+(defmulti #fac [n])
+(defmethod #fac ["int"] [n]
+  "int")
+(defmethod #fac ["str"] [n]
+  "string")
+
+(check (fac 2) "int")
+(check (fac "foo") "string")
