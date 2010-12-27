@@ -186,7 +186,7 @@ class Lexer{
             }else if($this->char == '"'){
                 $this->tok = new StringToken;
                 $this->state = "string";
-            }else if($this->in_sexpr_opening() && $this->char == ':'){
+            }else if($this->in_sexpr_opening() && $this->char == ':' && $this->code[$this->i+1] != ':'){
                 $this->tok = new ListAccessToken;
             }else if($this->in_sexpr_opening() && $this->char == '$' && trim($this->code[$this->i+1]) != ""){
                 $this->tok = new ExplicitVarToken;
@@ -872,6 +872,7 @@ class InstantiationNode extends Node{
 }
 
 class MethodCallNode extends Node{
+    public $operator = "->";
 
     public function compile(){
         $obj_varname = $this->children[1]->compile();
@@ -884,7 +885,16 @@ class MethodCallNode extends Node{
                 $chain []= $node->compile();
             }
         }
-        return $obj_varname."->".implode("->", $chain);
+        return $obj_varname.$operator.implode($operator, $chain);
+    }
+}
+
+class StaticCallNode extends Node{
+
+    public function compile(){
+        $class_name = $this->children[1]->compile();
+        $expr = $this->children[2]->compile();
+        return $class_name.'::'.$expr;
     }
 }
 
@@ -1821,6 +1831,7 @@ class Parser{
             "unquote" => array("UnquoteNode", "LeafNode", self::$values),
             "each_pair" => array("EachPairNode", "LeafNode", "VariableNode", "LiteralNode", self::$value),
             "->" => array("MethodCallNode", "LeafNode", self::$values),
+            "::" => array("StaticCallNode", "LeafNode", "LeafNode", self::$values),
             "new" => array("InstantiationNode", "LeafNode", "LeafNode", self::$values),
             "class" => array("ClassNode", "LeafNode", "LeafNode", self::$values),
             "access" => array("AccessModifierNode", "LeafNode", "LeafNode", self::$values)
