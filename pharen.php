@@ -423,7 +423,7 @@ class Node implements Iterator, ArrayAccess, Countable{
     public $unquoted;
     public $has_splice;
 
-    protected $scope = Null;
+    public $scope = Null;
     protected $value = "";
 
     static function add_tmp($code){
@@ -946,7 +946,7 @@ class FuncDefNode extends SpecialForm{
     static $functions;
 
     protected $body_index = 3;
-    protected $scope;
+    public $scope;
 
     public $params = array();
     public $is_partial;
@@ -1185,6 +1185,7 @@ class QuoteWrapper{
 
     function __construct(Node $node, $literal_id){
         $this->node = $node;
+        $this->node->scope = new Scope($this->node);
         $this->parent = $node->parent;
         $this->children =& $node->children;
         $this->literal_id = $literal_id;
@@ -1342,7 +1343,7 @@ class SpliceWrapper extends UnquoteWrapper{
 class LambdaNode extends FuncDefNode{
     static $counter=0;
 
-    protected $scope;
+    public $scope;
 
     static function get_next_name(){
         return Node::$ns."__lambdafunc".self::$counter++;
