@@ -79,3 +79,32 @@
   (reduce-pairs (lambda (pair acc) (append ($f (:pair 0) (:pair 1)) acc))
                 []
                 pairs))
+
+(def multis {})
+
+(fn multi-serialize-args (vals)
+  (reduce-concat (lambda (val)
+                         (cond
+                           ((is-string val) "str")
+                           ((is-int val) "int")
+                           ((is-float val) "float")
+                           ((is-bool val) "bool")
+                           ((is-array val) (if (isset (:val "_multitype")) (:val "_multitype") "5"))
+                           ((is-object val) (get-class val))))
+                 vals))
+
+(fn multi-serialize-pattern (pattern)
+  (implode pattern))
+
+(fn get-multi (name args)
+  (let [serialized-args (multi-serialize-args args)]
+    (if (isset (:multis name serialized-args))
+      (:multis name serialized-args)
+      "No matching pattern")))
+
+(defmacro defmulti (nm args)
+  '(fn ~-nm (~@args)
+     ((get-multi ~nm (func-get-args)) ~@args)))
+
+(defmacro defmethod (name pattern args &body)
+  '(= (:multis ~name (multi-serialize-pattern ~pattern)) (lambda (a) ~@body)))
