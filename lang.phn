@@ -1,7 +1,7 @@
 (define "SYSTEM" (dirname __FILE__))
 (require_once (. SYSTEM "/lexical.php"))
 (define "LIB_PATH" (. SYSTEM "/lib/"))
-(set_include_path (. (get_include_path) PATH_SEPARATOR LIB_PATH))
+(set-include-path (. (get-include-path) PATH_SEPARATOR LIB_PATH))
 
 (defmacro when (c &body)
   '(if ~c
@@ -14,6 +14,17 @@
 
 (defmacro not (expr)
   '(! ~expr))
+
+(defmacro load (file)
+  (local paths (explode PATH_SEPARATOR (get-include-path)))
+  (local lib-path (until 
+                    (lambda (path)
+                            (if (file-exists (. path "/" file))
+                              (. path "/" file)
+                              FALSE))
+                    paths))
+  (compile-file lib-path)
+  FALSE)
 
 (fn first (xs)
   (:xs 0))
