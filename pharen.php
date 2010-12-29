@@ -1669,9 +1669,13 @@ class ListNode extends LiteralNode{
     public function is_range(){
         for($x=0; $x<count($this->children); $x++){
             $el = $this->children[$x];
+            // Restore tmp since the test compile below may mess with it
+            $tmp = Node::$tmp;
             if($el->compile() == '..'){
+                Node::$tmp = $tmp;
                 return $x;
             }
+            Node::$tmp = $tmp;
         }
         return False;
     }
