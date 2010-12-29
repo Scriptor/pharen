@@ -86,6 +86,12 @@
     acc
     (for-n (- x 1) f ($f acc))))
 
+(fn until (f xs)
+  (cond 
+    ((empty xs) FALSE)
+    ((local result ($f (first xs))) result)
+    (TRUE (until f (rest xs)))))
+
 (fn map-pairs (f pairs)
   (reduce-pairs (lambda (pair acc) (append ($f (:pair 0) (:pair 1)) acc))
                 []
