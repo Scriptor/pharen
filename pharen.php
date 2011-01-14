@@ -591,6 +591,15 @@ class Node implements Iterator, ArrayAccess, Countable{
         return $output;
     }
 
+    public function search($value){
+        foreach($this->children as $child){
+            if($child->search($value)){
+                return True;
+            }
+        }
+        return False;
+    }
+
     public function get_last_func_call(){
         return $this->children[0];
     }
@@ -806,6 +815,10 @@ class LeafNode extends Node{
         }else{
             return $val;
         }
+    }
+
+    public function search($value){
+        return $this->value === $value;
     }
 
     public function get_last_func_call(){
