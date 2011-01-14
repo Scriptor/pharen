@@ -1,8 +1,8 @@
 #! /usr/bin/env php
 <?php
 $dir = dirname(__FILE__);
-$pharen_dir = substr($dir, 0, strrpos($dir, "/"));
-include($pharen_dir."/pharen.php");
+$pharen_dir = substr($dir, 0, strrpos($dir, DIRECTORY_SEPARATOR));
+include($pharen_dir.DIRECTORY_SEPARATOR."pharen.php");
 
 if(__FILE__ === realpath($_SERVER['SCRIPT_NAME'])){
     $input_files = array();
