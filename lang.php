@@ -1,5 +1,4 @@
 <?php
-require_once('/Applications/MAMP/htdocs/pharen/lexical.php');
 Lexical::$scopes['lang'] = array();
 define("SYSTEM", dirname(__FILE__));
 require_once((SYSTEM . "/lexical.php"));

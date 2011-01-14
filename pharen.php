@@ -756,7 +756,9 @@ class RootNode extends Node{
         if(!isset(Flags::$flags['no-import-lang']) or Flags::$flags['no-import-lang'] == False){
             $code .= $this->format_line("require_once('".COMPILER_SYSTEM."/lang.php"."');");
         }else if(Flags::$flags['no-import-lang'] == True){
-            $code .= $this->format_line("require_once('".COMPILER_SYSTEM."/lexical.php"."');");
+            if(!isset(Flags::$flags['no-import-lexical']) or Flags::$flags['no-import-lexical'] == False){
+                $code .= $this->format_line("require_once('".COMPILER_SYSTEM."/lexical.php"."');");
+            }
         }
 
         $code .= $this->scope->init_namespace_scope();
@@ -2010,7 +2012,10 @@ function compile($code, $root=Null){
     return $phpcode;
 }
 
-$old_setting = isset(Flags::$flags['no-import-lang']) ? Flags::$flags['no-import-lang'] : False;
+$old_lang_setting = isset(Flags::$flags['no-import-lang']) ? Flags::$flags['no-import-lang'] : False;
+$old_lexi_setting = isset(Flags::$flags['no-import-lexical']) ? Flags::$flags['no-import-lexical'] : False;
 set_flag("no-import-lang");
+set_flag("no-import-lexical");
 $lang_code = compile_file(COMPILER_SYSTEM . "/lang.phn");
-set_flag("no-import-lang", $old_setting);
+set_flag("no-import-lexical", $old_lexi_setting);
+set_flag("no-import-lang", $old_lang_setting);
