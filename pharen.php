@@ -220,15 +220,17 @@ class FuncInfo{
 
     private $name;
     private $func;
+    private $force_not_partial;
     private $args_given;
 
     static function get_next_name(){
         return Node::$ns."__partial".self::$tmp_counter++;
     }
 
-    public function __construct($name, $args){
+    public function __construct($name, $force_not_partial, $args){
         $this->name = $name;
         $this->args_given = $args;
+        $this->force_not_partial = $force_not_partial;
 
         if(FuncDefNode::is_pharen_func($name)){
             $this->func = FuncDefNode::get_pharen_func($name);
@@ -238,7 +240,7 @@ class FuncInfo{
     }
 
     public function is_partial(){
-        return $this->func && count($this->args_given) < $this->get_num_args_needed();
+        return !$this->force_not_partial && $this->func && count($this->args_given) < $this->get_num_args_needed();
     }
 
     public function get_num_args_needed(){
@@ -418,6 +420,7 @@ class Node implements Iterator, ArrayAccess, Countable{
     public $return_flag = False;
     public $has_variable_func = False;
     public $in_macro;
+    public $force_not_partial;
     public $indent = Null;
 
     public $quoted;
@@ -628,7 +631,7 @@ class Node implements Iterator, ArrayAccess, Countable{
         $scope = $this->get_scope();
         list($func_name, $args) = $this->get_compiled_func_args();
 
-        $func = new FuncInfo($func_name, array_slice($this->children, 1));
+        $func = new FuncInfo($func_name, $this->force_not_partial, array_slice($this->children, 1));
         if(MicroNode::is_micro($func_name)){
             $micro = MicroNode::get_micro($func_name);
             return $micro->get_body(array_slice($this->children, 1), $this->indent);
@@ -712,7 +715,7 @@ class InfixNode extends Node{
 
     public function compile(){
         list($func_name, $args) = $this->get_compiled_func_args();
-        $func = new FuncInfo($func_name, array_slice($this->children, 1));
+        $func = new FuncInfo($func_name, $this->force_not_partial, array_slice($this->children, 1));
         if(!$this->has_splice && $func->is_partial()){
             return $this->create_partial($func);
         }
@@ -882,6 +885,9 @@ class MethodCallNode extends Node{
             if($node instanceof VariableNode){
                 $chain []= substr($node->compile(), 1); // $ sign not needed for field access
             }else{
+                if(get_class($node) == "Node"){
+                    $node->force_not_partial = True;
+                }
                 $chain []= $node->compile();
             }
         }
