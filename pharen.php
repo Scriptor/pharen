@@ -3,7 +3,7 @@ error_reporting(E_ALL | E_NOTICE);
 define("COMPILER_SYSTEM", dirname(__FILE__));
 define("EXTENSION", ".phn");
 
-require_once(COMPILER_SYSTEM.'/lexical.php');
+require_once(COMPILER_SYSTEM.DIRECTORY_SEPARATOR.'lexical.php');
 require("lang.php");
 
 // Some utility functions for use in Pharen
