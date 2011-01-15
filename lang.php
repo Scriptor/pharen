@@ -1,4 +1,5 @@
 <?php
+require_once(dirname(__FILE__).'\lexical.php');
 Lexical::$scopes['lang'] = array();
 define("SYSTEM", dirname(__FILE__));
 require_once((SYSTEM . "/lexical.php"));
