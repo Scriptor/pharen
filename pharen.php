@@ -766,9 +766,14 @@ class RootNode extends Node{
 
         $code .= $this->format_line("<?php");
         if(!isset(Flags::$flags['no-import-lang']) or Flags::$flags['no-import-lang'] == False){
-            $code .= $this->format_line("require_once('".COMPILER_SYSTEM."/lang.php"."');");
+            $code .= $this->format_line("require_once('".COMPILER_SYSTEM.DIRECTORY_SEPARATOR."lang.php"."');");
         }else if(Flags::$flags['no-import-lang'] == True){
-            $code .= $this->format_line("require_once('".COMPILER_SYSTEM."/lexical.php"."');");
+            if(!isset(Flags::$flags['import-lexi-relative']) or Flags::$flags['import-lexi-relative'] == False){
+                $prefix = "'".COMPILER_SYSTEM."'";
+            } else {
+                $prefix = "dirname(__FILE__)";
+            }
+            $code .= $this->format_line("require_once(".$prefix.".'".DIRECTORY_SEPARATOR."lexical.php"."');");
         }
 
         $code .= $this->scope->init_namespace_scope();
@@ -2029,7 +2034,10 @@ function compile($code, $root=Null){
     return $phpcode;
 }
 
-$old_setting = isset(Flags::$flags['no-import-lang']) ? Flags::$flags['no-import-lang'] : False;
+$old_lang_setting = isset(Flags::$flags['no-import-lang']) ? Flags::$flags['no-import-lang'] : False;
+$old_lexi_setting = isset(Flags::$flags['import-lexi-relative']) ? Flags::$flags['import-lexi-relative'] : False;
 set_flag("no-import-lang");
+set_flag("import-lexi-relative");
 $lang_code = compile_file(COMPILER_SYSTEM . "/lang.phn");
-set_flag("no-import-lang", $old_setting);
+set_flag("import-lexi-relative", $old_lexi_setting);
+set_flag("no-import-lang", $old_lang_setting);
