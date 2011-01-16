@@ -1,5 +1,4 @@
 (define "SYSTEM" (dirname __FILE__))
-(require_once (. SYSTEM "/lexical.php"))
 (define "LIB_PATH" (. SYSTEM "/lib/"))
 (set-include-path (. (get-include-path) PATH_SEPARATOR LIB_PATH))
 

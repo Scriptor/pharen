@@ -1,8 +1,7 @@
 <?php
-require_once(dirname(__FILE__).'\lexical.php');
+require_once('/Applications/MAMP/htdocs/pharen'.'/lexical.php');
 Lexical::$scopes['lang'] = array();
 define("SYSTEM", dirname(__FILE__));
-require_once((SYSTEM . "/lexical.php"));
 define("LIB_PATH", (SYSTEM . "/lib/"));
 set_include_path((get_include_path() . PATH_SEPARATOR . LIB_PATH));
 function first($xs){
@@ -46,10 +45,12 @@ function reduce($f, $acc, $xs){
 		if(empty($xs)){
 				return $acc;
 		}
-		$__tailrecursetmp0 = (is_string($f)?$f(first($xs), $acc):$f[0](first($xs), $acc, $f[1]));
-		$__tailrecursetmp1 = rest($xs);
-		$acc = $__tailrecursetmp0;
-		$xs = $__tailrecursetmp1;
+		$__tailrecursetmp0 = $f;
+		$__tailrecursetmp1 = (is_string($f)?$f(first($xs), $acc):$f[0](first($xs), $acc, $f[1]));
+		$__tailrecursetmp2 = rest($xs);
+		$f = $__tailrecursetmp0;
+		$acc = $__tailrecursetmp1;
+		$xs = $__tailrecursetmp2;
 	}
 }
 
@@ -71,10 +72,12 @@ function reduce_pairs($f, $acc, $xs){
 		if(empty($xs)){
 				return $acc;
 		}
-		$__tailrecursetmp0 = (is_string($f)?$f(each($xs), $acc):$f[0](each($xs), $acc, $f[1]));
-		$__tailrecursetmp1 = rest($xs);
-		$acc = $__tailrecursetmp0;
-		$xs = $__tailrecursetmp1;
+		$__tailrecursetmp0 = $f;
+		$__tailrecursetmp1 = (is_string($f)?$f(each($xs), $acc):$f[0](each($xs), $acc, $f[1]));
+		$__tailrecursetmp2 = rest($xs);
+		$f = $__tailrecursetmp0;
+		$acc = $__tailrecursetmp1;
+		$xs = $__tailrecursetmp2;
 	}
 }
 
@@ -112,9 +115,11 @@ function for_n($x, $f, $acc){
 				return $acc;
 		}
 		$__tailrecursetmp0 = ($x - 1);
-		$__tailrecursetmp1 = (is_string($f)?$f($acc):$f[0]($acc, $f[1]));
+		$__tailrecursetmp1 = $f;
+		$__tailrecursetmp2 = (is_string($f)?$f($acc):$f[0]($acc, $f[1]));
 		$x = $__tailrecursetmp0;
-		$acc = $__tailrecursetmp1;
+		$f = $__tailrecursetmp1;
+		$acc = $__tailrecursetmp2;
 	}
 }
 
@@ -128,8 +133,10 @@ function until($f, $xs){
 		else if($result = (is_string($f)?$f(first($xs)):$f[0](first($xs), $f[1]))){
 				return $result;
 		}
-		$__tailrecursetmp0 = rest($xs);
-		$xs = $__tailrecursetmp0;
+		$__tailrecursetmp0 = $f;
+		$__tailrecursetmp1 = rest($xs);
+		$f = $__tailrecursetmp0;
+		$xs = $__tailrecursetmp1;
 	}
 }
 
