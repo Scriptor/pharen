@@ -4,7 +4,7 @@ define("COMPILER_SYSTEM", dirname(__FILE__));
 define("EXTENSION", ".phn");
 
 require_once(COMPILER_SYSTEM.DIRECTORY_SEPARATOR.'lexical.php');
-require("lang.php");
+require_once("lang.php");
 
 // Some utility functions for use in Pharen
 
