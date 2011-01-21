@@ -5,7 +5,7 @@ define("SYSTEM", dirname(__FILE__));
 define("LIB_PATH", (SYSTEM . "/lib/"));
 set_include_path((get_include_path() . PATH_SEPARATOR . LIB_PATH));
 function first($xs){
-	return $xs[0];
+	return $xs->first;
 }
 
 function first_pair($xs){
@@ -13,7 +13,7 @@ function first_pair($xs){
 }
 
 function rest($xs){
-	return array_slice($xs, 1);
+	return $xs->rest;
 }
 
 function early($xs){

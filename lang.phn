@@ -26,13 +26,13 @@
   FALSE)
 
 (fn first (xs)
-  (:xs 0))
+  (-> xs first))
 
 (fn first-pair (xs)
   (array-slice xs 0 1))
 
 (fn rest (xs)
-  (array-slice xs 1))
+  (-> xs rest))
 
 (fn early (xs)
   (array-slice xs 0 -1))
