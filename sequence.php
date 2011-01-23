@@ -5,15 +5,17 @@ interface IPharenSeq extends Countable, ArrayAccess{
     public function cons($item);
 }
 
-class PharenList implements IPharenSeq{
+class PharenList implements IPharenSeq, Iterator{
     public $first;
     public $rest;
     public $length;
+    public $iterator_key = 0;
+    public $iterator_el;
 
     public static function create_from_array(&$xs){
         $cache = SplFixedArray::fromArray($xs);
         $reversed = array_reverse($xs, True);
-        $el1 = new PharenCachedList(Null, Null, 0, $cache);
+        $el1 = new PharenCachedList(Null, Null, 0, $cache, count($xs));
         foreach($reversed as $index=>$x){
             $el2 = $el1->cached_cons($x, $cache, $index);
             $el1 = $el2;
@@ -25,6 +27,7 @@ class PharenList implements IPharenSeq{
         $this->first = $first;
         $this->rest = $rest;
         $this->length = $first !== Null ? $length : 0;
+        $this->iterator_el = $this;
     }
 
     public function count(){
@@ -51,6 +54,28 @@ class PharenList implements IPharenSeq{
     }
 
     public function offsetUnset($offset){
+    }
+
+    public function current(){
+        return $this->iterator_el->first;
+    }
+
+    public function key(){
+        return $this->iterator_key;
+    }
+
+    public function next(){
+        $this->iterator_key++;
+        $this->iterator_el = $this->iterator_el->rest;
+    }
+
+    public function rewind(){
+        $this->iterator_key = 0;
+        $this->iterator_el = $this;
+    }
+
+    public function valid(){
+        return $this->iterator_el !== Null;
     }
 
     public function first(){
