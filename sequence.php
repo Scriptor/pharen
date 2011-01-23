@@ -12,10 +12,10 @@ class PharenList implements IPharenSeq{
 
     public static function create_from_array(&$xs){
         $cache = SplFixedArray::fromArray($xs);
-        $reversed = array_reverse($xs);
+        $reversed = array_reverse($xs, True);
         $el1 = new PharenCachedList(Null, Null, 0, $cache);
-        foreach($reversed as $x){
-            $el2 = $el1->cached_cons($x, $cache);
+        foreach($reversed as $index=>$x){
+            $el2 = $el1->cached_cons($x, $cache, $index);
             $el1 = $el2;
         }
         return $el1;
@@ -32,10 +32,19 @@ class PharenList implements IPharenSeq{
     }
 
     public function offsetExists($offset){
-        return $offset === 0;
+        $list = $this;
+        for($x=$offset; $x > 0 && $list !== Null; $x--){
+            $list = $list->rest;
+        }
+        return $list !== Null;
     }
 
     public function offsetGet($offset){
+        $list = $this;
+        for($x=$offset; $x > 0 && $list !== Null; $x--){
+            $list = $list->rest;
+        }
+        return $list !== Null ? $list->first : Null;
     }
 
     public function offsetSet($offset, $value){
@@ -56,20 +65,26 @@ class PharenList implements IPharenSeq{
         return new PharenList($value, $this, $this->length+1);
     }
 
-    public function cached_cons($value, $cached_array){
-        return new PharenCachedList($value, $this, $this->length+1, $cached_array);
+    public function cached_cons($value, $cached_array, $index){
+        return new PharenCachedList($value, $this, $this->length+1, $cached_array, $index);
     }
 }
 
 class PharenCachedList extends PharenList{
     public $cached_array;
+    public $index;
 
-    public function __construct($value, $rest, $length, $cached_array){
+    public function __construct($value, $rest, $length, $cached_array, $index){
         $this->cached_array = $cached_array;
+        $this->index = $index;
         parent::__construct($value, $rest, $length);
     }
 
+    public function offsetExists($offset){
+        return isset($this->cached_array[$this->index + $offset]);
+    }
+
     public function offsetGet($offset){
-        return $this->cached_array[$offset];
+        return $this->cached_array[$this->index + $offset];
     }
 }
