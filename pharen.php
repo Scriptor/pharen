@@ -714,6 +714,9 @@ class LiteralNode extends Node{
         return "";
     }
 
+    /**
+     * Unused... why is it here/what was it for in the first place?
+     */
     public function compile_as_code(){
         $code = "";
         foreach($this->children as $c){
@@ -1059,7 +1062,7 @@ class FuncDefNode extends SpecialForm{
         $body = $this->scope->get_lexical_bindings().$body;
         $lexings = $this->get_param_lexings($params);
 
-        $code = $this->format_line("function ".$this->name.$params_string."{", $prefix).
+        $code = $this->format_line($this->get_func_proto($params_string)."{", $prefix).
             $lexings.
             $body.
             $this->format_line("}").$this->format_line("");
@@ -1072,6 +1075,10 @@ class FuncDefNode extends SpecialForm{
             Node::$in_func--;
             return Node::add_tmpfunc($code);
         }
+    }
+
+    public function get_func_proto($params_string){
+        return "function ".$this->name.$params_string;
     }
 
     public function is_tail_recursive($last_node){
@@ -1136,6 +1143,17 @@ class FuncDefNode extends SpecialForm{
         $body_nodes = array_merge($body_nodes, $last->get_body_nodes());
         $last = $last->get_last_expr();
         return array($body_nodes, $last);
+    }
+}
+
+class PrototypeDefNode extends FuncDefNode{
+    public function compile_statement($prefix=""){
+        $this->name = $this->children[1]->compile();
+
+        $params_string = $this->build_params_string($this->get_param_names($this->children[2]->children));
+        $code = $prefix.$this->get_func_proto($params_string).';';
+
+        return $this->format_line($code);
     }
 }
 
@@ -1444,9 +1462,22 @@ class ClassNode extends SpecialForm{
     public $body_index = 2;
 
     public function compile_statement(){
+        $node_name = $this->children[0]->compile();
         $class_name = $this->children[1]->compile();
         $body = $this->compile_body();
-        return $this->format_line("class $class_name{").$body.$this->format_line("}");
+        return $this->format_line("$node_name $class_name{").$body.$this->format_line("}");
+    }
+}
+
+class SubClassNode extends SpecialForm{
+    public $body_index = 3;
+
+    public function compile_statement(){
+        $node_name = str_replace('sub', '', $this->children[0]->compile());
+        $class_name = $this->children[1]->compile();
+        $parent_class_name = $this->children[2]->compile();
+        $body = $this->compile_body();
+        return $this->format_line("$node_name $class_name extends $parent_class_name{").$body.$this->format_line("}");
     }
 }
 
@@ -1458,8 +1489,13 @@ class AccessModifierNode extends SpecialForm{
         $this->indent = $this->parent->indent;
     }
 
-    public function compile_statement(){
-        $access_modifier = $this->children[1]->compile();
+    /**
+     * Added prefix arg to allow 'stacking' of access
+     * modifiers (ie: "public static").
+     *     -Rudy X. Desjardins ::: http://sandbenders.ca
+     */
+    public function compile_statement($prefix=""){
+        $access_modifier = $prefix.$this->children[1]->compile();
         $code = $this->compile_body(false, $access_modifier." ");
         return $code;
     }
@@ -1846,6 +1882,7 @@ class Parser{
 
         self::$special_forms = array(
             "fn" => array("FuncDefNode", "LeafNode", "LeafNode", "LiteralNode", self::$values),
+            "proto" => array("PrototypeDefNode", "LeafNode", "LeafNode", "LiteralNode"),
             "lambda" => array("LambdaNode", "LeafNode", "LiteralNode", self::$values),
             "do" => array("DoNode", "LeafNode", self::$values),
             "cond" => array("CondNode", "LeafNode", array(self::$cond_pair)),
@@ -1865,6 +1902,9 @@ class Parser{
             "::" => array("StaticCallNode", "LeafNode", "LeafNode", self::$values),
             "new" => array("InstantiationNode", "LeafNode", "LeafNode", self::$values),
             "class" => array("ClassNode", "LeafNode", "LeafNode", self::$values),
+            "interface" => array("ClassNode", "LeafNode", "LeafNode", self::$values),
+            "subclass" => array("SubClassNode", "LeafNode", "LeafNode", "LeafNode", self::$values),
+            "subinterface" => array("SubClassNode", "LeafNode", "LeafNode", "LeafNode", self::$values),
             "access" => array("AccessModifierNode", "LeafNode", "LeafNode", self::$values)
         );
         
