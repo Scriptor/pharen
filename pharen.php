@@ -1814,7 +1814,7 @@ class Parser{
     private $tokens;
 
     public function __construct($tokens){
-        self::$INFIX_OPERATORS = array("+", "-", "*", ".", "/", "and", "or", "=", "=&", "<", ">", "<=", ">=", "===", "==", "!=", "!==");
+        self::$INFIX_OPERATORS = array("+", "-", "*", ".", "/", "and", "or", "=", "=&", "<", ">", "<=", ">=", "===", "==", "!=", "!==", "instanceof");
 
         self::$reader_macros = array(
             "'" => "quote",
