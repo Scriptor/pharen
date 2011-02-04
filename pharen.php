@@ -482,7 +482,7 @@ class Node implements Iterator, ArrayAccess, Countable{
     }
 
     public function valid(){
-        return $this->current !== False;
+        return $this->current() !== False;
     }
 
     public function offsetExists($offset){
