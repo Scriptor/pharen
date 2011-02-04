@@ -615,7 +615,7 @@ class Node implements Iterator, ArrayAccess, Countable{
         return $this;
     }
     
-    public function get_compiled_func_args(){
+    public function get_func_name(){
         // Returns the compiled code for the function name and the arguments
         // in a function call.
         list($func_name_node, $args) = $this->split_children();
@@ -629,8 +629,7 @@ class Node implements Iterator, ArrayAccess, Countable{
             }
             $func_name = $func_name_node->compile();
         }
-        $args = $this->compile_args($args);
-        return array($func_name, $args);
+        return $func_name;
     }
 
     public function create_partial($func){
@@ -641,7 +640,7 @@ class Node implements Iterator, ArrayAccess, Countable{
 
     public function compile($is_statement=False){
         $scope = $this->get_scope();
-        list($func_name, $args) = $this->get_compiled_func_args();
+        $func_name = $this->get_func_name();
 
         $func = new FuncInfo($func_name, $this->force_not_partial, array_slice($this->children, 1));
         if(MicroNode::is_micro($func_name)){
@@ -675,6 +674,7 @@ class Node implements Iterator, ArrayAccess, Countable{
             return $this->create_partial($func);
         }
 
+        $args = $this->compile_args(array_slice($this->children, 1));
         $args_string = implode(", ", $args);
         if($this->has_variable_func){
             $args[] = $func_name."[1]";
@@ -726,7 +726,8 @@ class LiteralNode extends Node{
 class InfixNode extends Node{
 
     public function compile(){
-        list($func_name, $args) = $this->get_compiled_func_args();
+        $func_name = $this->get_func_name();
+        $args = $this->compile_args(array_slice($this->children, 1));
         $func = new FuncInfo($func_name, $this->force_not_partial, array_slice($this->children, 1));
         if(!$this->has_splice && $func->is_partial()){
             return $this->create_partial($func);
