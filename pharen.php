@@ -1322,6 +1322,10 @@ class UnquoteWrapper{
     public function compile_return(){
         return $this->format_line("return ".$this->compile().";");
     }
+
+    public function compile_statement($prefix){
+        return $this->format_line($prefix.$this->compile().";");
+    }
 }
 
 class SpliceWrapper extends UnquoteWrapper{
