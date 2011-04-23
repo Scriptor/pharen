@@ -1362,6 +1362,9 @@ class SpliceWrapper extends UnquoteWrapper{
     }
 
     public function compile_statement($prefix=""){
+        if(MacroNode::$ghosting){
+            return "";
+        }
         return $this->compile_exprs($this->get_exprs(), $prefix, __FUNCTION__);
     }
 
