@@ -16,7 +16,19 @@ function project_path($f){
 }
 
 function not_dots($dir){
-	return ("." !== $dir) and (".." !== $dir);
+
+
+$__condtmpvar0 =  Null;
+if(!(("." !== $dir))){
+$__condtmpvar0 = ("." !== $dir);
+}
+else if(!((".." !== $dir))){
+$__condtmpvar0 = (".." !== $dir);
+}
+else if(TRUE){
+$__condtmpvar0 = (".." !== $dir);
+}
+	return $__condtmpvar0;
 }
 
 function compile_with_flag($flag, $file){
@@ -27,42 +39,79 @@ function compile_with_flag($flag, $file){
 
 function compile_except($excepts, $file, $output_dir=NULL){
 
-$__condtmpvar0 = Null;
+$__condtmpvar1 = Null;
 if(!(in_array($file, $excepts))){
-	$__condtmpvar0 = compile_file($file);
+	$__condtmpvar1 = compile_file($file);
 }
 else{
-$__condtmpvar0 = FALSE;
+$__condtmpvar1 = FALSE;
 }
-	return $__condtmpvar0;
+	return $__condtmpvar1;
 }
 
 function is_phn($f){
-$__listAcessTmpVar0 = pathinfo($f);
-$__listAcessTmpVar1 = pathinfo($f);
-	return isset($__listAcessTmpVar0["extension"]) and ($__listAcessTmpVar1["extension"] == "phn");
+
+
+$__condtmpvar2 =  Null;
+if(!(isset($__listAcessTmpVar0["extension"]))){
+$__condtmpvar2 = isset($__listAcessTmpVar1["extension"]);
+}
+else if(!(($__listAcessTmpVar2["extension"] == "phn"))){
+$__condtmpvar2 = ($__listAcessTmpVar3["extension"] == "phn");
+}
+else if(TRUE){
+$__condtmpvar2 = ($__listAcessTmpVar4["extension"] == "phn");
+}
+$__listAcessTmpVar2 = pathinfo($f);
+$__listAcessTmpVar3 = pathinfo($f);
+$__listAcessTmpVar4 = pathinfo($f);
+	return $__condtmpvar2;
 }
 
 function phake__lambdafunc7($f, $__closure_id){
-	$__scope_id = Lexical::init_closure("phake", 58);
-	$dir =& Lexical::get_lexical_binding('phake', 57, '$dir', isset($__closure_id)?$__closure_id:0);;
-	$compile_func =& Lexical::get_lexical_binding('phake', 57, '$compile_func', isset($__closure_id)?$__closure_id:0);;
+	$__scope_id = Lexical::init_closure("phake", 64);
+	$dir =& Lexical::get_lexical_binding('phake', 63, '$dir', isset($__closure_id)?$__closure_id:0);;
+	$compile_func =& Lexical::get_lexical_binding('phake', 63, '$compile_func', isset($__closure_id)?$__closure_id:0);;
 	$file = path_join($dir, $f);
-	Lexical::bind_lexing("phake", 58, '$file', $file);
+	Lexical::bind_lexing("phake", 64, '$file', $file);
 	
 	 Null;
-	if((not_dots($f) and is_dir($file))){
+	if($__condtmpvar3){
+
+
+$__condtmpvar3 =  Null;
+if(!(not_dots($f))){
+$__condtmpvar3 = not_dots($f);
+}
+else if(!(is_dir($file))){
+$__condtmpvar3 = is_dir($file);
+}
+else if(TRUE){
+$__condtmpvar3 = is_dir($file);
+}
 		return compile_dir($file, $compile_func);
 	}
 	else if(is_phn($file)){
-		return (is_string($compile_func)?$compile_func($file, dirname($file)):$compile_func[0]($file, dirname($file), $compile_func[1])) and print(("Compile: " . $file . "\n"));
+
+
+$__condtmpvar4 =  Null;
+if(!((is_string($compile_func)?$compile_func($file, dirname($file)):$compile_func[0]($file, dirname($file), $compile_func[1])))){
+$__condtmpvar4 = (is_string($compile_func)?$compile_func($file, dirname($file)):$compile_func[0]($file, dirname($file), $compile_func[1]));
+}
+else if(!(print(("Compile: " . $file . "\n")))){
+$__condtmpvar4 = print(("Compile: " . $file . "\n"));
+}
+else if(TRUE){
+$__condtmpvar4 = print(("Compile: " . $file . "\n"));
+}
+		return $__condtmpvar4;
 	}
 }
 
 function compile_dir($dir, $compile_func="compile_file"){
-	$__scope_id = Lexical::init_closure("phake", 57);
-	Lexical::bind_lexing("phake", 57, '$dir', $dir);
-	Lexical::bind_lexing("phake", 57, '$compile_func', $compile_func);
+	$__scope_id = Lexical::init_closure("phake", 63);
+	Lexical::bind_lexing("phake", 63, '$dir', $dir);
+	Lexical::bind_lexing("phake", 63, '$compile_func', $compile_func);
 
 
 	return map(array("phake__lambdafunc7", Lexical::get_closure_id("phake", $__scope_id)), scandir($dir, 1));
