@@ -98,6 +98,11 @@ class FuncValToken extends Token{
 }
 
 class Lexer{
+    static $keyword_rewrites = array(
+        'or' => 'pharen-or',
+        'and' => 'pharen-and'
+    );
+
     private $code;
     private $char;
     private $tok;
@@ -159,6 +164,9 @@ class Lexer{
             }
         }else if($this->state == "append"){
             if(trim($this->char) === "" or $this->char === ","){
+                if(isset(self::$keyword_rewrites[$this->tok->value])){
+                    $this->tok->value = self::$keyword_rewrites[$this->tok->value];
+                }
                 $this->state = "new-expression";
             }else if($this->char == ")"){
                 $this->tok = new CloseParenToken;
@@ -821,6 +829,8 @@ class LeafNode extends Node{
             return strpos($val, '.') === False ? intval($val) : floatval($val);
         }else if(strstr($val, '"')){
             return str_replace('"', '', $val);
+        }else if(isset($keyword_rewrites[$val])){
+            $val = $keyword_rewrites[$val];
         }else{
             return $val;
         }
@@ -1312,6 +1322,10 @@ class UnquoteWrapper{
     public function compile_return(){
         return $this->format_line("return ".$this->compile().";");
     }
+
+    public function compile_statement($prefix){
+        return $this->format_line($prefix.$this->compile().";");
+    }
 }
 
 class SpliceWrapper extends UnquoteWrapper{
@@ -1362,6 +1376,9 @@ class SpliceWrapper extends UnquoteWrapper{
     }
 
     public function compile_statement($prefix=""){
+        if(MacroNode::$ghosting){
+            return "";
+        }
         return $this->compile_exprs($this->get_exprs(), $prefix, __FUNCTION__);
     }
 
@@ -1814,7 +1831,7 @@ class Parser{
     private $tokens;
 
     public function __construct($tokens){
-        self::$INFIX_OPERATORS = array("+", "-", "*", ".", "/", "and", "or", "=", "=&", "<", ">", "<=", ">=", "===", "==", "!=", "!==", "instanceof");
+        self::$INFIX_OPERATORS = array("+", "-", "*", ".", "/", "=", "=&", "<", ">", "<=", ">=", "===", "==", "!=", "!==", "instanceof");
 
         self::$reader_macros = array(
             "'" => "quote",
