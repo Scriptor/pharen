@@ -102,7 +102,11 @@ class PharenCachedList extends PharenList{
     public function __construct($value, $rest, $length, $cached_array, $index){
         $this->cached_array = $cached_array;
         $this->index = $index;
-        parent::__construct($value, $rest, $length);
+        $this->length = count($this->cached_array);
+    }
+
+    public function count(){
+        return $this->length;
     }
 
     public function offsetExists($offset){
