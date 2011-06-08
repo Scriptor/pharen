@@ -116,4 +116,8 @@ class PharenCachedList extends PharenList{
     public function offsetGet($offset){
         return $this->cached_array[$this->index + $offset];
     }
+
+    public function offsetSet($offset, $value){
+        $this->cached_array[$this->index+$offset] = $value;
+    }
 }
