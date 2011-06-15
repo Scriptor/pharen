@@ -429,6 +429,8 @@ class Node implements Iterator, ArrayAccess, Countable{
 
     public $parent;
     public $children;
+    public $tokens;
+    public $delimiter_tokens = array("OpenParenToken", "CloseParenToken");
     public $return_flag = False;
     public $has_variable_func = False;
     public $in_macro;
@@ -469,7 +471,7 @@ class Node implements Iterator, ArrayAccess, Countable{
         $this->children = array();
         if($this->parent instanceof SpecialForm){
             $this->indent = $this->parent->indent."\t";
-        }else{
+        }else if($parent !== Null){
             $this->indent = $this->parent->indent;
         }
     }
@@ -576,8 +578,15 @@ class Node implements Iterator, ArrayAccess, Countable{
         return array($this->children[0], array_slice($this->children, 1));
     }
 
-    public function add_child($child){
+    public function add_child($child, $tok=Null){
         $this->children[] = $child;
+        if($tok === Null){
+            # If $tok is null it'll mean that $child is not a leafnode
+            # and has tokens of its own
+            $this->tokens[] = $child;
+        }else{
+            $this->tokens[] = $tok;
+        }
     }
 
     public function add_children($children){
@@ -587,12 +596,29 @@ class Node implements Iterator, ArrayAccess, Countable{
         }
     }
 
-    public function convert_to_list(){
-        $list = PharenList::create_from_array($this->children);
-        foreach($list as $key=>$el){
-            $list[$key] = $el->convert_to_list;
+    public function get_tokens(){
+        $tokens = array(new $this->delimiter_tokens[0]);
+        foreach($this->tokens as $tok){
+            if(!($tok instanceof Token)){
+                $tokens = array_merge($tokens, $tok->get_tokens());
+            }else{
+                $tokens[] = $tok;
+            }
         }
-        return $list;
+        $tokens[] = new $this->delimiter_tokens[1];
+        return $tokens;
+    }
+
+    public function convert_to_list($return_as_array=False){
+        $list = array();
+        foreach($this->tokens as $key=>$tok){
+            if($tok instanceof Node){
+                $list = array_merge($list, $tok->convert_to_list(True));
+            }else{
+                $list[] = $tok;
+            }
+        }
+        return $return_as_array ? $list : PharenList::create_from_array($list);
     }
 
     public function compile_args($args=Null){
@@ -636,7 +662,7 @@ class Node implements Iterator, ArrayAccess, Countable{
         // Returns the compiled code for the function name and the arguments
         // in a function call.
         list($func_name_node, $args) = $this->split_children();
-        if(!($func_name_node instanceof LeafNode)){
+        if(!($func_name_node instanceof LeafNode) && !($func_name_node instanceof UnquoteWrapper)){
             $this->has_variable_func = True;
             $func_name = self::get_tmp_funcname_var();
             Node::$tmp .= $this->format_line($func_name." = ".$func_name_node->compile().";");
@@ -665,27 +691,30 @@ class Node implements Iterator, ArrayAccess, Countable{
             return $micro->get_body(array_slice($this->children, 1), $this->indent);
         }else if(MacroNode::is_macro($func_name) && !MacroNode::$ghosting){
             $unevaluated_args = array_slice($this->children, 1);
+            foreach($unevaluated_args as $key=>$arg){
+                $unevaluated_args[$key] = $arg->convert_to_list();
+            }
             MacroNode::evaluate($func_name, $unevaluated_args);
 
-            foreach($unevaluated_args as $key=>$arg){
-                if($arg instanceof LeafNode){
-                    $unevaluated_args[$key] = $arg->typify();
-                }else{
-                    $arg->in_macro = True;
-                }
-            }
-
-            $expanded = call_user_func_array($func_name, $unevaluated_args);
-            if($expanded instanceof QuoteWrapper){
+            $macro_result = call_user_func_array($func_name, $unevaluated_args);
+            if($macro_result instanceof QuoteWrapper){
+                $tokens = $macro_result->get_tokens();
+                $parser = new Parser($tokens);
+                $parser->parse($this->parent);
+                $count = count($this->parent->children);
+                $expanded = $this->parent->children[$count-1];
+                $expanded->scope = $macro_result->get_scope();
+                array_pop($this->parent->children);
+                
                 if($is_statement){
                     return trim($expanded->compile_statement(), ";\n");
                 }else{
                     return $expanded->compile();
                 }
-            }else if(is_string($expanded)){
-                return '"'.$expanded.'"';
+            }else if(is_string($macro_result)){
+                return '"'.$macro_result.'"';
             }else{
-                return $expanded;
+                return $macro_result;
             }
         }else if(!$this->has_splice && $func->is_partial()){
             return $this->create_partial($func);
@@ -1263,6 +1292,17 @@ class QuoteWrapper{
         return 'return MacroNode::$literals['.$this->literal_id.'];'."\n";
     }
 
+    public function get_tokens(){
+        $tokens = $this->node->get_tokens();
+        $scope = $this->node->parent->get_scope();
+        foreach($tokens as $key=>$tok){
+            if($tok->unquoted){
+                $tokens[$key] = $scope->find($tok->value, True);
+            }
+        }
+        return $tokens;
+    }
+
     public function __get($name){
         return $this->node->$name;
     }
@@ -1709,6 +1749,8 @@ class MicroNode extends SpecialForm{
 
 class ListNode extends LiteralNode{
 
+    public $delimiter_tokens = array("OpenBracketToken", "CloseBracketToken");
+
     public function compile(){
         if(($x = $this->is_range()) !== False){
             $step = $x > 1 ? $this->get_range_step() : 1;
@@ -1970,7 +2012,7 @@ class Parser{
                 }else if($tok->unquote_spliced){
                     $node = new SpliceWrapper($node);
                 }
-                $curnode->add_child($node);
+                $curnode->add_child($node, $tok);
             }
         }
         return $rootnode;
@@ -1992,7 +2034,12 @@ class Parser{
             $class = "TreatedNode";
             array_shift($cur_state);
         }else if(is_array($expected) && is_assoc($expected)){
-            $class = $expected[get_class($tok)];
+            $tok_class = get_class($tok);
+            if(isset($expected[$tok_class])){
+                $class = $expected[$tok_class];
+            }else{
+                $class = "LeafNode";
+            }
             array_shift($cur_state);
         }else{
             $class = $expected;
@@ -2074,4 +2121,4 @@ set_flag("no-import-lang");
 set_flag("import-lexi-relative");
 $lang_code = compile_file(COMPILER_SYSTEM . DIRECTORY_SEPARATOR . "lang.phn");
 set_flag("import-lexi-relative", $old_lexi_setting);
-set_flag("no-import-lang", $old_lang_setting);
+
