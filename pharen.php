@@ -445,6 +445,9 @@ class Node implements Iterator, ArrayAccess, Countable{
     protected $value = "";
 
     static function add_tmp($code){
+        if(LambdaNode::$in_lambda_compile){
+            return $code;
+        }
         $code = Node::$prev_tmp.Node::$tmp.$code.Node::$post_tmp;
         Node::$prev_tmp = '';
         Node::$tmp = '';
@@ -791,7 +794,7 @@ class InfixNode extends Node{
     }
 
     public function compile_return($prefix=""){
-        return $this->compile_statement("return ");
+        return $this->format_statement("return ".$this->compile().";", $prefix);
     }
 }
 
@@ -1449,6 +1452,7 @@ class SpliceWrapper extends UnquoteWrapper{
 }
 
 class LambdaNode extends FuncDefNode{
+    static $in_lambda_compile = False;
     static $counter=0;
 
     public $scope;
@@ -1458,6 +1462,7 @@ class LambdaNode extends FuncDefNode{
     }
 
     public function compile(){
+        self::$in_lambda_compile = True;
         $name = self::get_next_name();
         $name_node = new LeafNode($this, array(), $name);
 
@@ -1477,6 +1482,7 @@ class LambdaNode extends FuncDefNode{
 
         array_splice($this->children, 1, 1);
         array_pop($this->children[1]->children);
+        self::$in_lambda_compile = False;
         return 'array("'.$name.'", Lexical::get_closure_id("'.Node::$ns.'", '.$scope_id_str.'))';
     }
 
