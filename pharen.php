@@ -860,7 +860,7 @@ class LeafNode extends Node{
     public $value;
     public $tok;
 
-    public function __construct($parent, $children, $value, $tok){
+    public function __construct($parent, $children, $value, $tok=Null){
         parent::__construct($parent);
         $this->children = Null;
         $this->value = $value;
