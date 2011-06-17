@@ -1313,7 +1313,11 @@ class QuoteWrapper{
             }else if($tok->unquote_spliced){
                 $els = $scope->find($tok->value, True);
                 foreach($els as $el){
-                    $new_tokens[] = $el;
+                    if($el instanceof PharenCachedList){
+                        $new_tokens = array_merge($new_tokens, $el->flatten(Node::$delimiter_tokens));
+                    }else{
+                        $new_tokens[] = $el;
+                    }
                 }
             }
         }
