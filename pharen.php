@@ -426,11 +426,11 @@ class Node implements Iterator, ArrayAccess, Countable{
     static $post_tmp;
     static $ns;
     static $tmp_funcname_var=0;
+    static $delimiter_tokens = array("OpenParenToken", "CloseParenToken");
 
     public $parent;
     public $children;
     public $tokens;
-    public $delimiter_tokens = array("OpenParenToken", "CloseParenToken");
     public $return_flag = False;
     public $has_variable_func = False;
     public $in_macro;
@@ -601,7 +601,7 @@ class Node implements Iterator, ArrayAccess, Countable{
     }
 
     public function get_tokens(){
-        $tokens = array(new $this->delimiter_tokens[0]);
+        $tokens = array(new self::$delimiter_tokens[0]);
         foreach($this->tokens as $tok){
             if(!($tok instanceof Token)){
                 $tokens = array_merge($tokens, $tok->get_tokens());
@@ -609,7 +609,7 @@ class Node implements Iterator, ArrayAccess, Countable{
                 $tokens[] = $tok;
             }
         }
-        $tokens[] = new $this->delimiter_tokens[1];
+        $tokens[] = new self::$delimiter_tokens[1];
         return $tokens;
     }
 
@@ -1768,7 +1768,7 @@ class MicroNode extends SpecialForm{
 
 class ListNode extends LiteralNode{
 
-    public $delimiter_tokens = array("OpenBracketToken", "CloseBracketToken");
+    static $delimiter_tokens = array("OpenBracketToken", "CloseBracketToken");
 
     public function compile(){
         if(($x = $this->is_range()) !== False){
