@@ -858,11 +858,13 @@ class CommentNode extends Node{
 
 class LeafNode extends Node{
     public $value;
+    public $tok;
 
-    public function __construct($parent, $children, $value){
+    public function __construct($parent, $children, $value, $tok){
         parent::__construct($parent);
         $this->children = Null;
         $this->value = $value;
+        $this->tok = $tok;
     }
 
     public function typify(){
@@ -879,7 +881,7 @@ class LeafNode extends Node{
     }
 
     public function convert_to_list(){
-        return $this->value;
+        return $this->tok;
     }
 
     public function search($value){
@@ -1233,7 +1235,7 @@ class MacroNode extends FuncDefNode{
         $scope = $macronode->get_scope();
         foreach($macronode->children[2]->children as $param_node){
             if($param_node instanceof SplatNode){
-                $scope->bind($param_node->compile(True), new SpliceWrapper($args, True));
+                $scope->bind($param_node->compile(True), $args);
                 break;
             }
             $scope->bind($param_node->compile(True), array_shift($args));
@@ -1301,13 +1303,20 @@ class QuoteWrapper{
 
     public function get_tokens(){
         $tokens = $this->node->get_tokens();
+        $new_tokens = array(new $this->delimiter_tokens[0]);
         $scope = $this->node->parent->get_scope();
         foreach($tokens as $key=>$tok){
             if($tok->unquoted){
-                $tokens[$key] = $scope->find($tok->value, True);
+                $new_tokens[] = $scope->find(ltrim($tok->value, '-'), True);
+            }else if($tok->unquote_spliced){
+                $els = $scope->find($tok->value, True);
+                foreach($els as $el){
+                    $new_tokens[] = $el;
+                }
             }
         }
-        return $tokens;
+        $new_tokens[] = new $this->delimiter_tokens[1];
+        return $new_tokens;
     }
 
     public function __get($name){
@@ -1781,7 +1790,7 @@ class ListNode extends LiteralNode{
             $el = $this->children[$x];
             // Restore tmp since the test compile below may mess with it
             $tmp = Node::$tmp;
-            if($el->compile() == '..'){
+            if($el instanceof Node && $el->compile() == '..'){
                 Node::$tmp = $tmp;
                 return $x;
             }
@@ -2056,7 +2065,7 @@ class Parser{
             array_shift($cur_state);
         }
 
-        $node = new $class($parent, null, $tok->value);
+        $node = new $class($parent, null, $tok->value, $tok);
         return array($node, $state);
     }
 
