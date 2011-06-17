@@ -1303,7 +1303,9 @@ class QuoteWrapper{
 
     public function get_tokens(){
         $tokens = $this->node->get_tokens();
-        $new_tokens = array(new $this->delimiter_tokens[0]);
+        $node_cls_vars = get_class_vars(get_class($this->node));
+        $delims = $node_cls_vars['delimiter_tokens'];
+        $new_tokens = array(new $delims[0]);
         $scope = $this->node->parent->get_scope();
         foreach($tokens as $key=>$tok){
             if($tok->unquoted){
@@ -1315,7 +1317,7 @@ class QuoteWrapper{
                 }
             }
         }
-        $new_tokens[] = new $this->delimiter_tokens[1];
+        $new_tokens[] = new $delims[1];
         return $new_tokens;
     }
 
