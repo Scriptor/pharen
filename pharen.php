@@ -472,6 +472,7 @@ class Node implements Iterator, ArrayAccess, Countable{
     public function __construct($parent=null){
         $this->parent = $parent;
         $this->children = array();
+        $this->tokens = array();
         if($this->parent instanceof SpecialForm){
             $this->indent = $this->parent->indent."\t";
         }else if($parent !== Null){
@@ -1132,7 +1133,10 @@ class FuncDefNode extends SpecialForm{
 
     public function is_tail_recursive($last_node){
         $last_func_call = $last_node->get_last_func_call();
-        return count($this->children) > 3 && !($last_func_call instanceof EmptyNode) && $this->children[1]->compile() == $last_node->get_last_func_call()->compile();
+        return count($this->children) > 3 &&
+            !($this instanceof MacroNode) &&
+            !($last_func_call instanceof EmptyNode)
+            && $this->children[1]->compile() == $last_node->get_last_func_call()->compile();
     }
 
     public function compile_last($node){
