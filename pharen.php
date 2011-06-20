@@ -2146,4 +2146,5 @@ set_flag("no-import-lang");
 set_flag("import-lexi-relative");
 $lang_code = compile_file(COMPILER_SYSTEM . DIRECTORY_SEPARATOR . "lang.phn");
 set_flag("import-lexi-relative", $old_lexi_setting);
+set_flag("no-import-lang", $old_lang_setting);
 
