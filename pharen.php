@@ -1103,10 +1103,16 @@ class FuncDefNode extends SpecialForm{
                 $val_node = $new_param_values[$x];
                 $body .= $this->format_line_indent("\$__tailrecursetmp$x = " . $val_node->compile().";");
             }
-            for($x=0; $x<$params_len; $x++){
-                $var_node = $this->params[$x];
+            $x=0;
+            foreach($params as $param){
+                if(is_array($param)){
+                    $param_name = $param[0];
+                }else{
+                    $param_name = $param;
+                }
                 $val_node = $new_param_values[$x];
-                $body .= $this->format_line_indent($var_node->compile() . " = \$__tailrecursetmp$x;");
+                $body .= $this->format_line_indent($param_name. " = \$__tailrecursetmp$x;");
+                $x++;
             }
             $body .= $this->format_line("}");
             $this->decrease_indent();
