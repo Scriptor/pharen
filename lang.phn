@@ -107,11 +107,6 @@
           []
           xs))
 
-(fn for-n (x f acc)
-  (if (== 0 x)
-    acc
-    (for-n (- x 1) f ($f acc))))
-
 (fn until (f xs)
   (cond 
     ((empty xs) FALSE)
