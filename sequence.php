@@ -124,4 +124,21 @@ class PharenCachedList extends PharenList{
     public function offsetSet($offset, $value){
         $this->cached_array[$this->index+$offset] = $value;
     }
+
+    public function flatten($delimeters=Null){
+        if(is_null($delimeters)){
+            return $this->cached_array;
+        }else{
+            $tokens = array(new $delimeters[0]);
+            foreach($this->cached_array as $el){
+                if($el instanceof PharenCachedList){
+                    $tokens = array_merge($tokens, $el->flatten($delimeters));
+                }else{
+                    $tokens[] = $el;
+                }
+            }
+            $tokens[] = new $delimeters[1];
+        }
+        return $tokens;
+    }
 }
