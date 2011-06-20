@@ -893,7 +893,21 @@ class LeafNode extends Node{
     }
 
     public function compile(){
-        return strlen($this->value) > 1 && !is_numeric($this->value[1]) ? str_replace('-', '_', $this->value) : $this->value;
+        return strlen($this->value) > 1 && !is_numeric($this->value[1]) ?
+            $this->phpfy_name($this->value)
+            : $this->value;
+    }
+
+    public function phpfy_name($name){
+        $char_mappings = array(
+            '-'=>'_',
+            '?'=>'__question',
+            '!'=>'__exclam'
+        );
+        foreach($char_mappings as $char=>$replacement){
+            $name = str_replace($char, $replacement, $name);
+        }
+        return $name;
     }
 }
 
