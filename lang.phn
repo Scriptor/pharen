@@ -34,6 +34,15 @@
   (compile-file lib-path)
   FALSE)
 
+(fn zero? (n)
+  (== n 0))
+
+(fn pos? (n)
+  (> n 0))
+
+(fn neg? (n)
+  (< n 0))
+
 (fn first (xs)
   (-> xs first))
 
@@ -43,14 +52,23 @@
 (fn rest (xs)
   (-> xs rest))
 
+(fn take (n xs [acc []])
+  (if (zero? n)
+    acc
+    (take (- n 1) (rest xs) (cons (first xs) acc))))
+
+(fn drop (n xs)
+  (if (zero? n)
+    xs
+    (take (- n 1) (rest xs))))
+
+(fn reverse (xs [acc []])
+  (if (empty xs)
+    acc
+    (reverse (rest xs) (cons (first xs) acc))))
+
 (fn early (xs)
   (array-slice xs 0 -1))
-
-(fn take (x xs)
-  (array-slice xs 0 x))
-
-(fn drop (x xs)
-  (array-slice xs x))
 
 (fn cons (x xs)
   (array-merge [x] xs))
@@ -104,6 +122,7 @@
   (reduce-pairs (lambda (pair acc) (append ($f (:pair 0) (:pair 1)) acc))
                 []
                 pairs))
+
 
 (class MultiManager
        (access static (local multis {}))
