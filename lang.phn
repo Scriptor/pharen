@@ -6,7 +6,7 @@
   '(if ~c
      (do
        ~@body)
-     FALSE))
+     NULL))
 
 (defmacro error (&msgs)
   '(error-log (. ~@msgs)))
