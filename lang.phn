@@ -70,6 +70,11 @@
     acc
     (reverse (rest xs) (cons (first xs) acc))))
 
+(fn partition (xs n [acc []])
+  (if (empty xs)
+    acc
+    (partition (drop n xs) n (cons (take n) xs))))
+
 (fn early (xs)
   (array-slice xs 0 -1))
 
