@@ -43,6 +43,9 @@
 (fn neg? (n)
   (< n 0))
 
+(fn zero-or-empty? (n xs)
+  (or (zero? n) (empty xs)))
+
 (fn first (xs)
   (-> xs first))
 
