@@ -56,12 +56,12 @@
   (-> xs rest))
 
 (fn take (n xs [acc []])
-  (if (zero? n)
+  (if (zero-or-empty? n xs)
     acc
     (take (- n 1) (rest xs) (cons (first xs) acc))))
 
 (fn drop (n xs)
-  (if (zero? n)
+  (if (zero-or-empty? n xs)
     xs
     (take (- n 1) (rest xs))))
 
