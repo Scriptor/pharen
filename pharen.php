@@ -118,7 +118,7 @@ class Lexer{
 
     public function in_sexpr_opening(){
         $c = count($this->toks);
-        if($c <= 1)
+        if($c < 1)
             return False;
 
         $prev_tok = $this->toks[$c-1];
@@ -619,7 +619,7 @@ class Node implements Iterator, ArrayAccess, Countable{
         $list = array();
         foreach($this->tokens as $key=>$tok){
             if($tok instanceof Node){
-                $list = array_merge($list, $tok->convert_to_list(True));
+                $list[] = $tok->convert_to_list();
             }else{
                 $list[] = $tok;
             }
@@ -1690,6 +1690,11 @@ class LispyIfNode extends CondNode{
 class ListAccessNode extends Node{
     static $tmp_var = 0;
 
+    public function __construct($parent=Null){
+        parent::__construct($parent);
+        $this->tokens = array(new ListAccessToken);
+    }
+
     public function compile(){
         $list_name_node = $this->children[0];
         if($list_name_node instanceof LeafNode){
@@ -2016,6 +2021,7 @@ class Parser{
             
             if($tok instanceof OpenParenToken or $tok instanceof OpenBracketToken or $tok instanceof OpenBraceToken){
                 $expected_state = $this->get_expected($state);
+                $added_tok = Null;
                 if($this->is_literal($expected_state)){
                     if(!is_array($state[count($state)-1][0])){
                         array_shift($state[count($state)-1]);
@@ -2025,6 +2031,7 @@ class Parser{
                     array_push($state, self::$list_form);
                 }else if($lookahead instanceof ListAccessToken){
                     array_push($state, self::$list_access_form);
+                    $added_tok = $lookahead;
                     array_splice($this->tokens, $i+1, 1);
                 }else if($tok instanceof OpenBraceToken){
                     array_push($state, self::$special_forms["dict-literal"]);
@@ -2179,4 +2186,3 @@ set_flag("import-lexi-relative");
 $lang_code = compile_file(COMPILER_SYSTEM . DIRECTORY_SEPARATOR . "lang.phn");
 set_flag("import-lexi-relative", $old_lexi_setting);
 set_flag("no-import-lang", $old_lang_setting);
-
