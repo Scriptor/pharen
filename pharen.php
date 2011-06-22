@@ -859,6 +859,11 @@ class CommentNode extends Node{
 }
 
 class LeafNode extends Node{
+    static $reserved = array(
+        '!=',
+        '!=='
+    );
+
     public $value;
     public $tok;
 
@@ -895,7 +900,7 @@ class LeafNode extends Node{
     }
 
     public function compile(){
-        return strlen($this->value) > 1 && !is_numeric($this->value[1]) ?
+        return strlen($this->value) > 1 && !is_numeric($this->value[1]) && !in_array($this->value, self::$reserved) ?
             $this->phpfy_name($this->value)
             : $this->value;
     }
