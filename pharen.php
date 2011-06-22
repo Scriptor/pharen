@@ -1328,13 +1328,19 @@ class QuoteWrapper{
         $scope = $this->node->parent->get_scope();
         foreach($tokens as $key=>$tok){
             if($tok->unquoted){
-                $new_tokens[] = $scope->find(ltrim($tok->value, '-'), True);
+                $val = $scope->find(ltrim($tok->value, '-'), True);
+                if($val instanceof PharenCachedList){
+                    $flattened = $val->flatten(Node::$delimiter_tokens);
+                    $new_tokens = array_merge($new_tokens, $flattened);
+                }else{
+                    $new_tokens[] = $val;
+                }
             }else if($tok->unquote_spliced){
                 $els = $scope->find($tok->value, True);
                 foreach($els as $el){
                     if($el instanceof PharenCachedList){
                         $flattened = $el->flatten(Node::$delimiter_tokens);
-                        $new_tokens = array_merge($new_tokens, array_slice($flatten, 1, -1));
+                        $new_tokens = array_merge($new_tokens, $flattened);
                     }else{
                         $new_tokens[] = $el;
                     }
@@ -1343,6 +1349,7 @@ class QuoteWrapper{
                 $new_tokens[] = $tok;
             }
         }
+        print_r($new_tokens);
         return $new_tokens;
     }
 
