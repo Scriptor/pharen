@@ -1349,7 +1349,6 @@ class QuoteWrapper{
                 $new_tokens[] = $tok;
             }
         }
-        print_r($new_tokens);
         return $new_tokens;
     }
 
