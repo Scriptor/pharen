@@ -601,7 +601,9 @@ class Node implements Iterator, ArrayAccess, Countable{
     }
 
     public function get_tokens(){
-        $tokens = array(new self::$delimiter_tokens[0]);
+        $node_cls_vars = get_class_vars(get_class($this));
+        $delims = $node_cls_vars['delimiter_tokens'];
+        $tokens = array(new $delims[0]);
         foreach($this->tokens as $tok){
             if(!($tok instanceof Token)){
                 $tokens = array_merge($tokens, $tok->get_tokens());
@@ -609,7 +611,7 @@ class Node implements Iterator, ArrayAccess, Countable{
                 $tokens[] = $tok;
             }
         }
-        $tokens[] = new self::$delimiter_tokens[1];
+        $tokens[] = new $delims[1];
         return $tokens;
     }
 
@@ -1323,9 +1325,6 @@ class QuoteWrapper{
 
     public function get_tokens(){
         $tokens = $this->node->get_tokens();
-        $node_cls_vars = get_class_vars(get_class($this->node));
-        $delims = $node_cls_vars['delimiter_tokens'];
-        $new_tokens = array(new $delims[0]);
         $scope = $this->node->parent->get_scope();
         foreach($tokens as $key=>$tok){
             if($tok->unquoted){
@@ -1334,7 +1333,8 @@ class QuoteWrapper{
                 $els = $scope->find($tok->value, True);
                 foreach($els as $el){
                     if($el instanceof PharenCachedList){
-                        $new_tokens = array_merge($new_tokens, $el->flatten(Node::$delimiter_tokens));
+                        $flattened = $el->flatten(Node::$delimiter_tokens);
+                        $new_tokens = array_merge($new_tokens, array_slice($flatten, 1, -1));
                     }else{
                         $new_tokens[] = $el;
                     }
@@ -1343,7 +1343,6 @@ class QuoteWrapper{
                 $new_tokens[] = $tok;
             }
         }
-        $new_tokens[] = new $delims[1];
         return $new_tokens;
     }
 
