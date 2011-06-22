@@ -1339,6 +1339,8 @@ class QuoteWrapper{
                         $new_tokens[] = $el;
                     }
                 }
+            }else{
+                $new_tokens[] = $tok;
             }
         }
         $new_tokens[] = new $delims[1];
@@ -2164,7 +2166,7 @@ $old_lang_setting = isset(Flags::$flags['no-import-lang']) ? Flags::$flags['no-i
 $old_lexi_setting = isset(Flags::$flags['import-lexi-relative']) ? Flags::$flags['import-lexi-relative'] : False;
 set_flag("no-import-lang");
 set_flag("import-lexi-relative");
-$lang_code = compile_file(COMPILER_SYSTEM . DIRECTORY_SEPARATOR . "lang.phn");
+#$lang_code = compile_file(COMPILER_SYSTEM . DIRECTORY_SEPARATOR . "lang.phn");
 set_flag("import-lexi-relative", $old_lexi_setting);
 set_flag("no-import-lang", $old_lang_setting);
 
