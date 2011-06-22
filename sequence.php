@@ -127,16 +127,18 @@ class PharenCachedList extends PharenList{
 
     public function flatten($delimeters=Null){
         if(is_null($delimeters)){
-            return $this->cached_array;
+            $tokens = array();
         }else{
             $tokens = array(new $delimeters[0]);
-            foreach($this->cached_array as $el){
-                if($el instanceof PharenCachedList){
-                    $tokens = array_merge($tokens, $el->flatten($delimeters));
-                }else{
-                    $tokens[] = $el;
-                }
+        }
+        foreach($this->cached_array as $el){
+            if($el instanceof PharenCachedList){
+                $tokens = array_merge($tokens, $el->flatten($delimeters));
+            }else{
+                $tokens[] = $el;
             }
+        }
+        if(!is_null($delimeters)){
             $tokens[] = new $delimeters[1];
         }
         return $tokens;
