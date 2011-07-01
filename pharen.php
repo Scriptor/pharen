@@ -4,7 +4,7 @@ define("COMPILER_SYSTEM", dirname(__FILE__));
 define("EXTENSION", ".phn");
 
 require_once(COMPILER_SYSTEM.DIRECTORY_SEPARATOR.'lexical.php');
-require_once("lang.php");
+#require_once("lang.php");
 require_once("sequence.php");
 
 // Some utility functions for use in Pharen
@@ -619,7 +619,7 @@ class Node implements Iterator, ArrayAccess, Countable{
         $list = array();
         foreach($this->tokens as $key=>$tok){
             if($tok instanceof Node){
-                $list[] = $tok->convert_to_list();
+                $list[] = $tok->convert_to_list($return_as_array);
             }else{
                 $list[] = $tok;
             }
@@ -887,8 +887,9 @@ class LeafNode extends Node{
         }
     }
 
-    public function convert_to_list(){
-        return $this->tok;
+    public function convert_to_list($return_as_array=False){
+        $array = array($this->tok);
+        return $return_as_array ? $array : PharenList::create_from_array($array);
     }
 
     public function search($value){
