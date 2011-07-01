@@ -47,13 +47,13 @@
   (or (zero? n) (empty xs)))
 
 (defmacro first (xs)
-  (-> xs first))
+  '(-> ~xs first))
 
 (fn first-pair (xs)
   (array-slice xs 0 1))
 
 (defmacro rest (xs)
-  (-> xs rest))
+  '(-> ~xs rest))
 
 (fn take (n xs [acc []])
   (if (zero-or-empty? n xs)
