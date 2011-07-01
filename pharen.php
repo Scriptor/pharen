@@ -888,8 +888,7 @@ class LeafNode extends Node{
     }
 
     public function convert_to_list($return_as_array=False){
-        $array = array($this->tok);
-        return $return_as_array ? $array : PharenList::create_from_array($array);
+        return $this->tok;
     }
 
     public function search($value){
