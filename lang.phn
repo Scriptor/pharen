@@ -34,6 +34,9 @@
   (compile-file lib-path)
   FALSE)
 
+(defmacro inst? (var cls)
+  '(instanceof ~var ~-cls))
+
 (fn zero? (n)
   (== n 0))
 
