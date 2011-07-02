@@ -56,13 +56,16 @@
     (:: PharenList (seq x))))
 
 (defmacro first (xs)
-  '(-> ~xs first))
+  '(-> (seq ~xs) first))
 
 (fn first-pair (xs)
   (array-slice xs 0 1))
 
 (defmacro rest (xs)
-  '(-> ~xs rest))
+  '(-> (seq ~xs) rest))
+
+(defmacro cons (x xs)
+  '(-> (seq ~xs) (cons ~x)))
 
 (fn take (n xs [acc []])
   (if (zero-or-empty? n xs)
@@ -86,9 +89,6 @@
 
 (fn early (xs)
   (array-slice xs 0 -1))
-
-(fn cons (x xs)
-  (array-merge [x] xs))
 
 (fn append (x xs)
   (array-merge xs [x]))
