@@ -77,6 +77,9 @@ class NumberToken extends Token{
 class StringToken extends Token{
 }
 
+class UnstringToken extends Token{
+}
+
 class ListAccessToken extends Token{
 }
 
@@ -696,7 +699,7 @@ class Node implements Iterator, ArrayAccess, Countable{
             $micro = MicroNode::get_micro($func_name);
             return $micro->get_body(array_slice($this->children, 1), $this->indent);
         }else if(!($this->parent instanceof MethodCallNode)
-            && MacroNode::is_macro($func_name) && !MacroNode::$ghosting){
+                && MacroNode::is_macro($func_name) && !MacroNode::$ghosting){
             $unevaluated_args = array_slice($this->children, 1);
             foreach($unevaluated_args as $key=>$arg){
                 $unevaluated_args[$key] = $arg->convert_to_list();
@@ -1339,6 +1342,9 @@ class QuoteWrapper{
                     $flattened = $val->flatten(Node::$delimiter_tokens);
                     $new_tokens = array_merge($new_tokens, $flattened);
                 }else{
+                    if($tok->value[0]=='-'){
+                        $val = new UnstringToken($val->value);
+                    }
                     $new_tokens[] = $val;
                 }
             }else if($tok->unquote_spliced){
@@ -1962,7 +1968,8 @@ class Parser{
             "NumberToken" => "LeafNode",
             "FuncValToken" => "FuncValNode",
             "SplatToken" => "SplatNode",
-            "UnquoteToken" => "UnquoteNode"
+            "UnquoteToken" => "UnquoteNode",
+            "UnstringToken" => "LeafNode"
         );
 
         self::$values = array(self::$value);
