@@ -57,10 +57,13 @@ class PharenList implements IPharenSeq, Iterator{
 
     public function offsetGet($offset){
         $list = $this;
-        for($x=$offset; $x > 0 && $list !== Null; $x--){
+        for($x=$offset; $x > 0; $x--){
+            if($list instanceof PharenEmptyList){
+                throw new OutOfRangeException;
+            }
             $list = $list->rest;
         }
-        return $list !== Null ? $list->first : Null;
+        return $list;
     }
 
     public function offsetSet($offset, $value){
