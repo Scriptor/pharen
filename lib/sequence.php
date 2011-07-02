@@ -154,3 +154,12 @@ class PharenCachedList extends PharenList{
         return $tokens;
     }
 }
+
+class PharenEmptyList extends PharenList{
+
+    public function __construct(){
+        $this->first = Null;
+        $this->length = 0;
+        $this->rest = $this;
+    }
+}
