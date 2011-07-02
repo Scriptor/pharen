@@ -1,6 +1,7 @@
 (define "SYSTEM" (dirname __FILE__))
 (define "LIB_PATH" (. SYSTEM "/lib/"))
 (set-include-path (. (get-include-path) PATH_SEPARATOR LIB_PATH))
+(require "sequence.php")
 
 (defmacro when (c &body)
   '(if ~c
