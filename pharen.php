@@ -5,7 +5,7 @@ define("EXTENSION", ".phn");
 
 require_once(COMPILER_SYSTEM.DIRECTORY_SEPARATOR.'lexical.php');
 #require_once("lang.php");
-require_once("sequence.php");
+require_once(COMPILER_SYSTEM.DIRECTORY_SEPARATOR."lib/"."sequence.php");
 
 // Some utility functions for use in Pharen
 
