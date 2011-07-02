@@ -50,6 +50,11 @@
 (fn zero-or-empty? (n xs)
   (or (zero? n) (empty xs)))
 
+(fn seq (x)
+  (if (inst? x "IPharenSeq")
+    x
+    (:: PharenList (seq x))))
+
 (defmacro first (xs)
   '(-> ~xs first))
 
