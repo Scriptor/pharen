@@ -26,6 +26,16 @@ class PharenList implements IPharenSeq, Iterator{
         return $el1;
     }
 
+    public function seq(&$xs){
+        if(is_array($xs)){
+            if(count($xs) === 0){
+                return new PharenEmptyList;
+            }else{
+                return self::create_from_array($xs);
+            }
+        }
+    }
+
     public function __construct($first, $rest=null, $length=1){
         $this->first = $first;
         $this->rest = $rest;
