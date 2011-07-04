@@ -1409,7 +1409,6 @@ class QuoteWrapper{
                 $new_tokens[] = $tok;
             }
         }
-        var_dump($new_tokens);
         return $new_tokens;
     }
 
@@ -2100,6 +2099,12 @@ class Parser{
                     array_push($state, self::$empty_node);
                 }else{
                     array_push($state, self::$func_call);
+                    if($lookahead instanceof OpenParenToken){
+                        # Remove the func name part of the func_call state
+                        #   because the next expression is a func call that
+                        #   acts as a func name
+                        array_splice($state[count($state)-1], 1, 1);
+                    }
                 }
                 list($node, $state) = $this->parse_tok($tok, $state, $curnode);
                 if($tok->quoted){
