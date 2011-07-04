@@ -17,7 +17,7 @@ class PharenList implements IPharenSeq, Iterator{
         $reversed = array_reverse($xs, True);
         $last_el = array_shift($reversed);
         $len = count($xs);
-        $el1 = new PharenCachedList($last_el, Null, $len-1, $cache, $len);
+        $el1 = new PharenCachedList($last_el, Null, 1, $cache, $len-1);
         foreach($reversed as $i=>$x){
             $index = $len-($i+2);
             $el2 = $el1->cached_cons($x, $cache, $index);
