@@ -314,6 +314,7 @@ class Scope{
 
     public $owner;
     public $bindings = array();
+    public $tok_bindings = array();
     public $lexical_bindings = array();
     public $lexically_needed = array();
     public $lex_vars = False;
@@ -333,6 +334,10 @@ class Scope{
 
     public function bind_lexical($var_name, $id){
         $this->lexical_bindings[$var_name] = $id;
+    }
+
+    public function bind_tok($var_name, $token){
+        $this->tok_bindings[$var_name] = $token;
     }
 
     public function get_indent(){
@@ -383,14 +388,16 @@ class Scope{
         return $code;
     }
 
-    public function find($var_name, $return_value=False, $from_virtual=False){
+    public function find($var_name, $return_value=False, $from_virtual=False, $is_tok=False){
+        $bindings = $is_tok ? $this->tok_bindings : $this->bindings;
+
         if($var_name[0] != '$'){
             $var_name = '$'.$var_name;
         }
 
-        if(!array_key_exists($var_name, $this->bindings)){
+        if(!array_key_exists($var_name, $bindings)){
             if($this->owner->parent !== Null){
-                return $this->owner->parent->get_scope()->find($var_name, $return_value, $this->virtual);
+                return $this->owner->parent->get_scope()->find($var_name, $return_value, $this->virtual, $is_tok);
             }else{
                 return False;
             }
@@ -402,10 +409,11 @@ class Scope{
         }
 
         if($return_value){
-            return $this->bindings[$var_name];
+            return $bindings[$var_name];
         }
         return $this->id;
     }
+
 
     public function find_immediate($var_name){
         if($var_name[0] != '$'){
@@ -618,16 +626,27 @@ class Node implements Iterator, ArrayAccess, Countable{
         return $tokens;
     }
 
-    public function convert_to_list($return_as_array=False){
+    public function convert_to_list($return_as_array=False, $get_values=False){
         $list = array();
         foreach($this->tokens as $key=>$tok){
             if($tok instanceof Node){
-                $list[] = $tok->convert_to_list($return_as_array);
+                $list[] = $tok->convert_to_list($return_as_array, $get_values);
             }else{
-                $list[] = $tok;
+                if($get_values)
+                    $list[] = $tok->value;
+                else
+                    $list[] = $tok;
             }
         }
-        return $return_as_array ? $list : PharenList::create_from_array($list);
+        if($return_as_array){
+            return $list;
+        }else{
+            $node_cls_vars = get_class_vars(get_class($this));
+            $delims = $node_cls_vars['delimiter_tokens'];
+            $list = PharenList::create_from_array($list);
+            $list->delimiter_tokens = $delims;
+            return $list;
+        }
     }
 
     public function compile_args($args=Null){
@@ -701,12 +720,14 @@ class Node implements Iterator, ArrayAccess, Countable{
         }else if(!($this->parent instanceof MethodCallNode)
                 && MacroNode::is_macro($func_name) && !MacroNode::$ghosting){
             $unevaluated_args = array_slice($this->children, 1);
+            $arg_values = array();
             foreach($unevaluated_args as $key=>$arg){
                 $unevaluated_args[$key] = $arg->convert_to_list();
+                $arg_values[] = $arg->convert_to_list(False, True);
             }
             MacroNode::evaluate($func_name, $unevaluated_args);
 
-            $macro_result = call_user_func_array($func_name, $unevaluated_args);
+            $macro_result = call_user_func_array($func_name, $arg_values);
             if($macro_result instanceof QuoteWrapper){
                 $tokens = $macro_result->get_tokens();
                 $parser = new Parser($tokens);
@@ -891,8 +912,8 @@ class LeafNode extends Node{
         }
     }
 
-    public function convert_to_list($return_as_array=False){
-        return $this->tok;
+    public function convert_to_list($return_as_array=False, $get_value=False){
+        return $get_value ? $this->tok->value : $this->tok;
     }
 
     public function search($value){
@@ -1266,10 +1287,25 @@ class MacroNode extends FuncDefNode{
         $scope = $macronode->get_scope();
         foreach($macronode->children[2]->children as $param_node){
             if($param_node instanceof SplatNode){
-                $scope->bind($param_node->compile(True), $args);
+                $scope->bind_tok($param_node->compile(True), $args);
+                $values = array();
+                foreach($args as $tok){
+                    if($tok instanceof PharenCachedList){
+                        $values[] = self::get_values_from_list($tok);
+                    }else{
+                        $values[] = $tok->value;
+                    }
+                }
+                $scope->bind($param_node->compile(True), PharenList::create_from_array($values));
                 break;
             }
-            $scope->bind($param_node->compile(True), array_shift($args));
+            $tok = array_shift($args);
+            $scope->bind_tok($param_node->compile(True), $tok);
+            if($tok instanceof PharenCachedList){
+                $scope->bind($param_node->compile(True), self::get_values_from_list($tok));
+            }else{
+                $scope->bind($param_node->compile(True), $tok->value);
+            }
         }
         $code = $macronode->parent_compile();
         if($macronode->evaluated){
@@ -1279,6 +1315,18 @@ class MacroNode extends FuncDefNode{
             eval(Node::add_tmpfunc($code));
             $macronode->evaluated = True;
         }
+    }
+
+    static function get_values_from_list($list){
+        $values = array();
+        foreach($list->cached_array as $el){
+            if(!($el instanceof PharenCachedList)){
+                $values[] = $el->value;
+            }else{
+                $values[] = self::get_values_from_list($el);
+            }
+        }
+        return PharenList::create_from_array($values);
     }
 
     public function parent_compile(){
@@ -1337,9 +1385,9 @@ class QuoteWrapper{
         $scope = $this->node->parent->get_scope();
         foreach($tokens as $key=>$tok){
             if($tok->unquoted){
-                $val = $scope->find(ltrim($tok->value, '-'), True);
+                $val = $scope->find(ltrim($tok->value, '-'), True, False, True);
                 if($val instanceof PharenCachedList){
-                    $flattened = $val->flatten(Node::$delimiter_tokens);
+                    $flattened = $val->flatten($val->delimiter_tokens);
                     $new_tokens = array_merge($new_tokens, $flattened);
                 }else{
                     if($tok->value[0]=='-'){
@@ -1348,10 +1396,10 @@ class QuoteWrapper{
                     $new_tokens[] = $val;
                 }
             }else if($tok->unquote_spliced){
-                $els = $scope->find($tok->value, True);
+                $els = $scope->find($tok->value, True, False, True);
                 foreach($els as $el){
                     if($el instanceof PharenCachedList){
-                        $flattened = $el->flatten(Node::$delimiter_tokens);
+                        $flattened = $el->flatten($el->delimiter_tokens);
                         $new_tokens = array_merge($new_tokens, $flattened);
                     }else{
                         $new_tokens[] = $el;
@@ -1361,6 +1409,7 @@ class QuoteWrapper{
                 $new_tokens[] = $tok;
             }
         }
+        var_dump($new_tokens);
         return $new_tokens;
     }
 
@@ -1465,7 +1514,7 @@ class SpliceWrapper extends UnquoteWrapper{
             return $this->exprs;
         }else{
             $varname = str_replace('@', '', $this->node->compile(True));
-            return $this->get_scope()->find($varname, True)->get_exprs();
+            return $this->get_scope()->find($varname, True);
         }
     }
 
@@ -2191,6 +2240,6 @@ $old_lang_setting = isset(Flags::$flags['no-import-lang']) ? Flags::$flags['no-i
 $old_lexi_setting = isset(Flags::$flags['import-lexi-relative']) ? Flags::$flags['import-lexi-relative'] : False;
 set_flag("no-import-lang");
 set_flag("import-lexi-relative");
-$lang_code = compile_file(COMPILER_SYSTEM . DIRECTORY_SEPARATOR . "lang.phn");
+#$lang_code = compile_file(COMPILER_SYSTEM . DIRECTORY_SEPARATOR . "lang.phn");
 set_flag("import-lexi-relative", $old_lexi_setting);
 set_flag("no-import-lang", $old_lang_setting);
