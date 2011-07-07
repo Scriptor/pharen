@@ -1626,10 +1626,25 @@ class DoNode extends SpecialForm{
 class ClassNode extends SpecialForm{
     public $body_index = 2;
 
+    public function generate($header, $body){
+        return $this->format_line("class ".$header."{").$body.$this->format_line("}");
+    }
+
     public function compile_statement(){
         $class_name = $this->children[1]->compile();
         $body = $this->compile_body();
-        return $this->format_line("class $class_name{").$body.$this->format_line("}");
+        return $this->generate($class_name, $body);
+    }
+}
+
+class ClassExtendsNode extends ClassNode{
+    public $body_index = 3;
+
+    public function compile_statement(){
+        $class_name = $this->children[1]->compile();
+        $parent_class = $this->children[2]->children[0]->value;
+        $body = $this->compile_body();
+        return $this->generate($class_name." extends ".$parent_class, $body);
     }
 }
 
@@ -2056,6 +2071,7 @@ class Parser{
             "::" => array("StaticCallNode", "LeafNode", "LeafNode", self::$values),
             "new" => array("InstantiationNode", "LeafNode", "LeafNode", self::$values),
             "class" => array("ClassNode", "LeafNode", "LeafNode", self::$values),
+            "class-extends" => array("ClassExtendsNode", "LeafNode", "LeafNode", self::$list_form, self::$values),
             "access" => array("AccessModifierNode", "LeafNode", "LeafNode", self::$values)
         );
         
@@ -2245,6 +2261,6 @@ $old_lang_setting = isset(Flags::$flags['no-import-lang']) ? Flags::$flags['no-i
 $old_lexi_setting = isset(Flags::$flags['import-lexi-relative']) ? Flags::$flags['import-lexi-relative'] : False;
 set_flag("no-import-lang");
 set_flag("import-lexi-relative");
-#$lang_code = compile_file(COMPILER_SYSTEM . DIRECTORY_SEPARATOR . "lang.phn");
+$lang_code = compile_file(COMPILER_SYSTEM . DIRECTORY_SEPARATOR . "lang.phn");
 set_flag("import-lexi-relative", $old_lexi_setting);
 set_flag("no-import-lang", $old_lang_setting);
