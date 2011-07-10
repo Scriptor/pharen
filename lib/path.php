@@ -5,25 +5,25 @@ function path__lambdafunc7($chunk, $acc, $__closure_id){
 	
 	 Null;
 	if(empty($chunk)){
-		if(empty($acc)){
-			return append($chunk, $acc);
+		if(empty__question($acc)){
+			return seq($acc)->cons($chunk);
 		}
 		else{
 			return $acc;
 		}
 	}
 	else if((".." == $chunk)){
-		return early($acc);
+		return seq($acc)->rest;
 	}
 	else if(TRUE){
-		return append($chunk, $acc);
+		return seq($acc)->cons($chunk);
 	}
 }
 
 function path_normalize_array($chunks){
 
 
-	return reduce(array("path__lambdafunc7", Lexical::get_closure_id("path", Null)), array(), $chunks);
+	return reverse(reduce(array("path__lambdafunc7", Lexical::get_closure_id("path", Null)), array(), $chunks));
 }
 
 function path_normalize($path){

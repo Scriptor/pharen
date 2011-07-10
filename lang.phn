@@ -48,7 +48,10 @@
   (< n 0))
 
 (fn zero-or-empty? (n xs)
-  (or (zero? n) (empty xs)))
+  (or (zero? n) (empty? xs)))
+
+(fn empty? (xs)
+  (=== (count xs) 0))
 
 (fn seq (x)
   (if (inst? x "IPharenSeq")
@@ -78,12 +81,12 @@
     (drop (- n 1) (rest xs))))
 
 (fn reverse (xs [acc []])
-  (if (empty xs)
+  (if (empty? xs)
     acc
     (reverse (rest xs) (cons (first xs) acc))))
 
 (fn partition (xs n [acc []])
-  (if (empty xs)
+  (if (empty? xs)
     acc
     (partition (drop n xs) n (cons (take n) xs))))
 
@@ -97,7 +100,7 @@
   ($f val))
 
 (fn reduce (f acc xs)
-  (if (empty xs)
+  (if (empty? xs)
     acc
     (reduce f ($f (first xs) acc) (rest xs))))
 
@@ -107,7 +110,7 @@
           "" xs))
 
 (fn reduce-pairs (f acc xs)
-  (if (empty xs)
+  (if (empty? xs)
     acc
     (reduce-pairs f ($f (each xs) acc) (rest xs))))
 
@@ -126,7 +129,7 @@
 
 (fn until (f xs)
   (cond 
-    ((empty xs) FALSE)
+    ((empty? xs) FALSE)
     ((local result ($f (first xs))) result)
     (TRUE (until f (rest xs)))))
 

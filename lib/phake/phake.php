@@ -71,11 +71,11 @@ $__listAcessTmpVar4 = pathinfo($f);
 }
 
 function phake__lambdafunc7($f, $__closure_id){
-	$__scope_id = Lexical::init_closure("phake", 70);
-	$dir =& Lexical::get_lexical_binding('phake', 69, '$dir', isset($__closure_id)?$__closure_id:0);;
-	$compile_func =& Lexical::get_lexical_binding('phake', 69, '$compile_func', isset($__closure_id)?$__closure_id:0);;
+	$__scope_id = Lexical::init_closure("phake", 81);
+	$dir =& Lexical::get_lexical_binding('phake', 80, '$dir', isset($__closure_id)?$__closure_id:0);;
+	$compile_func =& Lexical::get_lexical_binding('phake', 80, '$compile_func', isset($__closure_id)?$__closure_id:0);;
 	$file = path_join($dir, $f);
-	Lexical::bind_lexing("phake", 70, '$file', $file);
+	Lexical::bind_lexing("phake", 81, '$file', $file);
 	
 	 Null;
 	if($__condtmpvar4){
@@ -87,9 +87,9 @@ function phake__lambdafunc7($f, $__closure_id){
 }
 
 function compile_dir($dir, $compile_func="compile_file"){
-	$__scope_id = Lexical::init_closure("phake", 69);
-	Lexical::bind_lexing("phake", 69, '$dir', $dir);
-	Lexical::bind_lexing("phake", 69, '$compile_func', $compile_func);
+	$__scope_id = Lexical::init_closure("phake", 80);
+	Lexical::bind_lexing("phake", 80, '$dir', $dir);
+	Lexical::bind_lexing("phake", 80, '$compile_func', $compile_func);
 		
 		
 		$__condtmpvar4 =  Null;

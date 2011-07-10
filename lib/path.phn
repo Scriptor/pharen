@@ -1,15 +1,16 @@
 ; Structure and protocol for the following was pretty much copied from NodeJS's path library,
 ; the meat is done functionally, however
 (fn path-normalize-array (chunks)
-  (reduce (lambda (chunk acc)
-                  (cond
-                    ((empty chunk) (if (empty acc)
-                                     (append chunk acc)
-                                     acc))
-                    ((== ".." chunk) (early acc))
-                    (TRUE (append chunk acc))))
-          []
-          chunks))
+  (reverse 
+    (reduce (lambda (chunk acc)
+                    (cond
+                      ((empty chunk) (if (empty? acc)
+                                       (cons chunk acc)
+                                       acc))
+                      ((== ".." chunk) (rest acc))
+                      (TRUE (cons chunk acc))))
+            []
+            chunks)))
 
 (fn path-normalize (path)
   (implode "/" (path-normalize-array (explode "/" path))))
