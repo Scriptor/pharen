@@ -11,6 +11,7 @@ class PharenList implements IPharenSeq, Iterator{
     public $length;
     public $iterator_key = 0;
     public $iterator_el;
+    public $arr;
 
     public static function create_from_array(&$xs){
         $cache = SplFixedArray::fromArray($xs);
@@ -41,6 +42,18 @@ class PharenList implements IPharenSeq, Iterator{
         $this->rest = $rest;
         $this->length = $length;
         $this->iterator_el = $this;
+    }
+
+    public function arr(){
+        if($this->arr)
+            return $this->arr;
+
+        $arr = array();
+        foreach($this as $val){
+            $arr[] = $val;
+        }
+        $this->arr = $arr;
+        return $arr;
     }
 
     public function count(){
@@ -91,7 +104,7 @@ class PharenList implements IPharenSeq, Iterator{
     }
 
     public function valid(){
-        return $this->iterator_el !== Null;
+        return $this->iterator_el->length !== 0;
     }
 
     public function first(){
@@ -124,6 +137,13 @@ class PharenCachedList extends PharenList{
 
     public function count(){
         return $this->length;
+    }
+
+    public function arr(){
+        if($this->arr)
+            return $this->arr;
+        $this->arr = array_slice($this->cached_array->toArray(), $this->index);
+        return $this->arr;
     }
 
     public function offsetExists($offset){
