@@ -51,7 +51,7 @@
   (or (zero? n) (empty xs)))
 
 (fn seq (x)
-  (if (inst? x "IPharenSeq")
+  (if (inst? x IPharenSeq)
     x
     (:: PharenList (seq x))))
 
