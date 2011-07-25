@@ -449,6 +449,7 @@ class Node implements Iterator, ArrayAccess, Countable{
     public $has_variable_func = False;
     public $in_macro;
     public $force_not_partial;
+    public $returns_special_form;
     public $indent = Null;
 
     public $quoted;
@@ -739,6 +740,9 @@ class Node implements Iterator, ArrayAccess, Countable{
                 $expanded = $this->parent->children[$count-1];
                 $expanded->scope = $macro_result->get_scope();
                 array_pop($this->parent->children);
+                if($expanded instanceof SpecialForm){
+                    $this->returns_special_form = True;
+                }
                 
                 if($is_statement){
                     return trim($expanded->compile_statement(), ";\n");
@@ -766,7 +770,13 @@ class Node implements Iterator, ArrayAccess, Countable{
     }
 
     public function compile_statement($prefix=""){
-        return $this->format_statement($this->compile(True).";", $prefix);
+        $code = $this->compile(True);
+        if($this->returns_special_form){
+            $semicolon="";
+        }else{
+            $semicolon=";";
+        }
+        return $this->format_statement($code.$semicolon, $prefix);
     }
 
     public function compile_return($prefix=""){
