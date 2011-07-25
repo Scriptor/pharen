@@ -2259,3 +2259,15 @@ function compile($code, $root=Null){
     $phpcode = $node_tree->compile();
     return $phpcode;
 }
+
+function compile_lang(){
+    $old_lang_setting = isset(Flags::$flags['no-import-lang']) ? Flags::$flags['no-import-lang'] : False;
+    $old_lexi_setting = isset(Flags::$flags['import-lexi-relative']) ? Flags::$flags['import-lexi-relative'] : False;
+    set_flag("no-import-lang");
+    set_flag("import-lexi-relative");
+    if(!$old_lang_setting){
+        $lang_code = compile_file(COMPILER_SYSTEM . DIRECTORY_SEPARATOR . "lang.phn");
+    }
+    set_flag("import-lexi-relative", $old_lexi_setting);
+    set_flag("no-import-lang", $old_lang_setting);
+}
