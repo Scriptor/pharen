@@ -47,6 +47,12 @@
 (fn neg? (n)
   (< n 0))
 
+(fn str (s1 s2)
+  (. s1 s2))
+
+(fn flip (f arg1 arg2)
+  ($f arg2 arg1))
+
 (fn zero-or-empty? (n xs)
   (or (zero? n) (empty? xs)))
 
@@ -57,6 +63,11 @@
   (if (inst? x "IPharenSeq")
     x
     (:: PharenList (seq x))))
+
+(fn arr (x)
+  (cond
+    ((is-array x) x)
+    ((inst? x "IPharenSeq") (-> x (arr)))))
 
 (defmacro first (xs)
   '(-> (seq ~xs) first))
@@ -85,13 +96,18 @@
     acc
     (reverse (rest xs) (cons (first xs) acc))))
 
+(fn interpose (sep xs [acc []])
+  (if (== (count xs) 1)
+    [(first xs)]
+    (cons (first xs) (cons sep (interpose sep (rest xs))))))
+
 (fn partition (xs n [acc []])
   (if (empty? xs)
     acc
     (partition (drop n xs) n (cons (take n) xs))))
 
-(fn early (xs)
-  (array-slice xs 0 -1))
+(fn seq-join (xs [glue ""])
+  (implode glue (arr xs)))
 
 (fn append (x xs)
   (array-merge xs [x]))
