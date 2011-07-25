@@ -27,12 +27,17 @@ function path_normalize_array($chunks){
 }
 
 function path_normalize($path){
-	return implode("/", path_normalize_array(explode("/", $path)));
+	echo(seq_join(path_normalize_array(explode("/", $path)), "/"));
+	return seq_join(path_normalize_array(explode("/", $path)), "/");
+}
+
+function convert_slashes($path){
+	return str_replace("\\", "/", $path);
 }
 
 function path_join($paths){
 
 	$paths = array_slice(func_get_args(), 0);
-	return path_normalize(implode("/", $paths));
+	return path_normalize(convert_slashes(seq_join($paths, "/")));
 }
 

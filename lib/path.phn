@@ -13,7 +13,10 @@
             chunks)))
 
 (fn path-normalize (path)
-  (implode "/" (path-normalize-array (explode "/" path))))
+  (seq-join (path-normalize-array (explode "/" path)) "/"))
+
+(fn convert-slashes (path)
+  (str-replace "\\" "/" path))
 
 (fn path-join (&paths)
-  (path-normalize (implode "/" paths)))
+  (path-normalize (convert-slashes (seq-join paths "/"))))
