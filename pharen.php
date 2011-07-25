@@ -2226,6 +2226,7 @@ class Parser{
 }
 
 class Flags{
+    public static $lang_compiled = False;
     public static $flags = array();
 }
 
@@ -2261,6 +2262,8 @@ function compile($code, $root=Null){
 }
 
 function compile_lang(){
+    if(Flags::$lang_compiled)
+        return;
     $old_lang_setting = isset(Flags::$flags['no-import-lang']) ? Flags::$flags['no-import-lang'] : False;
     $old_lexi_setting = isset(Flags::$flags['import-lexi-relative']) ? Flags::$flags['import-lexi-relative'] : False;
     set_flag("no-import-lang");
@@ -2270,4 +2273,5 @@ function compile_lang(){
     }
     set_flag("import-lexi-relative", $old_lexi_setting);
     set_flag("no-import-lang", $old_lang_setting);
+    Flags::$lang_compiled = True;
 }
