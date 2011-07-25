@@ -734,7 +734,7 @@ class Node implements Iterator, ArrayAccess, Countable{
             if($macro_result instanceof QuoteWrapper){
                 $tokens = $macro_result->get_tokens();
                 $parser = new Parser($tokens);
-                $parser->parse($this->parent);
+                $macro_result = $parser->parse($this->parent);
                 $count = count($this->parent->children);
                 $expanded = $this->parent->children[$count-1];
                 $expanded->scope = $macro_result->get_scope();
