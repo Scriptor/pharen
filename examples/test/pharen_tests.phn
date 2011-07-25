@@ -3,6 +3,7 @@
 
 (define "TESTS_DIR" (dirname __FILE__))
 (require-once (path-join TESTS-DIR "../.." "pharen.php"))
+(compile-lang)
 
 (fn run-test (fname)
     (compile-file (. TESTS-DIR "/tests/" fname ".phn") (. TESTS-DIR "/tmp"))
