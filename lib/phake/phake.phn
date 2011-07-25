@@ -4,6 +4,7 @@
 (define "PROJECT_SYSTEM" (getcwd))
 
 (require-once (. PHAREN-SYSTEM "/pharen.php"))
+(compile-lang)
 
 (fn proj (name attrs)
   "Do stuff with project info here")

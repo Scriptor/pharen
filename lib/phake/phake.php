@@ -7,6 +7,7 @@ define("PHAKE_SYSTEM", realpath(dirname(__FILE__)));
 define("PHAREN_SYSTEM", path_join(PHAKE_SYSTEM, "../.."));
 define("PROJECT_SYSTEM", getcwd());
 require_once((PHAREN_SYSTEM . "/pharen.php"));
+compile_lang();
 function proj($name, $attrs){
 	return "Do stuff with project info here";
 }
@@ -71,11 +72,11 @@ $__listAcessTmpVar4 = pathinfo($f);
 }
 
 function phake__lambdafunc7($f, $__closure_id){
-	$__scope_id = Lexical::init_closure("phake", 81);
-	$dir =& Lexical::get_lexical_binding('phake', 80, '$dir', isset($__closure_id)?$__closure_id:0);;
-	$compile_func =& Lexical::get_lexical_binding('phake', 80, '$compile_func', isset($__closure_id)?$__closure_id:0);;
+	$__scope_id = Lexical::init_closure("phake", 85);
+	$dir =& Lexical::get_lexical_binding('phake', 84, '$dir', isset($__closure_id)?$__closure_id:0);;
+	$compile_func =& Lexical::get_lexical_binding('phake', 84, '$compile_func', isset($__closure_id)?$__closure_id:0);;
 	$file = path_join($dir, $f);
-	Lexical::bind_lexing("phake", 81, '$file', $file);
+	Lexical::bind_lexing("phake", 85, '$file', $file);
 	
 	 Null;
 	if($__condtmpvar4){
@@ -87,9 +88,9 @@ function phake__lambdafunc7($f, $__closure_id){
 }
 
 function compile_dir($dir, $compile_func="compile_file"){
-	$__scope_id = Lexical::init_closure("phake", 80);
-	Lexical::bind_lexing("phake", 80, '$dir', $dir);
-	Lexical::bind_lexing("phake", 80, '$compile_func', $compile_func);
+	$__scope_id = Lexical::init_closure("phake", 84);
+	Lexical::bind_lexing("phake", 84, '$dir', $dir);
+	Lexical::bind_lexing("phake", 84, '$compile_func', $compile_func);
 		
 		
 		$__condtmpvar4 =  Null;
