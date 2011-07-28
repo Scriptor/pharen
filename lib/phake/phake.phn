@@ -43,7 +43,7 @@
      (print (. "Running " ~name ": " ~desc "\n"))
       ~@body))
 
-(compile-with-flag "executable" (project-path "/lib/phake/phake.phn"))
+(compile-with-flag "executable" (. PHAKE-SYSTEM "/phake.phn"))
 (compile-file (project-path "/phakefile"))
 (require (project-path "/phakefile.php"))
 
