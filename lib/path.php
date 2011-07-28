@@ -27,7 +27,6 @@ function path_normalize_array($chunks){
 }
 
 function path_normalize($path){
-	echo(seq_join(path_normalize_array(explode("/", $path)), "/"));
 	return seq_join(path_normalize_array(explode("/", $path)), "/");
 }
 
