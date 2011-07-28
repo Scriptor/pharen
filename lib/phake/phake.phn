@@ -9,7 +9,7 @@
 (fn proj (name attrs)
   "Do stuff with project info here")
 
-(fn project-path (f)
+(fn project-path ([f ""])
   (. PROJECT-SYSTEM f))
 
 (fn not-dots (dir)
