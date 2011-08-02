@@ -1377,6 +1377,7 @@ class MacroNode extends FuncDefNode{
 }
 
 class QuoteWrapper{
+
     public $node;
     public $parent;
     public $children;
@@ -1411,7 +1412,15 @@ class QuoteWrapper{
                     // $val is bound to a node defined outside the macro so we need to
                     // explicitly get its token
                     $val_node = $scope->find(ltrim($tok->value, '-'), True, False);
-                    $val = $val_node->convert_to_list();
+                    if($val_node instanceof Node){
+                        $val = $val_node->convert_to_list();
+                    }else{
+                        if(is_string($val_node)){
+                            $val = new StringToken($val_node);
+                        }else if(is_integer($val_node) or is_double($val_node)){
+                            $val = new NumberToken($val_node);
+                        }
+                    }
                 }
                 if($val instanceof PharenCachedList){
                     $flattened = $val->flatten($val->delimiter_tokens);
@@ -2304,7 +2313,7 @@ function compile_lang(){
     set_flag("no-import-lang");
     set_flag("import-lexi-relative");
     if(!$old_lang_setting){
-        $lang_code = compile_file(COMPILER_SYSTEM . DIRECTORY_SEPARATOR . "lang.phn");
+#        $lang_code = compile_file(COMPILER_SYSTEM . DIRECTORY_SEPARATOR . "lang.phn");
     }
     set_flag("import-lexi-relative", $old_lexi_setting);
     set_flag("no-import-lang", $old_lang_setting);
