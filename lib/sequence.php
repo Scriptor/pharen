@@ -162,7 +162,7 @@ class PharenCachedList extends PharenList{
         if(is_null($delimeters)){
             $tokens = array();
         }else{
-            $tokens = array(new $delimeters[0]);
+            $tokens = array($delimeters[0]);
         }
         foreach($this->cached_array as $el){
             if($el instanceof PharenCachedList){
@@ -172,7 +172,7 @@ class PharenCachedList extends PharenList{
             }
         }
         if(!is_null($delimeters)){
-            $tokens[] = new $delimeters[1];
+            $tokens[] = $delimeters[1];
         }
         return $tokens;
     }
