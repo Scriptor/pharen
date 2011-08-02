@@ -1407,12 +1407,18 @@ class QuoteWrapper{
         foreach($tokens as $key=>$tok){
             if($tok->unquoted){
                 $val = $scope->find(ltrim($tok->value, '-'), True, False, True);
+                if($val === False){
+                    // $val is bound to a node defined outside the macro so we need to
+                    // explicitly get its token
+                    $val_node = $scope->find(ltrim($tok->value, '-'), True, False);
+                    $val = $val_node->convert_to_list();
+                }
                 if($val instanceof PharenCachedList){
                     $flattened = $val->flatten($val->delimiter_tokens);
                     $new_tokens = array_merge($new_tokens, $flattened);
                 }else{
                     if($tok->value[0]=='-'){
-                        $val = new UnstringToken($val->value);
+                        $val = new UnstringToken(is_string($val) ? $val : $val->value);
                     }
                     $new_tokens[] = $val;
                 }
