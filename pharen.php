@@ -619,10 +619,15 @@ class Node implements Iterator, ArrayAccess, Countable{
         }
     }
 
-    public function get_tokens(){
+    public function get_delims(){
         $node_cls_vars = get_class_vars(get_class($this));
         $delims = $node_cls_vars['delimiter_tokens'];
-        $tokens = array(new $delims[0]);
+        return array(new $delims[0], new $delims[1]);
+    }
+
+    public function get_tokens($delims=Null){
+        $delims = $delims === Null ? $this->get_delims() : $delims;
+        $tokens = array($delims[0]);
         foreach($this->tokens as $tok){
             if(!($tok instanceof Token)){
                 $tokens = array_merge($tokens, $tok->get_tokens());
@@ -630,7 +635,7 @@ class Node implements Iterator, ArrayAccess, Countable{
                 $tokens[] = $tok;
             }
         }
-        $tokens[] = new $delims[1];
+        $tokens[] = $delims[1];
         return $tokens;
     }
 
@@ -649,8 +654,7 @@ class Node implements Iterator, ArrayAccess, Countable{
         if($return_as_array){
             return $list;
         }else{
-            $node_cls_vars = get_class_vars(get_class($this));
-            $delims = $node_cls_vars['delimiter_tokens'];
+            $delims = $this->get_delims();
             $list = PharenList::create_from_array($list);
             $list->delimiter_tokens = $delims;
             return $list;
@@ -1459,6 +1463,13 @@ class UnquoteWrapper{
 
     public function __set($name, $val){
         $this->node->$name = $val;
+    }
+
+    public function get_delims(){
+        $delims = $this->node->get_delims();
+        $delims[0]->unquoted = True;
+        $delims[1]->unquoted = True;
+        return $delims;
     }
 
     public function compile(){
