@@ -347,11 +347,15 @@ class Scope{
         return $this->owner->parent instanceof RootNode && $this->owner instanceof BindingNode ? "" : $this->owner->indent."\t";
     }
 
+    public function rescope($var_name){
+            Node::$post_tmp .= $this->owner->format_line_indent("Scope::\$scopes['{$this->id}']->bindings['$var_name'] = $var_name;");
+    }
+
     public function get_binding($var_name){
         $value = $this->bindings[$var_name]->compile();
 
         if(MacroNode::$rescope_vars){
-            Node::$post_tmp .= $this->owner->format_line_indent("Scope::\$scopes['{$this->id}']->bindings['$var_name'] = $var_name;");
+            $this->rescope($var_name);
         }
         return "$var_name = $value;";
     }
@@ -738,9 +742,9 @@ class Node implements Iterator, ArrayAccess, Countable{
                 $macro_result = $parser->parse($this->parent);
                 $count = count($this->parent->children);
                 $expanded = $this->parent->children[$count-1];
-                $expanded->scope = $macro_result->get_scope();
                 array_pop($this->parent->children);
                 if($expanded instanceof SpecialForm){
+                    // This prevents it from adding unnecessary semicolons
                     $this->returns_special_form = True;
                 }
                 
