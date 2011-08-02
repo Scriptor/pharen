@@ -1478,6 +1478,10 @@ class UnquoteWrapper{
         return $delims;
     }
 
+    public function get_tokens(){
+        return $this->node->get_tokens($this->get_delims());
+    }
+
     public function compile(){
         $unstring = False;
         if(isset($this->node->value) and count($this->value) > 0 and $this->value[0] == '-'){
