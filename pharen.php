@@ -913,6 +913,18 @@ class LeafNode extends Node{
     public $value;
     public $tok;
 
+    public static function phpfy_name($name){
+        $char_mappings = array(
+            '-'=>'_',
+            '?'=>'__question',
+            '!'=>'__exclam'
+        );
+        foreach($char_mappings as $char=>$replacement){
+            $name = str_replace($char, $replacement, $name);
+        }
+        return $name;
+    }
+
     public function __construct($parent, $children, $value, $tok=Null){
         parent::__construct($parent);
         $this->children = Null;
@@ -947,20 +959,8 @@ class LeafNode extends Node{
 
     public function compile(){
         return strlen($this->value) > 1 && !is_numeric($this->value[1]) && !in_array($this->value, self::$reserved) ?
-            $this->phpfy_name($this->value)
+            self::phpfy_name($this->value)
             : $this->value;
-    }
-
-    public function phpfy_name($name){
-        $char_mappings = array(
-            '-'=>'_',
-            '?'=>'__question',
-            '!'=>'__exclam'
-        );
-        foreach($char_mappings as $char=>$replacement){
-            $name = str_replace($char, $replacement, $name);
-        }
-        return $name;
     }
 }
 
@@ -2313,7 +2313,7 @@ function compile_lang(){
     set_flag("no-import-lang");
     set_flag("import-lexi-relative");
     if(!$old_lang_setting){
-#        $lang_code = compile_file(COMPILER_SYSTEM . DIRECTORY_SEPARATOR . "lang.phn");
+        $lang_code = compile_file(COMPILER_SYSTEM . DIRECTORY_SEPARATOR . "lang.phn");
     }
     set_flag("import-lexi-relative", $old_lexi_setting);
     set_flag("no-import-lang", $old_lang_setting);
