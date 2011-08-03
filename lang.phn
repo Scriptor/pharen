@@ -60,7 +60,7 @@
   (=== (count xs) 0))
 
 (fn seq (x)
-  (if (inst? x "IPharenSeq")
+  (if (inst? x IPharenSeq)
     x
     (:: PharenList (seq x))))
 
