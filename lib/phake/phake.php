@@ -12,7 +12,7 @@ function proj($name, $attrs){
 	return "Do stuff with project info here";
 }
 
-function project_path($f){
+function project_path($f=""){
 	return (PROJECT_SYSTEM . $f);
 }
 
@@ -120,7 +120,7 @@ function compile_dir($dir, $compile_func="compile_file"){
 	return map(array("phake__lambdafunc7", Lexical::get_closure_id("phake", $__scope_id)), scandir($dir, 1));
 }
 
-compile_with_flag("executable", project_path("/lib/phake/phake.phn"));
+compile_with_flag("executable", (PHAKE_SYSTEM . "/phake.phn"));
 compile_file(project_path("/phakefile"));
 require(project_path("/phakefile.php"));
 if((count($argv) > 1)){
