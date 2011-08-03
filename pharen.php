@@ -1407,11 +1407,11 @@ class QuoteWrapper{
         $scope = $this->node->parent->get_scope();
         foreach($tokens as $key=>$tok){
             if($tok->unquoted){
-                $val = $scope->find(ltrim($tok->value, '-'), True, False, True);
+                $val = $scope->find(LeafNode::phpfy_name(ltrim($tok->value, '-')), True, False, True);
                 if($val === False){
                     // $val is bound to a node defined outside the macro so we need to
                     // explicitly get its token
-                    $val_node = $scope->find(ltrim($tok->value, '-'), True, False);
+                    $val_node = $scope->find(LeafNode::phpfy_name(ltrim($tok->value, '-')), True, False);
                     if($val_node instanceof Node){
                         $val = $val_node->convert_to_list();
                     }else{
@@ -1688,6 +1688,9 @@ class ClassExtendsNode extends ClassNode{
     public $body_index = 3;
 
     public function compile_statement(){
+        if(MacroNode::$ghosting)
+            return "";
+
         $class_name = $this->children[1]->compile();
         $parent_class = $this->children[2]->children[0]->value;
         $body = $this->compile_body();
