@@ -439,6 +439,7 @@ class Scope{
 class Node implements Iterator, ArrayAccess, Countable{
     static $in_func = 0;
     static $tmpfunc;
+    static $lambda_tmp;
     static $prev_tmp;
     static $tmp;
     static $post_tmp;
@@ -464,10 +465,11 @@ class Node implements Iterator, ArrayAccess, Countable{
     protected $value = "";
 
     static function add_tmp($code){
-        if(LambdaNode::$in_lambda_compile){
-            return $code;
-        }
         $code = Node::$prev_tmp.Node::$tmp.$code.Node::$post_tmp;
+        if(!LambdaNode::$in_lambda_compile){
+            $code = Node::$lambda_tmp.$code;
+            Node::$lambda_tmp = '';
+        }
         Node::$prev_tmp = '';
         Node::$tmp = '';
         Node::$post_tmp = '';
