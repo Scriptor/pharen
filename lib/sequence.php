@@ -166,7 +166,7 @@ class PharenCachedList extends PharenList{
         }
         foreach($this->cached_array as $el){
             if($el instanceof PharenCachedList){
-                $tokens = array_merge($tokens, $el->flatten($delimeters));
+                $tokens = array_merge($tokens, $el->flatten($el->delimiter_tokens));
             }else{
                 $tokens[] = $el;
             }
