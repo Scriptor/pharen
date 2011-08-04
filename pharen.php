@@ -1407,6 +1407,7 @@ class QuoteWrapper{
     public function get_tokens(){
         $tokens = $this->node->get_tokens();
         $scope = $this->node->parent->get_scope();
+        $new_tokens = array();
         foreach($tokens as $key=>$tok){
             if($tok->unquoted){
                 $val = $scope->find(LeafNode::phpfy_name(ltrim($tok->value, '-')), True, False, True);
@@ -1627,7 +1628,7 @@ class LambdaNode extends FuncDefNode{
 
         $code = parent::compile_statement();
 
-        Node::$tmp .= $code.$this->format_line("");
+        Node::$lambda_tmp .= $code.$this->format_line("");
         $scope = $this->parent->get_scope();
         if(count($scope->lexically_needed) === 0 || $scope->owner instanceof MacroNode){
             $scope_id_str = 'Null';
@@ -1758,9 +1759,10 @@ class CondNode extends SpecialForm{
 
     public function compile_if($pair, $prefix, $return=False, $stmt_type="if"){
         $condition = $pair->children[0]->compile();
+        $header = $this->format_statement("$stmt_type(".$condition."){");
         $body = $this->compile_body(array_slice($pair->children, 1), $prefix, $return);
 
-        return $this->format_line("$stmt_type(".$condition."){")
+        return $header
             .$body
         .$this->format_line("}");
     }
