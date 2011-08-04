@@ -10,7 +10,7 @@
   "Do stuff with project info here")
 
 (fn project-path ([f ""])
-  (. PROJECT-SYSTEM f))
+  (str-replace "\\" "/" (. PROJECT-SYSTEM f)))
 
 (fn not-dots (dir)
   (and (!== "." dir) (!== ".." dir)))
@@ -25,8 +25,9 @@
     (compile-file file)))
 
 (fn is-phn (f)
-  (and (isset (:(pathinfo f) "extension"))
-       (== (:(pathinfo f) "extension") "phn")))
+  (let [pathinfo (pathinfo f)]
+    (and (isset (:pathinfo "extension"))
+         (== (:pathinfo "extension") "phn"))))
 
 (fn compile-dir (dir [compile-func #compile-file])
   (map 
@@ -34,7 +35,9 @@
             (def file (path-join dir f))
             (cond
               ((and (not-dots f) (is-dir file)) (compile-dir file compile-func))
-              ((is-phn file) (and ($compile-func file (dirname file)) (print (. "Compile: " file "\n"))))))
+              ((is-phn file) (do
+                               ($compile-func file (dirname file))
+                               (print (. "Compiled " file "\n"))))))
     (scandir dir 1)))
 
 
