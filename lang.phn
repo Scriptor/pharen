@@ -155,6 +155,31 @@
                 pairs))
 
 
+(defmacro attr* (access-modifier name val)
+  '(access ~access-modifier (local ~name ~val)))
+
+(defmacro attr (name val)
+  '(attr* public ~name ~val))
+
+(defmacro private-attr (name val)
+  '(attr* private ~name ~val))
+
+(defmacro static-attr (name val)
+  '(attr* static ~name ~val))
+
+(defmacro method* (access-modifier name args &code)
+  '(access ~access-modifier
+           (fn ~name ~args
+             ~@code)))
+
+(defmacro method (name args &code)
+  '(method* public ~name ~args
+            ~@code))
+
+(defmacro private-method (name args &code)
+  '(method* private ~name ~args
+            ~@code))
+
 (class MultiManager
        (access static (local multis {}))
 
