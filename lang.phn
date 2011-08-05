@@ -180,6 +180,9 @@
   '(method* private ~name ~args
             ~@code))
 
+(defmacro this (&exprs)
+  '(-> this ~@exprs))
+
 (class MultiManager
        (access static (local multis {}))
 
