@@ -131,9 +131,9 @@
     (reduce-pairs f ($f (each xs) acc) (rest xs))))
 
 (fn map (f xs)
-  (reduce (lambda (x acc) (append ($f x) acc)) 
-          []
-          xs))
+  (if (empty? xs)
+    xs
+    (cons ($f (first xs)) (map f (rest xs)))))
 
 (fn filter (f1 xs)
   (reduce (lambda (x acc)
