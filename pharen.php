@@ -752,10 +752,19 @@ class Node implements Iterator, ArrayAccess, Countable{
                 if($expanded instanceof SpecialForm){
                     // This prevents it from adding unnecessary semicolons
                     $this->returns_special_form = True;
+                }else if(get_class($expanded) == 'Node'){
+                    if(MacroNode::is_macro($expanded->get_func_name())){
+                        $this->returns_special_form = True;
+                    }
                 }
                 
                 if($is_statement){
-                    return trim($expanded->compile_statement(), ";\n");
+                    $code = $expanded->compile_statement();
+                    if(!$this->returns_special_form){
+                        # Special forms shouldn't have semicolons anyway
+                        $code = trim($code, ";\n");
+                    }
+                    return $code;
                 }else{
                     return $expanded->compile();
                 }
