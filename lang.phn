@@ -135,13 +135,13 @@
     xs
     (cons ($f (first xs)) (map f (rest xs)))))
 
-(fn filter (f1 xs)
-  (reduce (lambda (x acc)
-                  (if (f1 x)
-                    (cons x acc)
-                    acc))
-          []
-          xs))
+(fn filter (f coll)
+  (if (empty? coll)
+    coll
+    (let [x (first coll), xs (rest coll)]
+      (if ($f x)
+        (cons x (filter f xs))
+        (filter f xs)))))
 
 (fn until (f xs)
   (cond 
