@@ -34,6 +34,8 @@ class PharenList implements IPharenSeq, Iterator{
             }else{
                 return self::create_from_array($xs);
             }
+        }else if(is_string($xs)){
+            return self::create_from_array(str_split($xs));
         }
     }
 
