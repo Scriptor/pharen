@@ -72,6 +72,9 @@
 (defmacro first (xs)
   '(-> (seq ~xs) first))
 
+(defmacro second (xs)
+  '(first (rest ~xs)))
+
 (fn first-pair (xs)
   (array-slice xs 0 1))
 
