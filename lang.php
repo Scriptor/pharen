@@ -139,6 +139,10 @@ function seq_join($xs, $glue=""){
 	return implode($glue, arr($xs));
 }
 
+function vals($m){
+	return array_values(arr($m));
+}
+
 function append($x, $xs){
 	return array_merge($xs, array($x));
 }

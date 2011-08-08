@@ -112,6 +112,9 @@
 (fn seq-join (xs [glue ""])
   (implode glue (arr xs)))
 
+(fn vals (m)
+  (array-values (arr m)))
+
 (fn append (x xs)
   (array-merge xs [x]))
 
