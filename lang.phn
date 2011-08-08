@@ -38,6 +38,9 @@
 (defmacro inst? (var cls)
   '(instanceof ~var ~-cls))
 
+(defmacro print* (&s)
+  '(print (. ~@s)))
+
 (fn zero? (n)
   (== n 0))
 
