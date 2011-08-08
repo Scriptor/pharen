@@ -1094,10 +1094,17 @@ class SpecialForm extends Node{
     }
 
     public function get_body_nodes(){
+        # Where body is all but the last child of a special form node
         $body = clone $this;
-        array_pop($body->children);
+        $last_child = array_pop($body->children);
         foreach($body->children as $c){
             $c->parent = $body;
+        }
+        $last_body_nodes = $last_child->get_body_nodes();
+        if(count($last_body_nodes) > 0){
+            $last_body_node = $last_body_nodes[0]; // [0] because get_body_nodes returns [$body]
+            $body->children[] = $last_body_node;
+            $last_body_node->parent = $body;
         }
         return array($body);
     }
@@ -1163,6 +1170,10 @@ class FuncDefNode extends SpecialForm{
             $this->decrease_indent();
         }
         if($this->is_tail_recursive($last_node)){
+            // $last_expr->get_last_expr() -> The last function call, which provides the new args for the tail recurse
+            // $while_body_nodes -> The body of the function
+            // $while_last_node -> What's returned when tail recursion stops
+
             list($body_nodes, $last_expr) = $this->split_body_tail();
             // Indent because the nodes below are nested inside the while loop
             $this->increase_indent();
@@ -1177,6 +1188,10 @@ class FuncDefNode extends SpecialForm{
                 $body .= $n->compile_statement();
             }
 
+            # Ugly hack to force it to find the last function call node
+            while(get_class($last_expr->get_last_expr()) !== 'Node'){
+                $last_expr = $last_expr->get_last_expr();
+            }
             $new_param_values = array_slice($last_expr->get_last_expr()->children, 1);
             $params_len = count($new_param_values);
             for($x=0; $x<$params_len; $x++){
@@ -1224,7 +1239,7 @@ class FuncDefNode extends SpecialForm{
         return count($this->children) > 3 &&
             !($this instanceof MacroNode) &&
             !($last_func_call instanceof EmptyNode)
-            && $this->children[1]->compile() == $last_node->get_last_func_call()->compile();
+            && $this->children[1]->compile() == $last_func_call->compile();
     }
 
     public function compile_last($node){
@@ -1282,8 +1297,7 @@ class FuncDefNode extends SpecialForm{
     public function split_body_tail(){
         list($body_nodes, $last) = parent::split_body_last();
         $body_nodes = array_merge($body_nodes, $last->get_body_nodes());
-        $last = $last->get_last_expr();
-        return array($body_nodes, $last);
+        return array($body_nodes, $last->get_last_expr());
     }
 }
 
@@ -2018,6 +2032,7 @@ class LocalNode extends Node{
 }
 
 class BindingNode extends Node{
+    public $only_return_body = False;
 
     public function __construct($parent){
         parent::__construct($parent);
@@ -2044,9 +2059,14 @@ class BindingNode extends Node{
         $body = "";
         $last_line = "";
 
-        if($return === True){
-            $last_line = array_pop($this->children)->compile_return();
+        if(!$this->only_return_body){
+            if($return === True){
+                $last_line = array_pop($this->children)->compile_return();
+            }
+        }else if($this->only_return_body){
+            array_pop($this->children);
         }
+
         foreach(array_slice($this->children, 2) as $line){
             $body .= $line->compile_statement();
         }
@@ -2060,6 +2080,21 @@ class BindingNode extends Node{
 
     public function compile_return(){
         return $this->compile_statement(True);
+    }
+
+    public function get_last_expr(){
+        $count = count($this->children);
+        return $this->children[$count-1];
+    }
+
+    public function get_body_nodes(){
+        $body = clone $this;
+        $body->only_return_body = True;
+        return array($body);
+    }
+
+    public function get_last_func_call(){
+        return $this->get_last_expr()->get_last_func_call();
     }
 }
 
