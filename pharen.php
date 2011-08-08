@@ -929,7 +929,8 @@ class LeafNode extends Node{
             '-'=>'_',
             '?'=>'__question',
             '!'=>'__exclam',
-            '*'=>'__star'
+            '*'=>'__star',
+            "."=>'__dot__'
         );
         foreach($char_mappings as $char=>$replacement){
             $name = str_replace($char, $replacement, $name);
