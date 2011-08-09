@@ -107,10 +107,10 @@
     [(first xs)]
     (cons (first xs) (cons sep (interpose sep (rest xs))))))
 
-(fn partition (xs n [acc []])
+(fn partition (n xs)
   (if (empty? xs)
-    acc
-    (partition (drop n xs) n (cons (take n xs) acc))))
+    xs
+    (cons (take n xs) (partition n (drop n xs)))))
 
 (fn seq-join (xs [glue ""])
   (implode glue (arr xs)))
