@@ -46,6 +46,10 @@ class PharenList implements IPharenSeq, Iterator{
         $this->iterator_el = $this;
     }
 
+    public function seq(){
+        return $this;
+    }
+
     public function arr(){
         if($this->arr)
             return $this->arr;
