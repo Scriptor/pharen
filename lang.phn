@@ -87,10 +87,10 @@
 (fn cons (x xs)
   (-> (seq xs) (cons x)))
 
-(fn take (n xs [acc []])
+(fn take (n xs)
   (if (zero-or-empty? n xs)
-    acc
-    (take (- n 1) (rest xs) (cons (first xs) acc))))
+    []
+    (cons (first xs) (take (- n 1) (rest xs)))))
 
 (fn drop (n xs)
   (if (zero-or-empty? n xs)
