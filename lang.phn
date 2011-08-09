@@ -84,8 +84,8 @@
 (defmacro rest (xs)
   '(-> (seq ~xs) rest))
 
-(defmacro cons (x xs)
-  '(-> (seq ~xs) (cons ~x)))
+(fn cons (x xs)
+  (-> (seq xs) (cons x)))
 
 (fn take (n xs [acc []])
   (if (zero-or-empty? n xs)
@@ -110,7 +110,7 @@
 (fn partition (xs n [acc []])
   (if (empty? xs)
     acc
-    (partition (drop n xs) n (cons (take n) xs))))
+    (partition (drop n xs) n (cons (take n xs) acc))))
 
 (fn seq-join (xs [glue ""])
   (implode glue (arr xs)))
