@@ -64,8 +64,8 @@
 
 (fn seq (x)
   (if (inst? x IPharenSeq)
-    x
-    (:: PharenList (seq x))))
+    (-> x (seq))
+    (:: PharenList (seqify x))))
 
 (fn arr (x)
   (cond

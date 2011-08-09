@@ -27,7 +27,7 @@ class PharenList implements IPharenSeq, Iterator{
         return $el1;
     }
 
-    public static function seq(&$xs){
+    public static function seqify(&$xs){
         if(is_array($xs)){
             if(count($xs) === 0){
                 return new PharenEmptyList;
