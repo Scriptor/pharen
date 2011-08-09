@@ -82,7 +82,7 @@ class PharenList implements IPharenSeq, Iterator{
             }
             $list = $list->rest;
         }
-        return $list;
+        return $list->first;
     }
 
     public function offsetSet($offset, $value){
