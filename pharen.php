@@ -1873,6 +1873,7 @@ class SuperGlobalNode extends Node{
 }
 
 class DictNode extends Node{
+    static $delimiter_tokens = array("OpenBraceToken", "CloseBraceToken");
 
     public function compile(){
         // Use an offset when using the (dict... notation for dictionaries
