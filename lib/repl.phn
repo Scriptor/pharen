@@ -11,11 +11,11 @@
 
 (fn work ()
   (fwrite STDOUT "pharen> ")
-  (let [code (readl)])
-  (if (== code "quit")
-    (exit 0)
-    (do
-      (fwrite STDOUT (. (evaluate code) "\n" ))
-      (work))))
+  (let [code (readl)]
+    (if (== code "quit")
+      (exit 0)
+      (do
+        (fwrite STDOUT (. (evaluate code) "\n" ))
+        (work)))))
 
 (work)
