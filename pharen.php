@@ -1169,8 +1169,8 @@ class FuncDefNode extends SpecialForm{
             $this->decrease_indent();
         }
         if($this->is_tail_recursive($last_node)){
-            // $last_expr->get_last_expr() -> The last function call, which provides the new args for the tail recurse
-            // $while_body_nodes -> The body of the function
+            // Final $last_expr->get_last_expr() -> The last function call, which provides the new args for the tail recurse
+            // $while_body_nodes -> The body of the function, anything that's not the last "statementy" expression
             // $while_last_node -> What's returned when tail recursion stops
 
             list($body_nodes, $last_expr) = $this->split_body_tail();
@@ -1182,10 +1182,6 @@ class FuncDefNode extends SpecialForm{
             $body .= count($while_body_nodes) > 0 ? $this->compile_body($while_body_nodes) : "";
             $while_last_node->increase_indent();
             $body .= $while_last_node->compile_return();
-
-            foreach($last_expr->get_body_nodes() as $n){
-                $body .= $n->compile_statement();
-            }
 
             # Ugly hack to force it to find the last function call node
             while(get_class($last_expr->get_last_expr()) !== 'Node'){
@@ -2059,12 +2055,14 @@ class BindingNode extends Node{
         $body = "";
         $last_line = "";
 
-        if(!$this->only_return_body){
-            if($return === True){
-                $last_line = array_pop($this->children)->compile_return();
-            }
-        }else if($this->only_return_body){
-            array_pop($this->children);
+        if($this->only_return_body){
+            $last_node = array_pop($this->children);
+            $last_node_body = $last_node->get_body_nodes();
+            $this->children = array_merge($this->children, $last_node_body);
+        }
+
+        if($return === True){
+            $last_line = array_pop($this->children)->compile_return();
         }
 
         foreach(array_slice($this->children, 2) as $line){
