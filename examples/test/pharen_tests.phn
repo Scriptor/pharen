@@ -6,8 +6,9 @@
 (compile-lang)
 
 (fn run-test (fname)
-    (compile-file (. TESTS-DIR "/tests/" fname ".phn") (. TESTS-DIR "/tmp"))
-    (require (. TESTS-DIR "/tmp/" fname ".php")))
+  (print (. "Running test: " fname "\n"))
+  (compile-file (. TESTS-DIR "/tests/" fname ".phn") (. TESTS-DIR "/tmp"))
+  (require (. TESTS-DIR "/tmp/" fname ".php")))
     
 
 (let [tests [
