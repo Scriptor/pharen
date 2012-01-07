@@ -193,3 +193,41 @@ class PharenEmptyList extends PharenList{
         $this->rest = $this;
     }
 }
+
+class PharenHashMap implements Countable, ArrayAccess{
+    public $hashmap;
+    public $count;
+
+    public function __construct($hashmap, $count=Null){
+        $this->hashmap = $hashmap;
+        if($count){
+            $this->count = $count;
+        }else{
+            $this->count = count($hashmap);
+        }
+    }
+
+    public function assoc($key, $val){
+        $new_hashmap = $hashmap;
+        $new_hashmap[$key] = $val;
+        return new PharenHashMap($new_hashmap, $this->count+1);
+    }
+
+    public function offsetGet($key){
+        return $this->hashmap[$key];
+    }
+
+    public function offsetSet($key, $val){
+    }
+
+    public function offsetUnset($key){
+    }
+
+    public function offsetExists($key){
+        return isset($this->hashmap[$key]);
+    }
+
+    public function count(){
+        return $this->count;
+    }
+}
