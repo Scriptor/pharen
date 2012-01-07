@@ -18,3 +18,6 @@
                "imperative" "C",
                "wtf" "Pharen"})
 (check (:dct "functional") "Haskell")
+
+(def new-dct (assoc "logic" "Prolog"))
+(check (:new-dct "logic") "Prolog")
