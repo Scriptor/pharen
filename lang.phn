@@ -87,6 +87,9 @@
 (fn cons (x xs)
   (-> (seq xs) (cons x)))
 
+(fn assoc (key val hm)
+  (-> hm (assoc key val)))
+
 (fn take (n xs)
   (if (zero-or-empty? n xs)
     []
