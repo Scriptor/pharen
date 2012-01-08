@@ -1,11 +1,11 @@
 <?php
-interface IPharenSeq extends Countable, ArrayAccess{
+interface IPharenSeq{
     public function first();
     public function rest();
     public function cons($item);
 }
 
-class PharenList implements IPharenSeq, Iterator{
+class PharenList implements IPharenSeq, Countable, ArrayAccess, Iterator{
     public $first;
     public $rest;
     public $length;
