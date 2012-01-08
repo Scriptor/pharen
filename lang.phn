@@ -67,6 +67,11 @@
     (-> x (seq))
     (:: PharenList (seqify x))))
 
+(fn hashify (x)
+  (if (inst? x PharenHashMap)
+    x
+    (new PharenHashMap x))) ; TODO: Do actual conversion into a hashmap-suitable data structure
+
 (fn arr (x)
   (cond
     ((is-array x) x)
@@ -88,7 +93,7 @@
   (-> (seq xs) (cons x)))
 
 (fn assoc (key val hm)
-  (-> hm (assoc key val)))
+  (-> (hashify hm) (assoc key val)))
 
 (fn take (n xs)
   (if (zero-or-empty? n xs)
