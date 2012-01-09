@@ -72,6 +72,9 @@
     x
     (new PharenHashMap x))) ; TODO: Do actual conversion into a hashmap-suitable data structure
 
+(defmacro lazy (list-expr)
+  '(new PharenLazyList (lambda () ~list-expr)))
+
 (fn arr (x)
   (cond
     ((is-array x) x)
