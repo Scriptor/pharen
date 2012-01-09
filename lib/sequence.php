@@ -217,25 +217,24 @@ class PharenLazyList implements IPharenSeq{
         if($this->first){
             return $this->first;
         }else{
-            list($first, $rest) = $this->get_lambda_result();
-            $this->first = $first;
-            $this->rest = $rest;
+            $this->set_first_and_rest();
             return $this->first;
         }
     }
 
-    public function get_lambda_result(){
+    public function set_first_and_rest(){
         list($lambda, $scope_id) = $this->lambda;
         $result = $lambda($scope_id);
-        return array($result->first, $result->rest);
+        $this->first = $result->first;
+        $this->rest = $result->rest;
     }
 
     public function rest(){
         if($this->rest){
             return $this->rest;
         }else{
-            list($_, $rest) = $this->get_lambda_result();
-            return $rest;
+            $this->set_first_and_rest();
+            return $this->rest;
         }
     }
 
