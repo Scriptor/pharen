@@ -8,7 +8,7 @@ interface IPharenSeq{
 class PharenList implements IPharenSeq, Countable, ArrayAccess, Iterator{
     public $first;
     public $rest;
-    public $length;
+    public $length = Null;
     public $iterator_key = 0;
     public $iterator_el;
     public $arr;
@@ -64,7 +64,12 @@ class PharenList implements IPharenSeq, Countable, ArrayAccess, Iterator{
     }
 
     public function count(){
-        return $this->length;
+        if($this->length){
+            return $this->length;
+        }else{
+            $this->length = 1 + $this->rest()->count();
+            return $this->length;
+        }
     }
 
     public function offsetExists($offset){
@@ -197,6 +202,7 @@ class PharenEmptyList extends PharenList{
 class PharenLazyList implements IPharenSeq{
     public $first = Null;
     public $rest = Null;
+    public $length = Null;
     public $lambda;
 
     public function __construct($lambda){
@@ -234,7 +240,12 @@ class PharenLazyList implements IPharenSeq{
     }
 
     public function count(){
-
+        if($this->length){
+            return $this->length;
+        }else{
+            $this->length = 1 + $this->rest()->count();
+            return $this->length;
+        }
     }
 
     public function cons($value){
