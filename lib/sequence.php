@@ -194,6 +194,54 @@ class PharenEmptyList extends PharenList{
     }
 }
 
+class PharenLazyList implements IPharenSeq{
+    public $first = Null;
+    public $rest = Null;
+    public $lambda;
+
+    public function __construct($lambda){
+        $this->lambda = $lambda;
+    }
+
+    public function seq(){
+        return $this;
+    }
+
+    public function first(){
+        if($this->first){
+            return $this->first;
+        }else{
+            list($first, $rest) = $this->get_lambda_result();
+            $this->first = $first;
+            $this->rest = $rest;
+            return $this->first;
+        }
+    }
+
+    public function get_lambda_result(){
+        list($lambda, $scope_id) = $this->lambda;
+        $result = $lambda($scope_id);
+        return array($result->first, $result->rest);
+    }
+
+    public function rest(){
+        if($this->rest){
+            return $this->rest;
+        }else{
+            list($_, $rest) = $this->get_lambda_result();
+            return $rest;
+        }
+    }
+
+    public function count(){
+
+    }
+
+    public function cons($value){
+        return new PharenList($value, $this, Null);
+    }
+}
+
 class PharenHashMap implements Countable, ArrayAccess{
     public $hashmap;
     public $count;
