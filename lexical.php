@@ -24,7 +24,7 @@ class Lexical{
         self::$scopes[$ns][$id][$closure_id][$var] =& $val;
     }
 
-    public function get_lexical_binding($ns, $id, $var, $closure_id){
+    public static function get_lexical_binding($ns, $id, $var, $closure_id){
         return self::$scopes[$ns][$id][$closure_id][$var];
     }
 }
