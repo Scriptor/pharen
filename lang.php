@@ -50,6 +50,15 @@ function seq($x){
 	}
 }
 
+function hashify($x){
+	if(($x instanceof PharenHashMap)){
+		return $x;
+	}
+	else{
+		return new PharenHashMap($x);
+	}
+}
+
 function arr($x){
 	
 	 Null;
@@ -70,7 +79,7 @@ function cons($x, $xs){
 }
 
 function assoc($key, $val, $hm){
-	return $hm->assoc($key, $val);
+	return hashify($hm)->assoc($key, $val);
 }
 
 function take($n, $xs){
@@ -78,7 +87,7 @@ function take($n, $xs){
 		return array();
 	}
 	else{
-		return cons(seq($xs)->first, take(($n - 1), seq($xs)->rest));
+		return cons(seq($xs)->first(), take(($n - 1), seq($xs)->rest()));
 	}
 }
 
@@ -88,7 +97,7 @@ function drop($n, $xs){
 				return $xs;
 		}
 		$__tailrecursetmp0 = ($n - 1);
-		$__tailrecursetmp1 = seq($xs)->rest;
+		$__tailrecursetmp1 = seq($xs)->rest();
 		$n = $__tailrecursetmp0;
 		$xs = $__tailrecursetmp1;
 	}
@@ -99,8 +108,8 @@ function reverse($xs, $acc=array()){
 		if(empty__question($xs)){
 				return $acc;
 		}
-		$__tailrecursetmp0 = seq($xs)->rest;
-		$__tailrecursetmp1 = cons(seq($xs)->first, $acc);
+		$__tailrecursetmp0 = seq($xs)->rest();
+		$__tailrecursetmp1 = cons(seq($xs)->first(), $acc);
 		$xs = $__tailrecursetmp0;
 		$acc = $__tailrecursetmp1;
 	}
@@ -108,10 +117,10 @@ function reverse($xs, $acc=array()){
 
 function interpose($sep, $xs, $acc=array()){
 	if((count($xs) == 1)){
-		return array(seq($xs)->first);
+		return array(seq($xs)->first());
 	}
 	else{
-		return cons(seq($xs)->first, cons($sep, interpose($sep, seq($xs)->rest)));
+		return cons(seq($xs)->first(), cons($sep, interpose($sep, seq($xs)->rest())));
 	}
 }
 
@@ -146,25 +155,25 @@ function reduce($f, $acc, $xs){
 				return $acc;
 		}
 		$__tailrecursetmp0 = $f;
-		$__tailrecursetmp1 = (is_string($f)?$f(seq($xs)->first, $acc):$f[0](seq($xs)->first, $acc, $f[1]));
-		$__tailrecursetmp2 = seq($xs)->rest;
+		$__tailrecursetmp1 = (is_string($f)?$f(seq($xs)->first(), $acc):$f[0](seq($xs)->first(), $acc, $f[1]));
+		$__tailrecursetmp2 = seq($xs)->rest();
 		$f = $__tailrecursetmp0;
 		$acc = $__tailrecursetmp1;
 		$xs = $__tailrecursetmp2;
 	}
 }
 
-function lang__lambdafunc1($val, $acc, $__closure_id){
-	$new_val_func =& Lexical::get_lexical_binding('lang', 66, '$new_val_func', isset($__closure_id)?$__closure_id:0);;
+function lang__lambdafunc2($val, $acc, $__closure_id){
+	$new_val_func =& Lexical::get_lexical_binding('lang', 71, '$new_val_func', isset($__closure_id)?$__closure_id:0);;
 	return ($acc . (is_string($new_val_func)?$new_val_func($val):$new_val_func[0]($val, $new_val_func[1])));
 }
 
 function reduce_concat($new_val_func, $xs){
-	$__scope_id = Lexical::init_closure("lang", 66);
-	Lexical::bind_lexing("lang", 66, '$new_val_func', $new_val_func);
+	$__scope_id = Lexical::init_closure("lang", 71);
+	Lexical::bind_lexing("lang", 71, '$new_val_func', $new_val_func);
 
 
-	return reduce(array("lang__lambdafunc1", Lexical::get_closure_id("lang", $__scope_id)), "", $xs);
+	return reduce(array("lang__lambdafunc2", Lexical::get_closure_id("lang", $__scope_id)), "", $xs);
 }
 
 function reduce_pairs($f, $acc, $xs){
@@ -174,7 +183,7 @@ function reduce_pairs($f, $acc, $xs){
 		}
 		$__tailrecursetmp0 = $f;
 		$__tailrecursetmp1 = (is_string($f)?$f(each($xs), $acc):$f[0](each($xs), $acc, $f[1]));
-		$__tailrecursetmp2 = seq($xs)->rest;
+		$__tailrecursetmp2 = seq($xs)->rest();
 		$f = $__tailrecursetmp0;
 		$acc = $__tailrecursetmp1;
 		$xs = $__tailrecursetmp2;
@@ -186,7 +195,7 @@ function map($f, $xs){
 		return $xs;
 	}
 	else{
-		return cons((is_string($f)?$f(seq($xs)->first):$f[0](seq($xs)->first, $f[1])), map($f, seq($xs)->rest));
+		return cons((is_string($f)?$f(seq($xs)->first()):$f[0](seq($xs)->first(), $f[1])), map($f, seq($xs)->rest()));
 	}
 }
 
@@ -196,8 +205,8 @@ function filter($f, $coll){
 				return $coll;
 		}
 		else{
-			$x = seq($coll)->first;
-			$xs = seq($coll)->rest;
+			$x = seq($coll)->first();
+			$xs = seq($coll)->rest();
 				if((is_string($f)?$f($x):$f[0]($x, $f[1]))){
 					return cons($x, filter($f, $xs));
 				}
@@ -216,27 +225,27 @@ function until($f, $xs){
 		if(empty__question($xs)){
 				return FALSE;
 		}
-		else if($result = (is_string($f)?$f(seq($xs)->first):$f[0](seq($xs)->first, $f[1]))){
+		else if($result = (is_string($f)?$f(seq($xs)->first()):$f[0](seq($xs)->first(), $f[1]))){
 				return $result;
 		}
 		$__tailrecursetmp0 = $f;
-		$__tailrecursetmp1 = seq($xs)->rest;
+		$__tailrecursetmp1 = seq($xs)->rest();
 		$f = $__tailrecursetmp0;
 		$xs = $__tailrecursetmp1;
 	}
 }
 
-function lang__lambdafunc2($pair, $acc, $__closure_id){
-	$f =& Lexical::get_lexical_binding('lang', 73, '$f', isset($__closure_id)?$__closure_id:0);;
+function lang__lambdafunc3($pair, $acc, $__closure_id){
+	$f =& Lexical::get_lexical_binding('lang', 78, '$f', isset($__closure_id)?$__closure_id:0);;
 	return append((is_string($f)?$f($pair[0], $pair[1]):$f[0]($pair[0], $pair[1], $f[1])), $acc);
 }
 
 function map_pairs($f, $pairs){
-	$__scope_id = Lexical::init_closure("lang", 73);
-	Lexical::bind_lexing("lang", 73, '$f', $f);
+	$__scope_id = Lexical::init_closure("lang", 78);
+	Lexical::bind_lexing("lang", 78, '$f', $f);
 
 
-	return reduce_pairs(array("lang__lambdafunc2", Lexical::get_closure_id("lang", $__scope_id)), array(), $pairs);
+	return reduce_pairs(array("lang__lambdafunc3", Lexical::get_closure_id("lang", $__scope_id)), array(), $pairs);
 }
 
 class MultiManager{
@@ -254,7 +263,7 @@ class MultiManager{
 	}
 	
 }
-function lang__lambdafunc3($val, $__closure_id){
+function lang__lambdafunc4($val, $__closure_id){
 	
 	 Null;
 	if(is_string($val)){
@@ -285,7 +294,7 @@ function lang__lambdafunc3($val, $__closure_id){
 function multi_serialize_args($vals){
 
 
-	return reduce_concat(array("lang__lambdafunc3", Lexical::get_closure_id("lang", Null)), $vals);
+	return reduce_concat(array("lang__lambdafunc4", Lexical::get_closure_id("lang", Null)), $vals);
 }
 
 function multi_serialize_pattern($pattern){
