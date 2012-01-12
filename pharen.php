@@ -362,7 +362,7 @@ class Scope{
 
     public function get_lexical_binding($var_name, $id){
         $value = "Lexical::get_lexical_binding('".Node::$ns."', $id, '$var_name', isset(\$__closure_id)?\$__closure_id:0);";
-        return "$var_name =& $value";
+        return "$var_name = $value";
     }
 
     public function init_namespace_scope(){
