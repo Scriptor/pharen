@@ -1770,7 +1770,7 @@ class CondNode extends SpecialForm{
         foreach($elseif_pairs as $elseif_pair){
             $code .= $this->compile_elseif($elseif_pair, $prefix, $return);
         }
-        return $code;
+        return Node::add_tmp($code);
     }
 
     public function compile_return(){
@@ -1804,6 +1804,7 @@ class LispyIfNode extends CondNode{
         $compile_func = $return ? "compile_return" : "compile_statement";
 
         $cond = $this->children[1]->compile();
+        $tmp_from_cond = Node::add_tmp("");
 
         $code = $prefix ? $this->format_line($prefix."Null;") : "";
         $code .=  $this->format_line("if($cond){")
@@ -1815,7 +1816,7 @@ class LispyIfNode extends CondNode{
                 .$this->children[3]->$compile_func($prefix)
             .$this->format_line("}");
         }
-        return $code;
+        return $tmp_from_cond.$code;
     }
 
     public function compile_return(){
