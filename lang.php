@@ -5,6 +5,10 @@ define("SYSTEM", dirname(__FILE__));
 define("LIB_PATH", (SYSTEM . "/lib/"));
 set_include_path((get_include_path() . PATH_SEPARATOR . LIB_PATH));
 require("sequence.php");
+function prn($s){
+	return print($s);
+}
+
 function zero__question($n){
 	return ($n == 0);
 }
@@ -38,7 +42,7 @@ function zero_or_empty__question($n, $xs){
 }
 
 function empty__question($xs){
-	return (count($xs) === 0);
+	return ($xs instanceof PharenEmptyList);
 }
 
 function seq($x){
@@ -149,6 +153,15 @@ function apply($f, $val){
 	return (is_string($f)?$f($val):$f[0]($val, $f[1]));
 }
 
+function concat($xs1, $xs2){
+	if(empty__question($xs1)){
+		return $xs2;
+	}
+	else{
+		return cons(seq($xs1)->first(), concat(seq($xs1)->rest(), $xs2));
+	}
+}
+
 function reduce($f, $acc, $xs){
 	while(1){
 		if(empty__question($xs)){
@@ -164,13 +177,13 @@ function reduce($f, $acc, $xs){
 }
 
 function lang__lambdafunc2($val, $acc, $__closure_id){
-	$new_val_func =& Lexical::get_lexical_binding('lang', 71, '$new_val_func', isset($__closure_id)?$__closure_id:0);;
+	$new_val_func = Lexical::get_lexical_binding('lang', 73, '$new_val_func', isset($__closure_id)?$__closure_id:0);;
 	return ($acc . (is_string($new_val_func)?$new_val_func($val):$new_val_func[0]($val, $new_val_func[1])));
 }
 
 function reduce_concat($new_val_func, $xs){
-	$__scope_id = Lexical::init_closure("lang", 71);
-	Lexical::bind_lexing("lang", 71, '$new_val_func', $new_val_func);
+	$__scope_id = Lexical::init_closure("lang", 73);
+	Lexical::bind_lexing("lang", 73, '$new_val_func', $new_val_func);
 
 
 	return reduce(array("lang__lambdafunc2", Lexical::get_closure_id("lang", $__scope_id)), "", $xs);
@@ -236,13 +249,13 @@ function until($f, $xs){
 }
 
 function lang__lambdafunc3($pair, $acc, $__closure_id){
-	$f =& Lexical::get_lexical_binding('lang', 78, '$f', isset($__closure_id)?$__closure_id:0);;
+	$f = Lexical::get_lexical_binding('lang', 80, '$f', isset($__closure_id)?$__closure_id:0);;
 	return append((is_string($f)?$f($pair[0], $pair[1]):$f[0]($pair[0], $pair[1], $f[1])), $acc);
 }
 
 function map_pairs($f, $pairs){
-	$__scope_id = Lexical::init_closure("lang", 78);
-	Lexical::bind_lexing("lang", 78, '$f', $f);
+	$__scope_id = Lexical::init_closure("lang", 80);
+	Lexical::bind_lexing("lang", 80, '$f', $f);
 
 
 	return reduce_pairs(array("lang__lambdafunc3", Lexical::get_closure_id("lang", $__scope_id)), array(), $pairs);
