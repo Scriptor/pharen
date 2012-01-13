@@ -63,7 +63,7 @@
   (or (zero? n) (empty? xs)))
 
 (fn empty? (xs)
-  (=== (count xs) 0))
+  (inst? xs PharenEmptyList))
 
 (fn seq (x)
   (if (inst? x IPharenSeq)
