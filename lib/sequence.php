@@ -204,6 +204,7 @@ class PharenLazyList implements IPharenSeq{
     public $rest = Null;
     public $length = Null;
     public $lambda;
+    public $lambda_result = Null;
 
     public function __construct($lambda){
         $this->lambda = $lambda;
@@ -224,9 +225,9 @@ class PharenLazyList implements IPharenSeq{
 
     public function set_first_and_rest(){
         list($lambda, $scope_id) = $this->lambda;
-        $result = $lambda($scope_id);
-        $this->first = $result->first;
-        $this->rest = $result->rest;
+        $this->lambda_result = $lambda($scope_id);
+        $this->first = $this->lambda_result->first();
+        $this->rest = $this->lambda_result->rest();
     }
 
     public function rest(){
