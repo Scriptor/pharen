@@ -146,6 +146,11 @@
 (fn apply (f val)
   ($f val))
 
+(fn concat (xs1 xs2)
+  (if (empty? xs1)
+    xs2
+    (cons (first xs1) (concat (rest xs1) xs2))))
+
 (fn reduce (f acc xs)
   (if (empty? xs)
     acc
