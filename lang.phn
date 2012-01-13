@@ -129,6 +129,14 @@
 (fn seq-join (xs [glue ""])
   (implode glue (arr xs)))
 
+(fn cycle (xs)
+  (lazy (concat xs (cycle xs))))
+
+(fn cycle-with (f xs)
+  (lazy
+    (let [new-xs (map f xs)]
+      (concat xs (cycle-with f new-xs)))))
+
 (fn vals (m)
   (array-values (arr m)))
 
