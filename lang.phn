@@ -126,6 +126,13 @@
     xs
     (cons (take n xs) (partition n (drop n xs)))))
 
+(fn zip-with (f xs ys)
+  (if (or (empty? xs) (empty? ys))
+    []
+    (cons ($f (first xs) (first ys))
+          (zip-with f (rest xs) (rest ys)))))
+
+
 (fn seq-join (xs [glue ""])
   (implode glue (arr xs)))
 
