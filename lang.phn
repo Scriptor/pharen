@@ -41,6 +41,9 @@
 (defmacro print* (&s)
   '(print (. ~@s)))
 
+(fn prn (s)
+  (print s))
+
 (fn zero? (n)
   (== n 0))
 
