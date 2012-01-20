@@ -1738,6 +1738,8 @@ class AccessModifierNode extends SpecialForm{
 
 
 class CondNode extends SpecialForm{
+    public $cond_prev_tmp;
+    public $cond_tmp;
     static $tmp_num = 0;
 
     static function get_tmp_name(){
@@ -1766,29 +1768,65 @@ class CondNode extends SpecialForm{
 
         $code = $prefix === "" ? "" : $this->format_line("").$this->format_line("$prefix Null;");   // Start with newline because current line already has tabs in it.
 
-        $code .= $this->compile_if($if_pair, $prefix, $return);
+        $if_condition = $if_pair->children[0]->compile();
+        $if_then_code_children = array_slice($if_pair->children, 1);
+        $code .= $this->compile_if($if_condition, $if_then_code_children, $prefix, $return);
         foreach($elseif_pairs as $elseif_pair){
-            $code .= $this->compile_elseif($elseif_pair, $prefix, $return);
+            $condition = $elseif_pair->children[0]->compile();
+            $then_code_children = array_slice($elseif_pair->children, 1);
+            #$code = Node::$prev_tmp.Node::$tmp.$code;
+            if($condition == "TRUE" or strtoupper($condition) == "ELSE"){
+                $code .= $this->compile_else($condition, $then_code_children, $prefix, $return);
+            }else{
+                $code .= $this->compile_elseif($condition, $then_code_children, $prefix, $return);
+            }
         }
-        return Node::add_tmp($code);
+        $this->unstore_tmp();
+        return Node::add_tmp($this->cond_prev_tmp.$this->cond_tmp.$code);
     }
 
     public function compile_return(){
         return $this->compile_statement(False, True);
     }
 
-    public function compile_if($pair, $prefix, $return=False, $stmt_type="if"){
-        $condition = $pair->children[0]->compile();
-        $header = $this->format_statement("$stmt_type(".$condition."){");
-        $body = $this->compile_body(array_slice($pair->children, 1), $prefix, $return);
+    public function capture_tmp(){
+        $this->cond_prev_tmp .= Node::$prev_tmp;
+        $this->cond_tmp .= Node::$tmp;
+        Node::$prev_tmp = "";
+        Node::$tmp = "";
+    }
+
+    public function unstore_tmp(){
+        Node::$prev_tmp = $this->cond_prev_tmp;
+        Node::$tmp = $this->cond_tmp;
+        $this->cond_prev_tmp = "";
+        $this->cond_tmp = "";
+    }
+
+    public function compile_header($condition, $stmt_type){
+        if($stmt_type == 'else'){
+            return $this->format_line("else{");
+        }else{
+            $this->capture_tmp();
+            return $this->format_statement("$stmt_type($condition){");
+        }
+    }
+
+    public function compile_if($condition, $then_code_children, $prefix, $return=False, $stmt_type="if"){
+        $header = $this->compile_header($condition, $stmt_type);
+        $body = $this->compile_body($then_code_children, $prefix, $return);
 
         return $header
             .$body
         .$this->format_line("}");
     }
 
-    public function compile_elseif($pair, $prefix, $return=False){
-        return $this->compile_if($pair, $prefix, $return, "else if");
+    public function compile_elseif($condition, $then_code_children, $prefix, $return=False){
+        return $this->compile_if($condition, $then_code_children, $prefix, $return, "else if");
+    }
+
+    public function compile_else($condition, $then_code_children, $prefix, $return=False){
+        return $this->compile_if($condition, $then_code_children, $prefix, $return, "else");
     }
 }
 
@@ -2117,7 +2155,7 @@ class Parser{
     private $tokens;
 
     public function __construct($tokens){
-        self::$INFIX_OPERATORS = array("+", "-", "*", ".", "/", "=", "=&", "<", ">", "<=", ">=", "===", "==", "!=", "!==", "instanceof");
+        self::$INFIX_OPERATORS = array("+", "-", "*", ".", "/", "%", "=", "=&", "<", ">", "<=", ">=", "===", "==", "!=", "!==", "instanceof");
 
         self::$reader_macros = array(
             "'" => "quote",
