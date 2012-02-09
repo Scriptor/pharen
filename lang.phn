@@ -65,6 +65,9 @@
 (fn empty? (xs)
   (inst? xs PharenEmptyList))
 
+(fn seq? (x)
+  (or (is-array x) (inst? x IPharenSeq)))
+
 (fn seq (x)
   (if (inst? x IPharenSeq)
     (-> x (seq))
