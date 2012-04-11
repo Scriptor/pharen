@@ -1070,7 +1070,7 @@ class SpecialForm extends Node{
         return $this->compile_statement();
     }
 
-    public function compile_body($lines=false, $prefix="", $return=False){
+    public function compile_body($lines=false, $prefix="", $return=False, $omit_last_line=False){
         // Compile the body expressions of the special form according to
         // the start index of the first body expression.
         $body = "";
@@ -1079,10 +1079,14 @@ class SpecialForm extends Node{
         $body_index = $lines === false ? $this->body_index : 0;
         $lines = $lines === false ? $this->children : $lines;
         $last = array_pop($lines);
-        if($return){
-            $last_line = $last->compile_return();
-        }else{
-            $last_line = $last->compile_statement($prefix);
+        $last_line = "";
+
+        if(!$omit_last_line){
+            if($return){
+                $last_line = $last->compile_return();
+            }else{
+                $last_line = $last->compile_statement($prefix);
+            }
         }
 
         foreach(array_slice($lines, $body_index) as $child){
@@ -1183,6 +1187,10 @@ class FuncDefNode extends SpecialForm{
             $while_last_node->increase_indent();
             $body .= $while_last_node->compile_return();
 
+            if($last_expr instanceof DoNode){
+                $do_code = $last_expr->compile_without_last();
+                $body .= $do_code;
+            }
             # Ugly hack to force it to find the last function call node
             while(get_class($last_expr->get_last_expr()) !== 'Node'){
                 $last_expr = $last_expr->get_last_expr();
@@ -1690,6 +1698,14 @@ class DoNode extends SpecialForm{
 
     public function compile_statement($prefix=""){
         return $this->compile_body(False, $prefix, False);
+    }
+
+    public function compile_without_last($prefix=""){
+        return $this->compile_body(False, $prefix, False, True);
+    }
+
+    public function get_body_nodes(){
+        return array();
     }
 }
 
@@ -2403,7 +2419,7 @@ function compile_lang(){
     set_flag("no-import-lang");
     set_flag("import-lexi-relative");
     if(!$old_lang_setting){
-        $lang_code = compile_file(COMPILER_SYSTEM . DIRECTORY_SEPARATOR . "lang.phn");
+#        $lang_code = compile_file(COMPILER_SYSTEM . DIRECTORY_SEPARATOR . "lang.phn");
     }
     set_flag("import-lexi-relative", $old_lexi_setting);
     set_flag("no-import-lang", $old_lang_setting);
