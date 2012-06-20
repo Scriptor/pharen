@@ -929,7 +929,8 @@ class LeafNode extends Node{
             '-'=>'_',
             '?'=>'__question',
             '!'=>'__exclam',
-            '*'=>'__star'
+            '*'=>'__star',
+            '.'=>'\\'
         );
         foreach($char_mappings as $char=>$replacement){
             $name = str_replace($char, $replacement, $name);
@@ -973,6 +974,25 @@ class LeafNode extends Node{
         return strlen($this->value) > 1 && !is_numeric($this->value[1]) && !in_array($this->value, self::$reserved) ?
             self::phpfy_name($this->value)
             : $this->value;
+    }
+}
+
+class KeywordCallNode extends Node{
+    public function compile_statement(){
+        $keyword = $this->children[1]->compile();
+        $args = array_slice($this->children, 2);
+        $args_str = "";
+        foreach($args as $arg){
+            $args_str .= $arg->compile();
+        }
+        return $this->format_statement($keyword . " " . $args_str . ";");
+    }
+}
+
+class UseNode extends KeywordCallNode{
+    public function compile_statement(){
+        array_unshift($this->children, Null);
+        return parent::compile_statement();
     }
 }
 
@@ -2225,7 +2245,9 @@ class Parser{
             "new" => array("InstantiationNode", "LeafNode", "LeafNode", self::$values),
             "class" => array("ClassNode", "LeafNode", "LeafNode", self::$values),
             "class-extends" => array("ClassExtendsNode", "LeafNode", "LeafNode", self::$list_form, self::$values),
-            "access" => array("AccessModifierNode", "LeafNode", "LeafNode", self::$values)
+            "access" => array("AccessModifierNode", "LeafNode", "LeafNode", self::$values),
+            "keyword-call" => array("KeywordCallNode", "LeafNode", "LeafNode",  array("LeafNode")),
+            "use" => array("UseNode", "LeafNode", array("LeafNode"))
         );
         
         $this->tokens = $tokens;
@@ -2419,7 +2441,7 @@ function compile_lang(){
     set_flag("no-import-lang");
     set_flag("import-lexi-relative");
     if(!$old_lang_setting){
-#        $lang_code = compile_file(COMPILER_SYSTEM . DIRECTORY_SEPARATOR . "lang.phn");
+        $lang_code = compile_file(COMPILER_SYSTEM . DIRECTORY_SEPARATOR . "lang.phn");
     }
     set_flag("import-lexi-relative", $old_lexi_setting);
     set_flag("no-import-lang", $old_lang_setting);
