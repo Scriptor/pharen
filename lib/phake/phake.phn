@@ -42,8 +42,9 @@
 
 
 (defmacro task (name desc &body)
-  '(fn ~-name () 
-     (print (. "Running " ~name ": " ~desc "\n"))
+  (def name-str name)
+  '(fn ~name () 
+     (print (. "Running " ~name-str ": " ~desc "\n"))
       ~@body))
 
 (compile-with-flag "executable" (. PHAKE-SYSTEM "/phake.phn"))
