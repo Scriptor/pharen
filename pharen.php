@@ -981,10 +981,11 @@ class KeywordCallNode extends Node{
     public function compile_statement(){
         $keyword = $this->children[1]->compile();
         $args = array_slice($this->children, 2);
-        $args_str = "";
+        $compiled_args = "";
         foreach($args as $arg){
-            $args_str .= $arg->compile();
+            $compiled_args []= $arg->compile();
         }
+        $args_str = implode(' ', $compiled_args);
         return $this->format_statement($keyword . " " . $args_str . ";");
     }
 }
