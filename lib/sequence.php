@@ -267,7 +267,7 @@ class PharenHashMap implements Countable, ArrayAccess{
     }
 
     public function assoc($key, $val){
-        $new_hashmap = $hashmap;
+        $new_hashmap = $this->hashmap;
         $new_hashmap[$key] = $val;
         return new PharenHashMap($new_hashmap, $this->count+1);
     }
