@@ -990,6 +990,15 @@ class KeywordCallNode extends Node{
     }
 }
 
+class NamespaceNode extends KeywordCallNode{
+    public function compile_statement(){
+        array_unshift($this->children, Null);
+        $this->children[1]->value = "namespace";
+        RootNode::$ns = parent::compile_statement();
+        return "";
+    }
+}
+
 class UseNode extends KeywordCallNode{
     public function compile_statement(){
         array_unshift($this->children, Null);
@@ -2248,6 +2257,7 @@ class Parser{
             "class-extends" => array("ClassExtendsNode", "LeafNode", "LeafNode", self::$list_form, self::$values),
             "access" => array("AccessModifierNode", "LeafNode", "LeafNode", self::$values),
             "keyword-call" => array("KeywordCallNode", "LeafNode", "LeafNode",  array("LeafNode")),
+            "ns" => array("NamespaceNode", "LeafNode", array("LeafNode")),
             "use" => array("UseNode", "LeafNode", array("LeafNode"))
         );
         

@@ -41,9 +41,6 @@
 (defmacro print* (&s)
   '(print (. ~@s)))
 
-(defmacro ns (s)
-  '(keyword-call namespace ~s))
-
 (fn prn (s)
   (print* s "\n"))
 
