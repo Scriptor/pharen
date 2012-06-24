@@ -861,6 +861,7 @@ class InfixNode extends Node{
 
 class RootNode extends Node{
     public static $ns;
+    public static $ns_string;
 
     public function __construct(){
         // No parent to be passed to the constructor. It's Root all the way down.
@@ -902,8 +903,8 @@ class RootNode extends Node{
 
         $code .= $this->scope->init_lexical_scope().$body;
 
-        if(self::$ns){
-            $code = self::$ns . $code;
+        if(self::$ns_string){
+            $code = self::$ns_string . $code;
         }
         return $hashbang.$php_tag.$code;
     }
@@ -1004,7 +1005,8 @@ class NamespaceNode extends KeywordCallNode{
     public function compile_statement(){
         array_unshift($this->children, Null);
         $this->children[1]->value = "namespace";
-        RootNode::$ns = parent::compile_statement();
+        RootNode::$ns = $this->children[2]->compile();
+        RootNode::$ns_string = parent::compile_statement();
         return "";
     }
 }
@@ -1709,7 +1711,7 @@ class LambdaNode extends FuncDefNode{
         array_splice($this->children, 1, 1);
         array_pop($this->children[1]->children);
         self::$in_lambda_compile = False;
-        return 'array("'.$name.'", Lexical::get_closure_id("'.Node::$ns.'", '.$scope_id_str.'))';
+        return 'array("'.RootNode::$ns.'\\'.$name.'", Lexical::get_closure_id("'.Node::$ns.'", '.$scope_id_str.'))';
     }
 
     public function compile_statement(){
