@@ -721,7 +721,7 @@ class Node implements Iterator, ArrayAccess, Countable{
     public function create_partial($func){
         list($tmp_func, $tmp_name) = $func->get_tmp_func($this->parent);
         Node::$tmp .= $tmp_func;
-        return '"'.$tmp_name.'"';
+        return '"Phantom\\Symfony\\'.$tmp_name.'"';
     }
 
     public function compile($is_statement=False){
@@ -2434,14 +2434,15 @@ function unset_flag($flag){
 }
 
 function compile_file($fname, $output_dir=Null){
-    $ns = basename($fname, EXTENSION);
+    $file = basename($fname, EXTENSION);
+    $ns = str_replace('-', '_', $file);
     Node::$ns = $ns;
 
     $code = file_get_contents($fname);
     $phpcode = compile($code);
  
     $output_dir = $output_dir === Null ? dirname($fname) : $output_dir;
-    $output = $output_dir.DIRECTORY_SEPARATOR.$ns.".php";
+    $output = $output_dir.DIRECTORY_SEPARATOR.$file.".php";
     file_put_contents($output, $phpcode);
     return $phpcode;
 }
