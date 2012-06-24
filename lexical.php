@@ -1,4 +1,5 @@
 <?php
+namespace Pharen;
 class Lexical{
     static $scopes = array();
 
