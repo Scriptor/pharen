@@ -4,8 +4,9 @@ define("COMPILER_SYSTEM", dirname(__FILE__));
 define("EXTENSION", ".phn");
 
 require_once(COMPILER_SYSTEM.DIRECTORY_SEPARATOR.'lexical.php');
-#require_once("lang.php");
 require_once(COMPILER_SYSTEM.DIRECTORY_SEPARATOR."lib/"."sequence.php");
+
+use Pharen\Lexical as Lexical;
 
 // Some utility functions for use in Pharen
 
@@ -880,8 +881,6 @@ class RootNode extends Node{
             $hashbang = $this->format_line("#! /usr/bin/env php");
         }
 
-        if(isset(Flags::$flags['ns']) && Flags::$flags['ns']){
-        }
         $php_tag = $this->format_line("<?php");
         if(!isset(Flags::$flags['no-import-lang']) or Flags::$flags['no-import-lang'] == False){
             $code .= $this->format_line("require_once('".COMPILER_SYSTEM.DIRECTORY_SEPARATOR."lang.php"."');");
@@ -893,6 +892,7 @@ class RootNode extends Node{
             }
             $code .= $this->format_line("require_once(".$prefix.".'".DIRECTORY_SEPARATOR."lexical.php"."');");
         }
+        $code .= $this->format_line("use Pharen\Lexical as Lexical;");
 
         $code .= $this->scope->init_namespace_scope();
         $body = "";
@@ -1403,7 +1403,9 @@ class MacroNode extends FuncDefNode{
             Node::add_tmpfunc('');
             return;
         }else{
-            eval(Node::add_tmpfunc($code));
+            $code = "use Pharen\Lexical as Lexical;\n"
+                .Node::add_tmpfunc($code);
+            eval($code);
             $macronode->evaluated = True;
         }
     }
