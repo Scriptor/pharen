@@ -10,7 +10,7 @@
   "Do stuff with project info here")
 
 (fn project-path ([f ""])
-  (str-replace "\\" "/" (. PROJECT-SYSTEM f)))
+  (str-replace "\\" "/" (path-join PROJECT-SYSTEM f)))
 
 (fn not-dots (dir)
   (and (!== "." dir) (!== ".." dir)))

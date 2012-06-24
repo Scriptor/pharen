@@ -63,7 +63,7 @@
   (or (zero? n) (empty? xs)))
 
 (fn empty? (xs)
-  (inst? xs PharenEmptyList))
+  (or (inst? xs PharenEmptyList) (empty xs)))
 
 (fn seq? (x)
   (or (is-array x) (inst? x IPharenSeq)))

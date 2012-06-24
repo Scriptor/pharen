@@ -43,19 +43,27 @@ function zero_or_empty__question($n, $xs){
 }
 
 function empty__question($xs){
-	return ($xs instanceof PharenEmptyList);
+	
+	$__condtmpvar1 = Null;
+	if(($xs instanceof PharenEmptyList)){
+		$__condtmpvar1 = 		$xs instanceof PharenEmptyList;
+	}
+	else{
+		$__condtmpvar1 = empty($xs);
+	}
+	return $__condtmpvar1;
 }
 
 function seq__question($x){
 	
-	$__condtmpvar1 = Null;
+	$__condtmpvar2 = Null;
 	if(is_array($x)){
-		$__condtmpvar1 = is_array($x);
+		$__condtmpvar2 = is_array($x);
 	}
 	else{
-		$__condtmpvar1 = 		$x instanceof IPharenSeq;
+		$__condtmpvar2 = 		$x instanceof IPharenSeq;
 	}
-	return $__condtmpvar1;
+	return $__condtmpvar2;
 }
 
 function seq($x){
@@ -152,14 +160,14 @@ function partition($n, $xs){
 
 function zip_with($f, $xs, $ys){
 		
-		$__condtmpvar2 = Null;
+		$__condtmpvar3 = Null;
 		if(empty__question($xs)){
-			$__condtmpvar2 = empty__question($xs);
+			$__condtmpvar3 = empty__question($xs);
 		}
 		else{
-			$__condtmpvar2 = empty__question($ys);
+			$__condtmpvar3 = empty__question($ys);
 		}
-	if($__condtmpvar2){
+	if($__condtmpvar3){
 		return array();
 	}
 	else{
