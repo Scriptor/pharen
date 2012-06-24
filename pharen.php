@@ -2459,12 +2459,15 @@ function compile_lang(){
         return;
     $old_lang_setting = isset(Flags::$flags['no-import-lang']) ? Flags::$flags['no-import-lang'] : False;
     $old_lexi_setting = isset(Flags::$flags['import-lexi-relative']) ? Flags::$flags['import-lexi-relative'] : False;
+    $old_executable_setting = isset(Flags::$flags['executable']) ? Flags::$flags['executable'] : False;
     set_flag("no-import-lang");
     set_flag("import-lexi-relative");
+    set_flag("executable", False);
     if(!$old_lang_setting){
         $lang_code = compile_file(COMPILER_SYSTEM . DIRECTORY_SEPARATOR . "lang.phn");
     }
     set_flag("import-lexi-relative", $old_lexi_setting);
     set_flag("no-import-lang", $old_lang_setting);
+    set_flag("executable", $old_executable_setting);
     Flags::$lang_compiled = True;
 }
