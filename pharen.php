@@ -859,6 +859,8 @@ class InfixNode extends Node{
 }
 
 class RootNode extends Node{
+    public static $ns;
+
     public function __construct(){
         // No parent to be passed to the constructor. It's Root all the way down.
         $this->parent = Null;
@@ -873,11 +875,14 @@ class RootNode extends Node{
 
     public function compile(){
         $code = "";
+        $hashbang = "";
         if(isset(Flags::$flags['executable']) && Flags::$flags['executable']){
-            $code .= $this->format_line("#! /usr/bin/env php");
+            $hashbang = $this->format_line("#! /usr/bin/env php");
         }
 
-        $code .= $this->format_line("<?php");
+        if(isset(Flags::$flags['ns']) && Flags::$flags['ns']){
+        }
+        $php_tag = $this->format_line("<?php");
         if(!isset(Flags::$flags['no-import-lang']) or Flags::$flags['no-import-lang'] == False){
             $code .= $this->format_line("require_once('".COMPILER_SYSTEM.DIRECTORY_SEPARATOR."lang.php"."');");
         }else if(Flags::$flags['no-import-lang'] == True){
@@ -894,8 +899,13 @@ class RootNode extends Node{
         foreach($this->children as $child){
             $body .= $child->compile_statement();
         }
+
         $code .= $this->scope->init_lexical_scope().$body;
-        return $code;
+
+        if(self::$ns){
+            $code = self::$ns . $code;
+        }
+        return $hashbang.$php_tag.$code;
     }
 
 }
