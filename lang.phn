@@ -78,6 +78,12 @@
     x
     (new PharenHashMap x))) ; TODO: Do actual conversion into a hashmap-suitable data structure
 
+(fn hash-from-pairs (pairs)
+  (reduce (lambda (pair hm)
+                  (assoc (:pair 0) (:pair 1) hm))
+          {}
+          pairs))
+
 (defmacro lazy (list-expr)
   '(new PharenLazyList (lambda () ~list-expr)))
 
