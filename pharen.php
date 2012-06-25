@@ -395,7 +395,7 @@ class Scope{
         return $code;
     }
 
-    public function find($var_name, $return_value=False, $from_virtual=False, $is_tok=False){
+    public function find($var_name, $return_value=False, $from_virtual=Null, $is_tok=False){
         $bindings = $is_tok ? $this->tok_bindings : $this->bindings;
 
         if($var_name[0] != '$'){
@@ -404,7 +404,10 @@ class Scope{
 
         if(!array_key_exists($var_name, $bindings)){
             if($this->owner->parent !== Null){
-                return $this->owner->parent->get_scope()->find($var_name, $return_value, $this->virtual, $is_tok);
+                // Not virtual if variable was created from a non-virtual scope inside a virtual scope
+                // eg: Anonymous function inside let
+                $virtual = $this->virtual && ($from_virtual === Null || $from_virtual === True);
+                return $this->owner->parent->get_scope()->find($var_name, $return_value, $virtual, $is_tok);
             }else{
                 return False;
             }
@@ -1036,7 +1039,7 @@ class VariableNode extends LeafNode{
 
         if($scope->find_immediate($varname) !== False){
             return $varname;
-        }else if(($id = $scope->find($varname, False, False)) !== False){
+        }else if(($id = $scope->find($varname, False, Null)) !== False){
             $scope->bind_lexical($varname, $id);
             return $varname;
         }else{
@@ -1481,11 +1484,11 @@ class QuoteWrapper{
         $new_tokens = array();
         foreach($tokens as $key=>$tok){
             if($tok->unquoted){
-                $val = $scope->find(LeafNode::phpfy_name(ltrim($tok->value, '-')), True, False, True);
+                $val = $scope->find(LeafNode::phpfy_name(ltrim($tok->value, '-')), True, Null, True);
                 if($val === False){
                     // $val is bound to a node defined outside the macro so we need to
                     // explicitly get its token
-                    $val_node = $scope->find(LeafNode::phpfy_name(ltrim($tok->value, '-')), True, False);
+                    $val_node = $scope->find(LeafNode::phpfy_name(ltrim($tok->value, '-')), True, Null, False);
                     if($val_node instanceof Node){
                         $val = $val_node->convert_to_list();
                     }else{
@@ -1506,7 +1509,7 @@ class QuoteWrapper{
                     $new_tokens[] = $val;
                 }
             }else if($tok->unquote_spliced){
-                $els = $scope->find($tok->value, True, False, True);
+                $els = $scope->find($tok->value, True, Null, True);
                 foreach($els as $el){
                     if($el instanceof PharenCachedList){
                         $flattened = $el->flatten($el->delimiter_tokens);
