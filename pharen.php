@@ -3,9 +3,8 @@ error_reporting(E_ALL | E_NOTICE);
 define("COMPILER_SYSTEM", dirname(__FILE__));
 define("EXTENSION", ".phn");
 
-require_once(COMPILER_SYSTEM.DIRECTORY_SEPARATOR.'lexical.php');
+require_once(COMPILER_SYSTEM.DIRECTORY_SEPARATOR."lang.php");
 require_once(COMPILER_SYSTEM.DIRECTORY_SEPARATOR."lib/"."sequence.php");
-
 use Pharen\Lexical as Lexical;
 
 // Some utility functions for use in Pharen
