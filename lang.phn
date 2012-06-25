@@ -25,6 +25,8 @@
      (TRUE      ~e2)))
 
 (defmacro load (file)
+  (local old-ns (:: RootNode ns))
+  (local old-ns_string (:: RootNode ns-string))
   (local paths (explode PATH_SEPARATOR (get-include-path)))
   (local lib-path (until 
                     (lambda (path)
@@ -33,6 +35,8 @@
                               FALSE))
                     paths))
   (compile-file lib-path)
+  (= (:: RootNode ns) old-ns)
+  (= (:: RootNode ns-string) old-ns-string)
   FALSE)
 
 (defmacro inst? (var cls)

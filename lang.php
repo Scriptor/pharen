@@ -1,5 +1,5 @@
 <?php
-require_once(dirname(__FILE__).'/lexical.php');
+require_once(dirname(__FILE__).'\lexical.php');
 use Pharen\Lexical as Lexical;
 Lexical::$scopes['lang'] = array();
 define("SYSTEM", dirname(__FILE__));
@@ -91,7 +91,7 @@ function lang__lambdafunc1($pair, $hm, $__closure_id){
 function hash_from_pairs($pairs){
 
 
-	return reduce(array("lang__lambdafunc1", Lexical::get_closure_id("lang", Null)), array(), $pairs);
+	return reduce(array("\lang__lambdafunc1", Lexical::get_closure_id("lang", Null)), array(), $pairs);
 }
 
 function arr($x){
@@ -199,7 +199,7 @@ function cycle($xs){
 	Lexical::bind_lexing("lang", 72, '$xs', $xs);
 
 
-	return new PharenLazyList(array("lang__lambdafunc4", Lexical::get_closure_id("lang", $__scope_id)));
+	return new PharenLazyList(array("\lang__lambdafunc4", Lexical::get_closure_id("lang", $__scope_id)));
 }
 
 function lang__lambdafunc6($__closure_id){
@@ -215,7 +215,7 @@ function cycle_with($f, $xs){
 	Lexical::bind_lexing("lang", 74, '$xs', $xs);
 
 
-	return new PharenLazyList(array("lang__lambdafunc6", Lexical::get_closure_id("lang", $__scope_id)));
+	return new PharenLazyList(array("\lang__lambdafunc6", Lexical::get_closure_id("lang", $__scope_id)));
 }
 
 function vals($m){
@@ -263,7 +263,7 @@ function reduce_concat($new_val_func, $xs){
 	Lexical::bind_lexing("lang", 82, '$new_val_func', $new_val_func);
 
 
-	return reduce(array("lang__lambdafunc7", Lexical::get_closure_id("lang", $__scope_id)), "", $xs);
+	return reduce(array("\lang__lambdafunc7", Lexical::get_closure_id("lang", $__scope_id)), "", $xs);
 }
 
 function reduce_pairs($f, $acc, $xs){
@@ -335,7 +335,7 @@ function map_pairs($f, $pairs){
 	Lexical::bind_lexing("lang", 89, '$f', $f);
 
 
-	return reduce_pairs(array("lang__lambdafunc8", Lexical::get_closure_id("lang", $__scope_id)), array(), $pairs);
+	return reduce_pairs(array("\lang__lambdafunc8", Lexical::get_closure_id("lang", $__scope_id)), array(), $pairs);
 }
 
 class MultiManager{
@@ -384,7 +384,7 @@ function lang__lambdafunc9($val, $__closure_id){
 function multi_serialize_args($vals){
 
 
-	return reduce_concat(array("lang__lambdafunc9", Lexical::get_closure_id("lang", Null)), $vals);
+	return reduce_concat(array("\lang__lambdafunc9", Lexical::get_closure_id("lang", Null)), $vals);
 }
 
 function multi_serialize_pattern($pattern){
