@@ -39,7 +39,7 @@ Adding more file names causes each file to be compiled in order:
 $ pharen your_file.phn file2.phn file3.phn fileN.phn
 {% endhighlight %}
 
-Each file is then compiled to the equivalent PHP file, so your_file.php, file2.php, etc.
+Each file is then compiled to the equivalent PHP file, so your\_file.php, file2.php, etc.
 The order in which you specify the files is only important when using [partials](/pharen/reference.html#partials)
 and [macros](/pharen/reference.html#macros) since the compiler stores information related to those in memory.
 If you're not doing either, then you don't have to worry about the order.
