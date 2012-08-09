@@ -1,5 +1,5 @@
 <?php
-require_once(dirname(__FILE__).'\lexical.php');
+require_once(dirname(__FILE__).'/lexical.php');
 use Pharen\Lexical as Lexical;
 Lexical::$scopes['lang'] = array();
 define("SYSTEM", dirname(__FILE__));
