@@ -114,6 +114,9 @@
 (fn assoc (key val hm)
   (-> (hashify hm) (assoc key val)))
 
+(fn get (key hm)
+  (:hm key))
+
 (fn take (n xs)
   (if (zero-or-empty? n xs)
     []
