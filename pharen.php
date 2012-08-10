@@ -723,7 +723,7 @@ class Node implements Iterator, ArrayAccess, Countable{
     public function create_partial($func){
         list($tmp_func, $tmp_name) = $func->get_tmp_func($this->parent);
         Node::$tmp .= $tmp_func;
-        return '"Phantom\\Symfony\\'.$tmp_name.'"';
+        return RootNode::$ns.'"\\\\'.$tmp_name.'"';
     }
 
     public function compile($is_statement=False){
@@ -1713,7 +1713,7 @@ class LambdaNode extends FuncDefNode{
         array_splice($this->children, 1, 1);
         array_pop($this->children[1]->children);
         self::$in_lambda_compile = False;
-        return 'array("'.RootNode::$ns.'\\'.$name.'", Lexical::get_closure_id("'.Node::$ns.'", '.$scope_id_str.'))';
+        return 'array("'.RootNode::$ns.'\\\\'.$name.'", Lexical::get_closure_id("'.Node::$ns.'", '.$scope_id_str.'))';
     }
 
     public function compile_statement(){
