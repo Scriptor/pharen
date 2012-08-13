@@ -69,6 +69,12 @@
 (fn flip (f arg1 arg2)
   ($f arg2 arg1))
 
+(fn comp (&fs)
+  (let [rfs (reverse fs)]
+    (lambda (&args)
+            (let [init (call-user-func-array (first rfs) args)]
+              (reduce #apply init (rest rfs))))))
+
 (fn zero-or-empty? (n xs)
   (or (zero? n) (empty? xs)))
 
