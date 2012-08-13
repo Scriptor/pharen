@@ -45,6 +45,12 @@
 (defmacro print* (&s)
   '(print (. ~@s)))
 
+(defmacro first (xs)
+  '(-> (seq ~xs) (first)))
+
+(defmacro rest (xs)
+  '(-> (seq ~xs) (rest)))
+
 (fn prn (s)
   (print* s "\n"))
 
@@ -96,17 +102,12 @@
     ((is-array x) x)
     ((inst? x "IPharenSeq") (-> x (arr)))))
 
-(defmacro first (xs)
-  '(-> (seq ~xs) (first)))
 
 (defmacro second (xs)
   '(first (rest ~xs)))
 
 (fn first-pair (xs)
   (array-slice xs 0 1))
-
-(defmacro rest (xs)
-  '(-> (seq ~xs) (rest)))
 
 (fn cons (x xs)
   (-> (seq xs) (cons x)))
