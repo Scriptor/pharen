@@ -30,6 +30,23 @@ function flip($f, $arg1, $arg2){
 	return (is_string($f)?$f($arg2, $arg1):$f[0]($arg2, $arg1, $f[1]));
 }
 
+function lang__lambdafunc1($args, $__closure_id){
+	
+		$args = array_slice(func_get_args(), 0);
+		$rfs = Lexical::get_lexical_binding('lang', 50, '$rfs', isset($__closure_id)?$__closure_id:0);;
+	$init = call_user_func_array(seq($rfs)->first(), $args);
+	return reduce("apply", $init, seq($rfs)->rest());
+}
+
+function comp($fs){
+
+	$fs = array_slice(func_get_args(), 0);
+	$rfs = reverse($fs);
+		$__scope_id = Lexical::init_closure("lang", 50);
+		Lexical::bind_lexing("lang", 50, '$rfs', $rfs);
+	return array("\\lang__lambdafunc1", Lexical::get_closure_id("lang", $__scope_id));
+}
+
 function zero_or_empty__question($n, $xs){
 	
 	$__condtmpvar0 = Null;
@@ -84,14 +101,14 @@ function hashify($x){
 	}
 }
 
-function lang__lambdafunc1($pair, $hm, $__closure_id){
+function lang__lambdafunc2($pair, $hm, $__closure_id){
 	return assoc($pair[0], $pair[1], $hm);
 }
 
 function hash_from_pairs($pairs){
 
 
-	return reduce(array("\lang__lambdafunc1", Lexical::get_closure_id("lang", Null)), array(), $pairs);
+	return reduce(array("\\lang__lambdafunc2", Lexical::get_closure_id("lang", Null)), array(), $pairs);
 }
 
 function arr($x){
@@ -115,6 +132,10 @@ function cons($x, $xs){
 
 function assoc($key, $val, $hm){
 	return hashify($hm)->assoc($key, $val);
+}
+
+function get($key, $hm){
+	return $hm[$key];
 }
 
 function take($n, $xs){
@@ -189,33 +210,33 @@ function seq_join($xs, $glue=""){
 	return implode($glue, arr($xs));
 }
 
-function lang__lambdafunc4($__closure_id){
-	$xs = Lexical::get_lexical_binding('lang', 72, '$xs', isset($__closure_id)?$__closure_id:0);;
+function lang__lambdafunc5($__closure_id){
+	$xs = Lexical::get_lexical_binding('lang', 77, '$xs', isset($__closure_id)?$__closure_id:0);;
 	return concat($xs, cycle($xs));
 }
 
 function cycle($xs){
-	$__scope_id = Lexical::init_closure("lang", 72);
-	Lexical::bind_lexing("lang", 72, '$xs', $xs);
+	$__scope_id = Lexical::init_closure("lang", 77);
+	Lexical::bind_lexing("lang", 77, '$xs', $xs);
 
 
-	return new PharenLazyList(array("\lang__lambdafunc4", Lexical::get_closure_id("lang", $__scope_id)));
+	return new PharenLazyList(array("\\lang__lambdafunc5", Lexical::get_closure_id("lang", $__scope_id)));
 }
 
-function lang__lambdafunc6($__closure_id){
-		$f = Lexical::get_lexical_binding('lang', 74, '$f', isset($__closure_id)?$__closure_id:0);;
-		$xs = Lexical::get_lexical_binding('lang', 74, '$xs', isset($__closure_id)?$__closure_id:0);;
+function lang__lambdafunc7($__closure_id){
+		$f = Lexical::get_lexical_binding('lang', 79, '$f', isset($__closure_id)?$__closure_id:0);;
+		$xs = Lexical::get_lexical_binding('lang', 79, '$xs', isset($__closure_id)?$__closure_id:0);;
 	$new_xs = map($f, $xs);
 	return concat($xs, cycle_with($f, $new_xs));
 }
 
 function cycle_with($f, $xs){
-	$__scope_id = Lexical::init_closure("lang", 74);
-	Lexical::bind_lexing("lang", 74, '$f', $f);
-	Lexical::bind_lexing("lang", 74, '$xs', $xs);
+	$__scope_id = Lexical::init_closure("lang", 79);
+	Lexical::bind_lexing("lang", 79, '$f', $f);
+	Lexical::bind_lexing("lang", 79, '$xs', $xs);
 
 
-	return new PharenLazyList(array("\lang__lambdafunc6", Lexical::get_closure_id("lang", $__scope_id)));
+	return new PharenLazyList(array("\\lang__lambdafunc7", Lexical::get_closure_id("lang", $__scope_id)));
 }
 
 function vals($m){
@@ -253,17 +274,17 @@ function reduce($f, $acc, $xs){
 	}
 }
 
-function lang__lambdafunc7($val, $acc, $__closure_id){
-	$new_val_func = Lexical::get_lexical_binding('lang', 82, '$new_val_func', isset($__closure_id)?$__closure_id:0);;
+function lang__lambdafunc8($val, $acc, $__closure_id){
+	$new_val_func = Lexical::get_lexical_binding('lang', 87, '$new_val_func', isset($__closure_id)?$__closure_id:0);;
 	return ($acc . (is_string($new_val_func)?$new_val_func($val):$new_val_func[0]($val, $new_val_func[1])));
 }
 
 function reduce_concat($new_val_func, $xs){
-	$__scope_id = Lexical::init_closure("lang", 82);
-	Lexical::bind_lexing("lang", 82, '$new_val_func', $new_val_func);
+	$__scope_id = Lexical::init_closure("lang", 87);
+	Lexical::bind_lexing("lang", 87, '$new_val_func', $new_val_func);
 
 
-	return reduce(array("\lang__lambdafunc7", Lexical::get_closure_id("lang", $__scope_id)), "", $xs);
+	return reduce(array("\\lang__lambdafunc8", Lexical::get_closure_id("lang", $__scope_id)), "", $xs);
 }
 
 function reduce_pairs($f, $acc, $xs){
@@ -325,17 +346,17 @@ function until($f, $xs){
 	}
 }
 
-function lang__lambdafunc8($pair, $acc, $__closure_id){
-	$f = Lexical::get_lexical_binding('lang', 89, '$f', isset($__closure_id)?$__closure_id:0);;
+function lang__lambdafunc9($pair, $acc, $__closure_id){
+	$f = Lexical::get_lexical_binding('lang', 94, '$f', isset($__closure_id)?$__closure_id:0);;
 	return append((is_string($f)?$f($pair[0], $pair[1]):$f[0]($pair[0], $pair[1], $f[1])), $acc);
 }
 
 function map_pairs($f, $pairs){
-	$__scope_id = Lexical::init_closure("lang", 89);
-	Lexical::bind_lexing("lang", 89, '$f', $f);
+	$__scope_id = Lexical::init_closure("lang", 94);
+	Lexical::bind_lexing("lang", 94, '$f', $f);
 
 
-	return reduce_pairs(array("\lang__lambdafunc8", Lexical::get_closure_id("lang", $__scope_id)), array(), $pairs);
+	return reduce_pairs(array("\\lang__lambdafunc9", Lexical::get_closure_id("lang", $__scope_id)), array(), $pairs);
 }
 
 class MultiManager{
@@ -353,7 +374,7 @@ class MultiManager{
 	}
 	
 }
-function lang__lambdafunc9($val, $__closure_id){
+function lang__lambdafunc10($val, $__closure_id){
 	
 	 Null;
 	if(is_string($val)){
@@ -384,7 +405,7 @@ function lang__lambdafunc9($val, $__closure_id){
 function multi_serialize_args($vals){
 
 
-	return reduce_concat(array("\lang__lambdafunc9", Lexical::get_closure_id("lang", Null)), $vals);
+	return reduce_concat(array("\\lang__lambdafunc10", Lexical::get_closure_id("lang", Null)), $vals);
 }
 
 function multi_serialize_pattern($pattern){
