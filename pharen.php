@@ -1201,16 +1201,11 @@ class FuncDefNode extends SpecialForm{
         $this->params = $this->children[2]->children;
 
         $params = $this->get_param_names($this->params);
-        $params_string = $this->build_params_string($params);
         $this->bind_params($params);
         list($body_nodes, $last_node) = $this->split_body_last();
 
-        $body = "";
-        $params_count = count($this->params);
-        if($params_count > 0 && $this->params[$params_count-1] instanceof SplatNode){
-            $param = $params[$params_count-1];
-            $body .= $this->format_line("").$this->format_line_indent($param." = array_slice(func_get_args(), ".($params_count-1).");");
-        }
+        $body = $this->compile_splat_code($params);
+        $params_string = $this->build_params_string($params);
 
         Node::$in_func++;
         if(Node::$in_func > 1){
@@ -1291,6 +1286,17 @@ class FuncDefNode extends SpecialForm{
 
     public function compile_last($node){
         return $node->compile_return($this->indent."\t");
+    }
+
+    public function compile_splat_code($params){
+        $params_count = count($this->params);
+        $code = "";
+        if($params_count > 0 && $this->params[$params_count-1] instanceof SplatNode){
+            $param = $params[count($params)-1];
+            array_pop($params);
+            $code = $this->format_line("").$this->format_line_indent($param." = array_slice(func_get_args(), ".($params_count-1).");");
+        }
+        return $code;
     }
 
     public function get_param_lexings($varnames){
@@ -1723,6 +1729,17 @@ class LambdaNode extends FuncDefNode{
     public function compile_return(){
         // Indent because FuncDefNode decreases an indent
         return $this->format_line_indent("return ".$this->compile().";");
+    }
+
+    public function compile_splat_code($params){
+        $params_count = count($this->params);
+        $code = "";
+        if($params_count > 1 && $this->params[$params_count-2] instanceof SplatNode){
+            $param = $params[count($params)-2];
+            array_splice($params, count($params)-2, 1);
+            $code = $this->format_line("").$this->format_line_indent($param." = array_slice(func_get_args(), ".($params_count-2).");");
+        }
+        return $code;
     }
 }
 
