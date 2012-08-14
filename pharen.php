@@ -1190,7 +1190,8 @@ class FuncDefNode extends SpecialForm{
     }
 
     public function compile(){
-        return $this->compile_statement();
+        $this->compile_statement();
+        return '"'.$this->name.'"';
     }
 
     public function compile_statement($prefix=""){
@@ -2120,6 +2121,10 @@ class ListNode extends LiteralNode{
 
 class DefNode extends Node{
 
+    public function compile(){
+        return $this->compile_statement();
+    }
+
     public function compile_statement($prefix=""){
         $this->scope = $this->parent->get_scope();
         $varname = $this->children[1]->compile();
@@ -2490,7 +2495,7 @@ function compile_lang(){
     set_flag("import-lexi-relative");
     set_flag("executable", False);
     if(!$old_lang_setting){
-#        $lang_code = compile_file(COMPILER_SYSTEM . DIRECTORY_SEPARATOR . "lang.phn");
+        $lang_code = compile_file(COMPILER_SYSTEM . DIRECTORY_SEPARATOR . "lang.phn");
     }
     set_flag("import-lexi-relative", $old_lexi_setting);
     set_flag("no-import-lang", $old_lang_setting);
