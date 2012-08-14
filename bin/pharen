@@ -25,11 +25,15 @@ if(__FILE__ === realpath($_SERVER['SCRIPT_NAME'])){
     }else{
         $php_code = "";
     }
-    //require(SYSTEM . "/lang.php");
-    foreach($input_files as $file){
-        $php_code .= compile_file($file);
-    }
-    if(isset($_SERVER['REQUEST_METHOD'])){
-        echo "<pre>$php_code</pre>";
+
+    if(count($input_files) === 0){
+        include($pharen_dir.DIRECTORY_SEPARATOR."lib".DIRECTORY_SEPARATOR."repl.php");
+    }else{
+        foreach($input_files as $file){
+            $php_code .= compile_file($file);
+        }
+        if(isset($_SERVER['REQUEST_METHOD'])){
+            echo "<pre>$php_code</pre>";
+        }
     }
 }
