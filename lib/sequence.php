@@ -261,7 +261,7 @@ class PharenLazyList implements IPharenSeq{
     }
 }
 
-class PharenHashMap implements Countable, ArrayAccess{
+class PharenHashMap implements Countable, ArrayAccess, Iterator{
     public $hashmap;
     public $count;
 
@@ -272,6 +272,14 @@ class PharenHashMap implements Countable, ArrayAccess{
         }else{
             $this->count = count($hashmap);
         }
+    }
+
+    public function __toString(){
+        $pairs = array();
+        foreach($this as $k=>$v){
+            $pairs []= "$k $v";
+        }
+        return "{".implode(", ", $pairs)."}";
     }
 
     public function assoc($key, $val){
@@ -296,5 +304,25 @@ class PharenHashMap implements Countable, ArrayAccess{
 
     public function count(){
         return $this->count;
+    }
+
+    public function current(){
+        return current($this->hashmap);
+    }
+
+    public function key(){
+        return key($this->hashmap);
+    }
+
+    public function next(){
+        return next($this->hashmap);
+    }
+
+    public function rewind(){
+        return reset($this->hashmap);
+    }
+
+    public function valid(){
+        return isset($this->hashmap[key($this->hashmap)]);
     }
 }
