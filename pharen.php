@@ -2099,7 +2099,7 @@ class ListNode extends LiteralNode{
             $el = $this->children[$x];
             // Restore tmp since the test compile below may mess with it
             $tmp = Node::$tmp;
-            if($el instanceof Node && $el->compile() == '..'){
+            if($el instanceof Node && $el->value == '..'){
                 Node::$tmp = $tmp;
                 return $x;
             }
