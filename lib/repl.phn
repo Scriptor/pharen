@@ -4,14 +4,27 @@
 
 (require-once (. PHAREN_SYSTEM "/pharen.php"))
 
-(fn readl ()
-  (trim (fgets STDIN)))
+(if (function-exists "readline")
+  (fn prompt (prompt)
+    (let [line (trim (readline prompt))]
+      (readline-add-history line)
+      line))
+  (fn prompt (prompt)
+    (fwrite STDOUT prompt)
+    (trim (fgets STDIN))))
+
 (fn evaluate (code)
-  (eval (. "?>" (compile code))))
+  (let [embedded-code (. "(fn eval-func () " code ")")
+        compiled-code (compile embedded-code)
+        no-func-def (str-replace "function eval_func(){" "" compiled-code)
+        final-code (substr 
+                     no-func-def
+                     0
+                     (- (strrpos no-func-def "}") 1))]
+    (eval (. "?>" final-code))))
 
 (fn work ()
-  (fwrite STDOUT "pharen> ")
-  (let [code (readl)]
+  (let [code (prompt "pharen> ")]
     (if (== code "quit")
       (exit 0)
       (do
