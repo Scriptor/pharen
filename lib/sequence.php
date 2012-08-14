@@ -47,6 +47,14 @@ class PharenList implements IPharenSeq, Countable, ArrayAccess, Iterator{
         $this->iterator_el = $this;
     }
 
+    public function __toString(){
+        $nums = array();
+        foreach($this as $num){
+            $nums []= $num;
+        }
+        return "[" . implode(", ", $nums) . "]";
+    }
+
     public function seq(){
         return $this;
     }
