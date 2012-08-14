@@ -1213,7 +1213,7 @@ class FuncDefNode extends SpecialForm{
         }
         if($this->is_tail_recursive($last_node)){
             // Final $last_expr->get_last_expr() -> The last function call, which provides the new args for the tail recurse
-            // $while_body_nodes -> The body of the function, anything that's not the last "statementy" expression
+            // $while_body_nodes -> The body of the function, anything that's not the last "statementy" expression and isn't a return
             // $while_last_node -> What's returned when tail recursion stops
 
             list($body_nodes, $last_expr) = $this->split_body_tail();
@@ -1226,14 +1226,16 @@ class FuncDefNode extends SpecialForm{
             $while_last_node->increase_indent();
             $body .= $while_last_node->compile_return();
 
-            if($last_expr instanceof DoNode){
-                $do_code = $last_expr->compile_without_last();
-                $body .= $do_code;
-            }
             # Ugly hack to force it to find the last function call node
             while(get_class($last_expr->get_last_expr()) !== 'Node'){
                 $last_expr = $last_expr->get_last_expr();
             }
+            
+            if($last_expr instanceof DoNode){
+                $do_code = $last_expr->compile_without_last();
+                $body .= $do_code;
+            }
+
             $new_param_values = array_slice($last_expr->get_last_expr()->children, 1);
             $params_len = count($new_param_values);
             for($x=0; $x<$params_len; $x++){
@@ -2488,7 +2490,7 @@ function compile_lang(){
     set_flag("import-lexi-relative");
     set_flag("executable", False);
     if(!$old_lang_setting){
-        $lang_code = compile_file(COMPILER_SYSTEM . DIRECTORY_SEPARATOR . "lang.phn");
+#        $lang_code = compile_file(COMPILER_SYSTEM . DIRECTORY_SEPARATOR . "lang.phn");
     }
     set_flag("import-lexi-relative", $old_lexi_setting);
     set_flag("no-import-lang", $old_lang_setting);
