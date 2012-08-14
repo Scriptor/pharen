@@ -13,7 +13,7 @@
     (fwrite STDOUT prompt)
     (trim (fgets STDIN))))
 
-(fn evaluate (code)
+(fn compile-code (code)
   (let [embedded-code (. "(fn eval-func () " code ")")
         compiled-code (compile embedded-code)
         no-func-def (str-replace "function eval_func(){" "" compiled-code)
@@ -21,14 +21,16 @@
                      no-func-def
                      0
                      (- (strrpos no-func-def "}") 1))]
-    (eval (. "?>" final-code))))
+    final-code))
 
 (fn work ()
   (let [code (prompt "pharen> ")]
     (if (== code "quit")
       (exit 0)
       (do
-        (fwrite STDOUT (. (evaluate code) "\n" ))
+        (local compiled-code (compile-code code))
+        (prn (eval (. "?>" compiled-code)))
         (work)))))
 
+(compile-lang)
 (work)
