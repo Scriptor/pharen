@@ -306,7 +306,7 @@ class FuncInfo{
             $var = new VariableNode($body, array(), "arg$x");
             $body->add_child($var);
         }
-        return array($function->compile().$parent->format_line(""), $name);
+        return array($function->compile_statement().$parent->format_line(""), $name);
     }
 
 }
