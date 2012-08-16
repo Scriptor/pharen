@@ -722,7 +722,7 @@ class Node implements Iterator, ArrayAccess, Countable{
 
     public function create_partial($func){
         list($tmp_func, $tmp_name) = $func->get_tmp_func($this->parent);
-        Node::$tmp .= $tmp_func;
+        Node::$tmpfunc .= $tmp_func;
         return RootNode::$ns.'"\\\\'.$tmp_name.'"';
     }
 
