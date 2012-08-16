@@ -23,7 +23,7 @@ else{
 }
 function compile_code($code){
 	$embedded_code = ("(fn eval-func () " . $code . ")");
-	$compiled_code = compile($embedded_code);
+	$compiled_code = compile($embedded_code, NULL, "repl_input");
 	$no_func_def = str_replace("function eval_func(){", "", $compiled_code);
 	$final_code = substr($no_func_def, 0, (strrpos($no_func_def, "}") - 1));
 	return $final_code;

@@ -15,7 +15,7 @@
 
 (fn compile-code (code)
   (let [embedded-code (. "(fn eval-func () " code ")")
-        compiled-code (compile embedded-code)
+        compiled-code (compile embedded-code NULL "repl_input")
         no-func-def (str-replace "function eval_func(){" "" compiled-code)
         final-code (substr 
                      no-func-def
