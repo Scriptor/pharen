@@ -218,6 +218,10 @@ class PharenLazyList implements IPharenSeq{
         $this->lambda = $lambda;
     }
 
+    public function __toString(){
+        return "<".__CLASS__.">";
+    }
+
     public function seq(){
         return $this;
     }
