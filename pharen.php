@@ -1412,7 +1412,7 @@ class MacroNode extends FuncDefNode{
             }
         }
         $code = $macronode->parent_compile();
-        if($macronode->evaluated){
+        if($macronode->evaluated || function_exists($name)){
             Node::add_tmpfunc('');
             return;
         }else{
