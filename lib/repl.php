@@ -17,7 +17,7 @@ if(function_exists("readline")){
 else{
 	function prompt($prompt){
 		fwrite(STDOUT, $prompt);
-		return trim(fgets(STDIN));
+		return trim(stream_get_line(STDIN, 1024, PHP_EOL));
 	}
 	
 }

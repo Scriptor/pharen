@@ -11,7 +11,7 @@
       line))
   (fn prompt (prompt)
     (fwrite STDOUT prompt)
-    (trim (fgets STDIN))))
+    (trim (stream-get-line STDIN 1024 PHP_EOL))))
 
 (fn compile-code (code)
   (let [embedded-code (. "(fn eval-func () " code ")")
