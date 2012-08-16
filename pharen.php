@@ -2475,7 +2475,10 @@ function compile_file($fname, $output_dir=Null){
     return $phpcode;
 }
  
-function compile($code, $root=Null){
+function compile($code, $root=Null, $ns=Null){
+    if($ns !== Null){
+        Node::$ns = $ns;
+    }
     $lexer = new Lexer($code);
     $tokens = $lexer->lex();
  
