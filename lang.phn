@@ -159,6 +159,12 @@
 (fn seq-join (xs [glue ""])
   (implode glue (arr xs)))
 
+(fn infinity ([n 0])
+  (lazy (cons n (infinity (+ n 1)))))
+
+(fn repeat (x)
+  (lazy (cons x (repeat x))))
+
 (fn cycle (xs)
   (lazy (concat xs (cycle xs))))
 
