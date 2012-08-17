@@ -1,5 +1,8 @@
 #!/bin/bash
-pharen_dir=$(dirname $(readlink -f $0))
+pushd `dirname $0` > /dev/null
+pharen_dir=`pwd`
+popd > /dev/null
+echo $pharen_dir
 if [ ! -e "/usr/local/bin/pharen" ]
 then
     ln -s $pharen_dir/bin/pharen /usr/local/bin/pharen
