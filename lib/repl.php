@@ -1,5 +1,5 @@
 <?php
-require_once('/Users/historium/pharen/lang.php');
+require_once('C:\pharen\lang.php');
 use Pharen\Lexical as Lexical;
 Lexical::$scopes['repl'] = array();
 require_once("path.php");
