@@ -27,6 +27,8 @@ if(__FILE__ === realpath($_SERVER['SCRIPT_NAME'])){
     }
 
     if(count($input_files) === 0){
+        compile_file($pharen_dir.DIRECTORY_SEPARATOR."lib".DIRECTORY_SEPARATOR."repl.phn");
+        compile_file($pharen_dir.DIRECTORY_SEPARATOR."lib".DIRECTORY_SEPARATOR."path.phn");
         include($pharen_dir.DIRECTORY_SEPARATOR."lib".DIRECTORY_SEPARATOR."repl.php");
     }else{
         foreach($input_files as $file){
