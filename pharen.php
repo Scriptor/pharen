@@ -1147,7 +1147,7 @@ class SpecialForm extends Node{
         foreach($body->children as $c){
             $c->parent = $body;
         }
-        $last_body_nodes = $last_child->get_body_nodes();
+        $last_body_nodes = $last_child->get_body_nodes(True);
         if(count($last_body_nodes) > 0){
             $last_body_node = $last_body_nodes[0]; // [0] because get_body_nodes returns [$body]
             $body->children[] = $last_body_node;
@@ -1232,9 +1232,8 @@ class FuncDefNode extends SpecialForm{
                 $last_expr = $last_expr->get_last_expr();
             }
             
-            if($last_expr instanceof DoNode){
-                $do_code = $last_expr->compile_without_last();
-                $body .= $do_code;
+            if($last_expr instanceof DoNode or $last_expr instanceof BindingNode){
+                $body .= $last_expr->compile_without_last();
             }
 
             $new_param_values = array_slice($last_expr->get_last_expr()->children, 1);
@@ -1770,8 +1769,12 @@ class DoNode extends SpecialForm{
         return $this->compile_body(False, $prefix, False, True);
     }
 
-    public function get_body_nodes(){
-        return array();
+    public function get_body_nodes($recur=False){
+        if(!$recur){
+            return parent::get_body_nodes();
+        }else{
+            return array();
+        }
     }
 }
 
@@ -2181,6 +2184,7 @@ class BindingNode extends Node{
         $last_line = "";
 
         if($this->only_return_body){
+            $stashed_children = $this->children;
             $last_node = array_pop($this->children);
             $last_node_body = $last_node->get_body_nodes();
             $this->children = array_merge($this->children, $last_node_body);
@@ -2198,7 +2202,13 @@ class BindingNode extends Node{
         foreach($varnames as $varname){
             $lexings .= $scope->get_lexing($varname);
         }
-        return $this->scope->get_lexical_bindings().$code.$lexings.$body.$last_line;
+        $code = $this->scope->get_lexical_bindings().$code.$lexings.$body.$last_line;
+
+        // Restore children because only_return_body is TODO: MUTATING GAAH
+        if($this->only_return_body){
+            $this->children = $stashed_children;
+        }
+        return $code;
     }
 
     public function compile_return(){
@@ -2210,10 +2220,19 @@ class BindingNode extends Node{
         return $this->children[$count-1];
     }
 
-    public function get_body_nodes(){
-        $body = clone $this;
-        $body->only_return_body = True;
-        return array($body);
+    public function get_body_nodes($recur=False){
+        if(!$recur){
+            $body = clone $this;
+            $body->only_return_body = True;
+            return array($body);
+        }else{
+            return array();
+        }
+    }
+
+    public function compile_without_last($prefix=""){
+        $this->only_return_body = True;
+        return $this->compile_statement();
     }
 
     public function get_last_func_call(){
