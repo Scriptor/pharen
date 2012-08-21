@@ -33,8 +33,7 @@
   (let [code (prompt "pharen> ")]
     (if (== code "quit")
       (exit 0)
-      (do
-        (local compiled-code (compile-code code))
+      (let [compiled-code (compile-code code)]
         (prn (eval (. "?>" compiled-code)))
         (work)))))
 
