@@ -2276,14 +2276,8 @@ class PlambdaDefNode extends FuncDefNode {
             $body.
             $this->format_line("}").$this->format_line("");
 
-        if(Node::$in_func > 1){
-            Node::$in_func--;
-            Node::$tmpfunc .= $code;
-            return $this->format_line("");
-        }else{
             Node::$in_func--;
             return Node::add_tmpfunc($code);
-        }
     }
 
 
