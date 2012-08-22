@@ -2264,32 +2264,15 @@ class BindingNode extends Node{
 }
 
 
-class PlambdaDefNode extends SpecialForm{
-    static $functions;
-
-    protected $body_index = 3;
-    public $scope;
-
-    public $params = array();
-    public $is_partial;
-
-    static function is_pharen_func($func_name){
-        return isset(self::$functions[$func_name]);
-    }
-
-    static function get_pharen_func($func_name){
-        return self::$functions[$func_name];
-    }
+class PlambdaDefNode extends FuncDefNode {
 
     public function compile(){
         return $this->compile_statement();
     }
 
     public function compile_statement($prefix=""){
+      
         $this->scope = $this->scope == Null ? new Scope($this) : $this->scope;
-
-        $this->name = "";
-        self::$functions[$this->name] = $this;
         $this->params = $this->children[1];
 
         $params = $this->get_param_names($this->params);
@@ -2326,70 +2309,6 @@ class PlambdaDefNode extends SpecialForm{
         }
     }
 
- 
-
-    public function compile_last($node){
-        return $node->compile_return($this->indent."\t");
-    }
-
-    public function compile_splat_code($params){
-        $params_count = count($this->params);
-        $code = "";
-        if($params_count > 0 && $this->params[$params_count-1] instanceof SplatNode){
-            $param = $params[count($params)-1];
-            array_pop($params);
-            $code = $this->format_line("").$this->format_line_indent($param." = array_slice(func_get_args(), ".($params_count-1).");");
-        }
-        return $code;
-    }
-
-    public function get_param_lexings($varnames){
-        $lexings = $this->scope->init_lexical_scope();
-        foreach($varnames as $varname){
-            if(is_array($varname)){
-                $varname = $varname[0];
-            }
-            $lexings .= $this->scope->get_lexing($varname);
-        }
-        return $lexings;
-    }
-
-    public function get_param_names($param_nodes){
-        $params = array();
-        foreach($param_nodes as $node){
-            if($node instanceof VariableNode || $node instanceof UnquoteWrapper){
-                $params[] = $node->compile(True);
-            }else if($node instanceof ListNode){
-                $params[] = array($node->children[0]->compile(True), $node->children[1]);
-            }
-        }
-        return $params;
-    }
-
-    public function bind_params($params){
-        array_walk($params, array($this, "bind_param"));
-    }
-
-    public function bind_param($param){
-        if(is_array($param)){
-            $this->scope->bind($param[0], $param[1]);
-        }else{
-            $this->scope->bind($param, new EmptyNode($this));
-        }
-    }
-
-    public function build_params_string($params){
-        return '('.ltrim(array_reduce($params, array($this, "add_param")), ", ").')';
-    }
-
-    public function add_param($params, $param){
-        if(is_array($param)){
-            $params .= ", ".$param[0].'='.$param[1]->compile();
-        }else{
-            $params .= ", $param";
-        }
-        return $params;
-    }
 
 }
 
