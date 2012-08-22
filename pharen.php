@@ -2264,9 +2264,9 @@ class PlambdaDefNode extends SpecialForm{
     public function compile_statement($prefix=""){
         $this->scope = $this->scope == Null ? new Scope($this) : $this->scope;
 
-        $this->name = $this->children[1]->compile();
+        $this->name = "";
         self::$functions[$this->name] = $this;
-        $this->params = $this->children[2]->children;
+        $this->params = $this->children[1];
 
         $params = $this->get_param_names($this->params);
         $this->bind_params($params);
@@ -2458,7 +2458,7 @@ class Parser{
             "keyword-call" => array("KeywordCallNode", "LeafNode", "LeafNode",  array("LeafNode")),
             "ns" => array("NamespaceNode", "LeafNode", array("LeafNode")),
             "use" => array("UseNode", "LeafNode", array("LeafNode")),
-            "plambda" => array("PlambdaDefNode", "LeafNode", "LeafNode", "LiteralNode", self::$values),            
+            "plambda" => array("PlambdaDefNode",  "LeafNode", "LiteralNode", self::$values),            
             
         );
         
