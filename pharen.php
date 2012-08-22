@@ -2240,6 +2240,7 @@ class BindingNode extends Node{
     }
 }
 
+
 class PlambdaDefNode extends SpecialForm{
     static $functions;
 
@@ -2302,13 +2303,7 @@ class PlambdaDefNode extends SpecialForm{
         }
     }
 
-    public function is_tail_recursive($last_node){
-        $last_func_call = $last_node->get_last_func_call();
-        return count($this->children) > 3 &&
-            !($this instanceof MacroNode) &&
-            !($last_func_call instanceof EmptyNode)
-            && $this->children[1]->compile() == $last_func_call->compile();
-    }
+ 
 
     public function compile_last($node){
         return $node->compile_return($this->indent."\t");
@@ -2373,11 +2368,6 @@ class PlambdaDefNode extends SpecialForm{
         return $params;
     }
 
-    public function split_body_tail(){
-        list($body_nodes, $last) = parent::split_body_last();
-        $body_nodes = array_merge($body_nodes, $last->get_body_nodes());
-        return array($body_nodes, $last->get_last_expr());
-    }
 }
 
 class Parser{
