@@ -1,6 +1,16 @@
+(fn check (vl assertion) 
+  (print-r (== vl assertion)) 
+  (echo "\n")
+  FALSE)
+
+
 (def x 100)
 (def y 100)
 (def sum (plambda (a b) (+ a b x y)))
 (def sum3 (plambda (a b) (+ a b)))
 (check ($sum 1 2) 203)
 (check ($sum3 1 2) 3)
+
+(defmacro gen-sum (n) '(plambda (x) (+ x ~n)))
+(def sum10 (gen-sum 10))
+(check ($sum10 100) 110)
