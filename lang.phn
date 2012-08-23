@@ -39,6 +39,16 @@
   (= (:: RootNode ns-string) old-ns-string)
   FALSE)
 
+(defmacro runtime (expr)
+  '(let [time-start (microtime TRUE)
+         result ~expr
+         time-duration (- (microtime TRUE) time-start)
+         time-to-display (if (> time-duration 1)
+                           (. time-duration " seconds")
+                           (. (* time-duration 1000)  " milliseconds"))]
+     (print (. "Elapsed time: " time-to-display "\n"))
+     result))
+
 (defmacro inst? (var cls)
   '(instanceof ~var ~-cls))
 
@@ -227,7 +237,6 @@
   (reduce-pairs (lambda (pair acc) (append ($f (:pair 0) (:pair 1)) acc))
                 []
                 pairs))
-
 
 (defmacro attr* (access-modifier name val)
   '(access ~access-modifier (local ~name ~val)))
