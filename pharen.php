@@ -726,7 +726,7 @@ class Node implements Iterator, ArrayAccess, Countable{
         return RootNode::$ns.'"\\\\'.$tmp_name.'"';
     }
 
-    public function compile($is_statement=False){
+    public function compile($is_statement=False, $is_return=False){
         $scope = $this->get_scope();
         $func_name = $this->get_func_name();
 
@@ -736,6 +736,7 @@ class Node implements Iterator, ArrayAccess, Countable{
             return $micro->get_body(array_slice($this->children, 1), $this->indent);
         }else if(!($this->parent instanceof MethodCallNode)
                 && MacroNode::is_macro($func_name) && !MacroNode::$ghosting){
+            $this->in_macro = True;
             $unevaluated_args = array_slice($this->children, 1);
             $arg_values = array();
             foreach($unevaluated_args as $key=>$arg){
@@ -752,7 +753,7 @@ class Node implements Iterator, ArrayAccess, Countable{
                 $count = count($this->parent->children);
                 $expanded = $this->parent->children[$count-1];
                 array_pop($this->parent->children);
-                if($expanded instanceof SpecialForm){
+                if($expanded instanceof SpecialForm or $expanded instanceof BindingNode){
                     // This prevents it from adding unnecessary semicolons
                     $this->returns_special_form = True;
                 }else if(get_class($expanded) == 'Node'){
@@ -768,6 +769,8 @@ class Node implements Iterator, ArrayAccess, Countable{
                         $code = trim($code, ";\n");
                     }
                     return $code;
+                }else if($is_return){
+                    return $expanded->compile_return();
                 }else{
                     return $expanded->compile();
                 }
@@ -791,18 +794,25 @@ class Node implements Iterator, ArrayAccess, Countable{
         }
     }
 
-    public function compile_statement($prefix=""){
-        $code = $this->compile(True);
+    public function add_semicolon ($code){
         if($this->returns_special_form){
             $semicolon="";
         }else{
             $semicolon=";";
         }
-        return $this->format_statement($code.$semicolon, $prefix);
+        return $code.$semicolon;
+    }
+
+    public function compile_statement($prefix=""){
+        return $this->format_statement($this->add_semicolon($this->compile(True)), $prefix);
     }
 
     public function compile_return($prefix=""){
-        return $this->format_statement("return ".$this->compile().";", $prefix);
+        $code = $this->compile(False, True);
+        if(!$this->in_macro){
+            $code = "return $code;";
+        }
+        return $this->format_statement($code, $prefix);
     }
 }
 
@@ -2191,6 +2201,7 @@ class BindingNode extends Node{
         }
 
         if($return === True){
+            $ret_stashed_children = $this->children;
             $last_line = array_pop($this->children)->compile_return();
         }
 
@@ -2204,6 +2215,9 @@ class BindingNode extends Node{
         }
         $code = $this->scope->get_lexical_bindings().$code.$lexings.$body.$last_line;
 
+        if($return === True){
+            $this->children = $ret_stashed_children;
+        }
         // Restore children because only_return_body is TODO: MUTATING GAAH
         if($this->only_return_body){
             $this->children = $stashed_children;
@@ -2213,6 +2227,10 @@ class BindingNode extends Node{
 
     public function compile_return(){
         return $this->compile_statement(True);
+    }
+
+    public function compile(){
+        return $this->compile_return();
     }
 
     public function get_last_expr(){
