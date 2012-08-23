@@ -1227,15 +1227,15 @@ class FuncDefNode extends SpecialForm{
             $while_last_node->increase_indent();
             $body .= $while_last_node->compile_return();
 
+            if($last_expr instanceof SpecialForm or $last_expr instanceof BindingNode){
+                $body .= $this->compile_body($last_expr->get_body_nodes());
+            }
+
             # Ugly hack to force it to find the last function call node
             while(get_class($last_expr->get_last_expr()) !== 'Node'){
                 $last_expr = $last_expr->get_last_expr();
             }
             
-            if($last_expr instanceof DoNode or $last_expr instanceof BindingNode){
-                $body .= $last_expr->compile_without_last();
-            }
-
             $new_param_values = array_slice($last_expr->get_last_expr()->children, 1);
             $params_len = count($new_param_values);
             for($x=0; $x<$params_len; $x++){
@@ -2217,7 +2217,7 @@ class BindingNode extends Node{
 
     public function get_last_expr(){
         $count = count($this->children);
-        return $this->children[$count-1];
+        return $this->children[$count-1]->get_last_expr();
     }
 
     public function get_body_nodes($recur=False){
