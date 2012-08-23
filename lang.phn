@@ -52,7 +52,9 @@
   '(-> (seq ~xs) (rest)))
 
 (fn prn (s)
-  (print* s "\n"))
+  (do
+    (print* s "\n")
+    NULL))
 
 (fn zero? (n)
   (== n 0))
