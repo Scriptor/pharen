@@ -987,6 +987,10 @@ class LeafNode extends Node{
 }
 
 class KeywordCallNode extends Node{
+    public function compile(){
+        return $this->compile_statement();
+    }
+    
     public function compile_statement(){
         $keyword = $this->children[1]->compile();
         $args = array_slice($this->children, 2);
@@ -1000,6 +1004,7 @@ class KeywordCallNode extends Node{
 }
 
 class NamespaceNode extends KeywordCallNode{
+
     public function compile_statement(){
         array_unshift($this->children, Null);
         $this->children[1]->value = "namespace";
@@ -1010,6 +1015,12 @@ class NamespaceNode extends KeywordCallNode{
 }
 
 class UseNode extends KeywordCallNode{
+
+    public function compile(){
+        Node::$tmp .= $this->compile_statement();
+        return "";
+    }
+
     public function compile_statement(){
         array_unshift($this->children, Null);
         return parent::compile_statement();
