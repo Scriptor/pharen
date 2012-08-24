@@ -97,7 +97,7 @@
   (or (inst? xs PharenEmptyList) (empty xs)))
 
 (fn seq? (x)
-  (or (is-array x) (inst? x IPharenSeq)))
+  (inst? x IPharenSeq))
 
 (fn seq (x)
   (if (inst? x IPharenSeq)
