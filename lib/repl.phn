@@ -16,6 +16,13 @@
     (fwrite STDOUT prompt)
     (trim (fgets STDIN))))
 
+(fn prn-result (x)
+  (prn (cond
+         ((=== NULL x) "Null")
+         ((=== TRUE x) "True")
+         ((=== FALSE x) "False")
+         (TRUE x))))
+
 (fn compile-code (code)
   (let [embedded-code (. "(fn eval-func () " code ")")
         compiled-code (compile embedded-code NULL "repl_input")
@@ -34,7 +41,7 @@
     (if (== code "quit")
       (exit 0)
       (let [compiled-code (compile-code code)]
-        (prn (eval (. "?>" compiled-code)))
+        (prn-result (eval (. "?>" compiled-code)))
         (work)))))
 
 (intro)

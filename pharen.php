@@ -726,7 +726,7 @@ class Node implements Iterator, ArrayAccess, Countable{
         return RootNode::$ns.'"\\\\'.$tmp_name.'"';
     }
 
-    public function compile($is_statement=False){
+    public function compile($is_statement=False, $is_return=False){
         $scope = $this->get_scope();
         $func_name = $this->get_func_name();
 
@@ -736,6 +736,7 @@ class Node implements Iterator, ArrayAccess, Countable{
             return $micro->get_body(array_slice($this->children, 1), $this->indent);
         }else if(!($this->parent instanceof MethodCallNode)
                 && MacroNode::is_macro($func_name) && !MacroNode::$ghosting){
+            $this->in_macro = True;
             $unevaluated_args = array_slice($this->children, 1);
             $arg_values = array();
             foreach($unevaluated_args as $key=>$arg){
@@ -752,7 +753,7 @@ class Node implements Iterator, ArrayAccess, Countable{
                 $count = count($this->parent->children);
                 $expanded = $this->parent->children[$count-1];
                 array_pop($this->parent->children);
-                if($expanded instanceof SpecialForm){
+                if($expanded instanceof SpecialForm or $expanded instanceof BindingNode){
                     // This prevents it from adding unnecessary semicolons
                     $this->returns_special_form = True;
                 }else if(get_class($expanded) == 'Node'){
@@ -768,6 +769,8 @@ class Node implements Iterator, ArrayAccess, Countable{
                         $code = trim($code, ";\n");
                     }
                     return $code;
+                }else if($is_return){
+                    return $expanded->compile_return();
                 }else{
                     return $expanded->compile();
                 }
@@ -791,18 +794,25 @@ class Node implements Iterator, ArrayAccess, Countable{
         }
     }
 
-    public function compile_statement($prefix=""){
-        $code = $this->compile(True);
+    public function add_semicolon ($code){
         if($this->returns_special_form){
             $semicolon="";
         }else{
             $semicolon=";";
         }
-        return $this->format_statement($code.$semicolon, $prefix);
+        return $code.$semicolon;
+    }
+
+    public function compile_statement($prefix=""){
+        return $this->format_statement($this->add_semicolon($this->compile(True)), $prefix);
     }
 
     public function compile_return($prefix=""){
-        return $this->format_statement("return ".$this->compile().";", $prefix);
+        $code = $this->compile(False, True);
+        if(!$this->in_macro){
+            $code = "return $code;";
+        }
+        return $this->format_statement($code, $prefix);
     }
 }
 
@@ -984,7 +994,7 @@ class LeafNode extends Node{
     }
 
     public function compile(){
-        return strlen($this->value) > 1 && !is_numeric($this->value[1]) && !in_array($this->value, self::$reserved) ?
+        return strlen($this->value) > 1 && !is_numeric($this->value) && !in_array($this->value, self::$reserved) ?
             self::phpfy_name($this->value)
             : $this->value;
     }
@@ -1227,15 +1237,15 @@ class FuncDefNode extends SpecialForm{
             $while_last_node->increase_indent();
             $body .= $while_last_node->compile_return();
 
+            if($last_expr instanceof SpecialForm or $last_expr instanceof BindingNode){
+                $body .= $this->compile_body($last_expr->get_body_nodes());
+            }
+
             # Ugly hack to force it to find the last function call node
             while(get_class($last_expr->get_last_expr()) !== 'Node'){
                 $last_expr = $last_expr->get_last_expr();
             }
             
-            if($last_expr instanceof DoNode or $last_expr instanceof BindingNode){
-                $body .= $last_expr->compile_without_last();
-            }
-
             $new_param_values = array_slice($last_expr->get_last_expr()->children, 1);
             $params_len = count($new_param_values);
             for($x=0; $x<$params_len; $x++){
@@ -1780,13 +1790,20 @@ class DoNode extends SpecialForm{
 
 class ClassNode extends SpecialForm{
     public $body_index = 2;
+    public $class_name;
 
     public function generate($header, $body){
         return $this->format_line("class ".$header."{").$body.$this->format_line("}");
     }
 
+    public function compile(){
+        Node::$tmp .= $this->compile_statement();
+        return '"'.$this->class_name.'"';
+    }
+
     public function compile_statement(){
         $class_name = $this->children[1]->compile();
+        $this->class_name = $class_name;
         $body = $this->compile_body();
         return $this->generate($class_name, $body);
     }
@@ -1800,6 +1817,7 @@ class ClassExtendsNode extends ClassNode{
             return "";
 
         $class_name = $this->children[1]->compile();
+        $this->class_name = $class_name;
         $parent_class = $this->children[2]->children[0]->value;
         $body = $this->compile_body();
         return $this->generate($class_name." extends ".$parent_class, $body);
@@ -2191,6 +2209,7 @@ class BindingNode extends Node{
         }
 
         if($return === True){
+            $ret_stashed_children = $this->children;
             $last_line = array_pop($this->children)->compile_return();
         }
 
@@ -2204,6 +2223,9 @@ class BindingNode extends Node{
         }
         $code = $this->scope->get_lexical_bindings().$code.$lexings.$body.$last_line;
 
+        if($return === True){
+            $this->children = $ret_stashed_children;
+        }
         // Restore children because only_return_body is TODO: MUTATING GAAH
         if($this->only_return_body){
             $this->children = $stashed_children;
@@ -2215,9 +2237,13 @@ class BindingNode extends Node{
         return $this->compile_statement(True);
     }
 
+    public function compile(){
+        return $this->compile_return();
+    }
+
     public function get_last_expr(){
         $count = count($this->children);
-        return $this->children[$count-1];
+        return $this->children[$count-1]->get_last_expr();
     }
 
     public function get_body_nodes($recur=False){

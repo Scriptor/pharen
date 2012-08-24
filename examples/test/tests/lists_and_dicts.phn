@@ -19,5 +19,5 @@
                "wtf" "Pharen"})
 (check (:dct "functional") "Haskell")
 
-(def new-dct (assoc "logic" "Prolog"))
+(def new-dct (assoc "logic" "Prolog" dct))
 (check (:new-dct "logic") "Prolog")
