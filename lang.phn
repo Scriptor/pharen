@@ -131,7 +131,9 @@
   (array-slice xs 0 1))
 
 (fn cons (x xs)
-  (-> (seq xs) (cons x)))
+  (if (seq? xs)
+    (-> xs (cons x))
+    (-> (seq xs) (cons x))))
 
 (fn assoc (key val hm)
   (-> (hashify hm) (assoc key val)))
