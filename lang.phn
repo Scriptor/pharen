@@ -78,6 +78,9 @@
 (fn str (s1 s2)
   (. s1 s2))
 
+(fn identity (x)
+  x)
+
 (fn flip (f arg1 arg2)
   ($f arg2 arg1))
 
