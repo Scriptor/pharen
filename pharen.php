@@ -1790,13 +1790,20 @@ class DoNode extends SpecialForm{
 
 class ClassNode extends SpecialForm{
     public $body_index = 2;
+    public $class_name;
 
     public function generate($header, $body){
         return $this->format_line("class ".$header."{").$body.$this->format_line("}");
     }
 
+    public function compile(){
+        Node::$tmp .= $this->compile_statement();
+        return '"'.$this->class_name.'"';
+    }
+
     public function compile_statement(){
         $class_name = $this->children[1]->compile();
+        $this->class_name = $class_name;
         $body = $this->compile_body();
         return $this->generate($class_name, $body);
     }
@@ -1810,6 +1817,7 @@ class ClassExtendsNode extends ClassNode{
             return "";
 
         $class_name = $this->children[1]->compile();
+        $this->class_name = $class_name;
         $parent_class = $this->children[2]->children[0]->value;
         $body = $this->compile_body();
         return $this->generate($class_name." extends ".$parent_class, $body);
