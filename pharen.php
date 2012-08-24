@@ -13,10 +13,6 @@ function last($xs){
     return end($xs);
 }
 
-function at($xs, $i){
-    return $xs[$i];
-}
-
 function is_assoc($xs){
     return array_keys($xs) !== range(0, count($xs)-1);
 }
@@ -25,17 +21,6 @@ function split_body_last($xs){
     $body = array_slice($xs, 0, -1);
     $last = $xs[count($xs)-1];
     return array($body, $last);
-}
-
-function print_tree($node){
-    echo "\t";
-    foreach($node->children as $child){
-        if($child instanceof LeafNode){
-            echo $child->value;
-        }else{
-            echo get_class($child);
-        }
-    }
 }
             
 class Token{
