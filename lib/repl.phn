@@ -21,6 +21,7 @@
          ((=== NULL x) "Null")
          ((=== TRUE x) "True")
          ((=== FALSE x) "False")
+         ((is-string x) (. "\"" x "\""))
          (TRUE x))))
 
 (fn compile-code (code)
