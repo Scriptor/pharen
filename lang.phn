@@ -209,7 +209,7 @@
     acc
     (reduce f ($f (first xs) acc) (rest xs))))
 
-(fn reduce-concat (new-val-func xs)
+(fn reduce-to-str (new-val-func xs)
   (reduce (lambda (val acc)
                   (. acc ($new-val-func val)))
           "" xs))
