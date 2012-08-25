@@ -426,6 +426,7 @@ class Scope{
 }
 
 class Node implements Iterator, ArrayAccess, Countable{
+    const REPL_INPUT = "repl_input";
     static $in_func = 0;
     static $tmpfunc;
     static $lambda_tmp;
@@ -1017,7 +1018,10 @@ class NamespaceNode extends KeywordCallNode{
 class UseNode extends KeywordCallNode{
 
     public function compile(){
-        Node::$tmp .= $this->compile_statement();
+        $c = $this->compile_statement();
+        if(Node::$ns != "repl_input"){
+            Node::$tmp .= $c;
+        }
         return "";
     }
 
