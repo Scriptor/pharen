@@ -47,7 +47,7 @@
                            (. time-duration " seconds")
                            (. (* time-duration 1000)  " milliseconds"))]
      (print (. "Elapsed time: " time-to-display "\n"))
-     result))
+     NULL))
 
 (defmacro inst? (var cls)
   '(instanceof ~var ~-cls))
@@ -78,6 +78,9 @@
 (fn str (s1 s2)
   (. s1 s2))
 
+(fn identity (x)
+  x)
+
 (fn flip (f arg1 arg2)
   ($f arg2 arg1))
 
@@ -94,7 +97,7 @@
   (or (inst? xs PharenEmptyList) (empty xs)))
 
 (fn seq? (x)
-  (or (is-array x) (inst? x IPharenSeq)))
+  (inst? x IPharenSeq))
 
 (fn seq (x)
   (if (inst? x IPharenSeq)
@@ -128,7 +131,9 @@
   (array-slice xs 0 1))
 
 (fn cons (x xs)
-  (-> (seq xs) (cons x)))
+  (if (seq? xs)
+    (-> xs (cons x))
+    (-> (seq xs) (cons x))))
 
 (fn assoc (key val hm)
   (-> (hashify hm) (assoc key val)))
@@ -204,7 +209,7 @@
     acc
     (reduce f ($f (first xs) acc) (rest xs))))
 
-(fn reduce-concat (new-val-func xs)
+(fn reduce-to-str (new-val-func xs)
   (reduce (lambda (val acc)
                   (. acc ($new-val-func val)))
           "" xs))

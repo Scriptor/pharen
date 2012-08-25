@@ -13,10 +13,6 @@ function last($xs){
     return end($xs);
 }
 
-function at($xs, $i){
-    return $xs[$i];
-}
-
 function is_assoc($xs){
     return array_keys($xs) !== range(0, count($xs)-1);
 }
@@ -25,17 +21,6 @@ function split_body_last($xs){
     $body = array_slice($xs, 0, -1);
     $last = $xs[count($xs)-1];
     return array($body, $last);
-}
-
-function print_tree($node){
-    echo "\t";
-    foreach($node->children as $child){
-        if($child instanceof LeafNode){
-            echo $child->value;
-        }else{
-            echo get_class($child);
-        }
-    }
 }
             
 class Token{
@@ -151,6 +136,7 @@ class Lexer{
                 $this->state = "new-expression";
             }else if($this->char == "\\" && !$this->escaping && $this->code[$this->i+1] == '"'){
                 $this->escaping = True;
+                $this->tok->append($this->char);
             }else if($this->char == "\\" && !$this->escaping && $this->code[$this->i+1] == "\\"){
                 $this->escaping = True;
                 $this->tok->append($this->char);
@@ -440,6 +426,7 @@ class Scope{
 }
 
 class Node implements Iterator, ArrayAccess, Countable{
+    const REPL_INPUT = "repl_input";
     static $in_func = 0;
     static $tmpfunc;
     static $lambda_tmp;
@@ -723,7 +710,7 @@ class Node implements Iterator, ArrayAccess, Countable{
     public function create_partial($func){
         list($tmp_func, $tmp_name) = $func->get_tmp_func($this->parent);
         Node::$tmpfunc .= $tmp_func;
-        return RootNode::$ns.'"\\\\'.$tmp_name.'"';
+        return '"'.RootNode::$ns.'\\\\'.$tmp_name.'"';
     }
 
     public function compile($is_statement=False, $is_return=False){
@@ -874,6 +861,7 @@ class InfixNode extends Node{
 class RootNode extends Node{
     public static $ns;
     public static $ns_string;
+    public static $uses = array();
 
     public function __construct(){
         // No parent to be passed to the constructor. It's Root all the way down.
@@ -1001,6 +989,10 @@ class LeafNode extends Node{
 }
 
 class KeywordCallNode extends Node{
+    public function compile(){
+        return $this->compile_statement();
+    }
+    
     public function compile_statement(){
         $keyword = $this->children[1]->compile();
         $args = array_slice($this->children, 2);
@@ -1014,6 +1006,7 @@ class KeywordCallNode extends Node{
 }
 
 class NamespaceNode extends KeywordCallNode{
+
     public function compile_statement(){
         array_unshift($this->children, Null);
         $this->children[1]->value = "namespace";
@@ -1024,8 +1017,25 @@ class NamespaceNode extends KeywordCallNode{
 }
 
 class UseNode extends KeywordCallNode{
+
+    public function compile(){
+        $c = $this->compile_statement();
+        if(Node::$ns != "repl_input"){
+            Node::$tmp .= $c;
+        }
+        return "";
+    }
+
     public function compile_statement(){
         array_unshift($this->children, Null);
+        $use = array($this->children[2]->compile());
+        if(isset($this->children[4])){
+            $use []=$this->children[4]->compile();
+        }
+        if(!isset(RootNode::$uses[RootNode::$ns])){
+            RootNode::$uses[RootNode::$ns] = array();
+        }
+        RootNode::$uses[RootNode::$ns] []= $use;
         return parent::compile_statement();
     }
 }

@@ -223,32 +223,32 @@ class PharenLazyList implements IPharenSeq{
     }
 
     public function seq(){
-        return $this;
+        $this->set_first_and_rest();
+        return $this->lambda_result;
     }
 
     public function first(){
-        if($this->first){
-            return $this->first;
-        }else{
-            $this->set_first_and_rest();
-            return $this->first;
-        }
+        $this->set_first_and_rest();
+        return $this->first;
     }
 
     public function set_first_and_rest(){
-        list($lambda, $scope_id) = $this->lambda;
-        $this->lambda_result = $lambda($scope_id);
-        $this->first = $this->lambda_result->first();
-        $this->rest = $this->lambda_result->rest();
+        if(!$this->lambda_result){
+            list($lambda, $scope_id) = $this->lambda;
+            $result = $lambda($scope_id);
+
+            if(empty($result)){
+                $result = new PharenEmptyList;
+            }
+            $this->lambda_result = $result;
+            $this->first = $result->first();
+            $this->rest = $result->rest();
+        }
     }
 
     public function rest(){
-        if($this->rest){
-            return $this->rest;
-        }else{
-            $this->set_first_and_rest();
-            return $this->rest;
-        }
+        $this->set_first_and_rest();
+        return $this->rest;
     }
 
     public function count(){

@@ -16,21 +16,33 @@
     (fwrite STDOUT prompt)
     (trim (fgets STDIN))))
 
+(fn add-uses (code)
+  (let [uses (if (isset (:(:: RootNode uses) (:: RootNode ns)))
+               (reduce-to-str (lambda (ns)
+                                      (if (== (count ns) 2)
+                                        (. "use " (:ns 0) " as " (:ns 1) ";\n")
+                                        (. "use " (:ns 0) ";\n")))
+                              (:(:: RootNode uses) (:: RootNode ns)))
+               "")]
+    (substr-replace code uses (+ (strpos code ";") 2) 0)))
+
 (fn prn-result (x)
   (prn (cond
          ((=== NULL x) "Null")
          ((=== TRUE x) "True")
          ((=== FALSE x) "False")
+         ((is-string x) (. "\"" x "\""))
          (TRUE x))))
 
 (fn compile-code (code)
   (let [embedded-code (. "(fn eval-func () " code ")")
-        compiled-code (compile embedded-code NULL "repl_input")
+        compiled-code (compile embedded-code NULL (:: Node REPL_INPUT))
         no-func-def (str-replace "function eval_func(){" "" compiled-code)
+        with-uses (add-uses no-func-def)
         final-code (substr 
-                     no-func-def
-                     0
-                     (- (strrpos no-func-def "}") 1))]
+                    with-uses
+                    0
+                    (- (strrpos with-uses "}") 1))]
     final-code))
 
 (fn intro ()
