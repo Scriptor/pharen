@@ -47,7 +47,7 @@
                            (. time-duration " seconds")
                            (. (* time-duration 1000)  " milliseconds"))]
      (print (. "Elapsed time: " time-to-display "\n"))
-     result))
+     NULL))
 
 (defmacro inst? (var cls)
   '(instanceof ~var ~-cls))
