@@ -861,6 +861,7 @@ class InfixNode extends Node{
 class RootNode extends Node{
     public static $ns;
     public static $ns_string;
+    public static $uses = array();
 
     public function __construct(){
         // No parent to be passed to the constructor. It's Root all the way down.
@@ -1027,6 +1028,14 @@ class UseNode extends KeywordCallNode{
 
     public function compile_statement(){
         array_unshift($this->children, Null);
+        $use = array($this->children[2]->compile());
+        if(isset($this->children[4])){
+            $use []=$this->children[4]->compile();
+        }
+        if(!isset(RootNode::$uses[RootNode::$ns])){
+            RootNode::$uses[RootNode::$ns] = array();
+        }
+        RootNode::$uses[RootNode::$ns] []= $use;
         return parent::compile_statement();
     }
 }
