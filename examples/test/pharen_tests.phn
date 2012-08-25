@@ -21,6 +21,7 @@
         "if",
         "function_definition",
         "lambdas",
+        "plambda",
         "macros",
         "multi",
         "oop"

@@ -1,9 +1,3 @@
-(fn check (vl assertion) 
-  (print-r (== vl assertion)) 
-  (echo "\n")
-  FALSE)
-
-
 (def x 100)
 (def y 100)
 (def sum (plambda (a b) (+ a b x y)))
