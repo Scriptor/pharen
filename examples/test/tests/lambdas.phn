@@ -1,6 +1,7 @@
 (check (arr (map (lambda (n)
                     (* n 2)) [1 2 3])) [2 4 6])
 
+
 (fn apply-test (f n)
   ($f n))
 (check (apply-test (lambda (n)

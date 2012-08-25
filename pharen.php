@@ -774,7 +774,7 @@ class Node implements Iterator, ArrayAccess, Countable{
         if($this->has_variable_func){
             $args[] = $func_name."[1]";
             $closure_args_string = implode(", ", $args);
-            return "(is_string($func_name)?$func_name($args_string):{$func_name}[0]($closure_args_string))";
+            return "(is_string($func_name) || is_callable($func_name)?$func_name($args_string):{$func_name}[0]($closure_args_string))";
         }else{
             return "$func_name($args_string)";
         }
@@ -2263,6 +2263,49 @@ class BindingNode extends Node{
     }
 }
 
+
+class PlambdaDefNode extends FuncDefNode {
+
+    public function compile(){
+        return $this->compile_statement();
+    }
+
+    public function compile_statement($prefix=""){
+      
+        $this->scope = $this->scope == Null ? new Scope($this) : $this->scope;
+        $this->params = $this->children[1];
+
+        $params = $this->get_param_names($this->params);
+        $this->bind_params($params);
+        list($body_nodes, $last_node) = $this->split_body_last();
+
+        $body = $this->compile_splat_code($params);
+        $params_string = $this->build_params_string($params);
+
+        Node::$in_func++;
+        if(Node::$in_func > 1){
+            $this->decrease_indent();
+        }
+  
+        $body .= count($body_nodes) > 0 ? parent::compile_body($body_nodes) : "";
+        $last = $last_node->compile_return();
+        $body .= $last;
+
+        $body = $this->scope->get_lexical_bindings().$body;
+        $lexings = $this->get_param_lexings($params);
+
+        $code = $this->format_line("function ".$params_string."{", $prefix).
+            $lexings.
+            $body.
+            $this->format_line("}").$this->format_line("");
+
+            Node::$in_func--;
+            return Node::add_tmpfunc($code);
+    }
+
+
+}
+
 class Parser{
     static $INFIX_OPERATORS; 
     static $reader_macros;
@@ -2340,7 +2383,9 @@ class Parser{
             "access" => array("AccessModifierNode", "LeafNode", "LeafNode", self::$values),
             "keyword-call" => array("KeywordCallNode", "LeafNode", "LeafNode",  array("LeafNode")),
             "ns" => array("NamespaceNode", "LeafNode", array("LeafNode")),
-            "use" => array("UseNode", "LeafNode", array("LeafNode"))
+            "use" => array("UseNode", "LeafNode", array("LeafNode")),
+            "plambda" => array("PlambdaDefNode",  "LeafNode", "LiteralNode", self::$values),            
+            
         );
         
         $this->tokens = $tokens;
