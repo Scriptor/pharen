@@ -17,14 +17,15 @@
     (trim (fgets STDIN))))
 
 (fn add-uses (code)
-  (let [uses (if (isset (:(:: RootNode uses) (:: RootNode ns)))
-               (reduce-to-str (lambda (ns)
-                                      (if (== (count ns) 2)
-                                        (. "use " (:ns 0) " as " (:ns 1) ";\n")
-                                        (. "use " (:ns 0) ";\n")))
-                              (:(:: RootNode uses) (:: RootNode ns)))
-               "")]
-    (substr-replace code uses (+ (strpos code ";") 2) 0)))
+  (let [use-str (if-let [uses (get (:: RootNode ns) (:: RootNode uses))]
+                  (reduce-to-str 
+                    (lambda (ns)
+                            (if (== (count ns) 2)
+                              (. "use " (:ns 0) " as " (:ns 1) ";\n")
+                              (. "use " (:ns 0) ";\n")))
+                    uses)
+                  "")]
+    (substr-replace code use-str (+ (strpos code ";") 2) 0)))
 
 (fn prn-result (x)
   (prn (cond
