@@ -68,6 +68,12 @@
        ~then)
      ~else))
 
+(defmacro when-let (binding then)
+  (def cond (:binding 1))
+  '(when ~cond
+     (let ~binding
+       ~then)))
+
 (fn prn (s)
   (do
     (print* s "\n")
