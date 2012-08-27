@@ -146,7 +146,9 @@
   (-> (hashify hm) (assoc key val)))
 
 (fn get (key hm)
-  (:hm key))
+  (if (isset (:hm key))
+    (:hm key)
+    NULL))
 
 (fn take (n xs)
   (if (zero-or-empty? n xs)
