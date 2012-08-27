@@ -61,6 +61,13 @@
 (defmacro rest (xs)
   '(-> (seq ~xs) (rest)))
 
+(defmacro if-let (binding then else)
+  (def cond (:binding 1))
+  '(if ~cond
+     (let ~binding
+       ~then)
+     ~else))
+
 (fn prn (s)
   (do
     (print* s "\n")
