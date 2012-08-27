@@ -2195,7 +2195,7 @@ class BindingNode extends Node{
         parent::__construct($parent);
     }
 
-    public function compile_statement($return=False){
+    public function compile_statement($prefix="", $return=False, $expr=False){
         if(MacroNode::$ghosting){
             return "";
         }
@@ -2226,13 +2226,24 @@ class BindingNode extends Node{
             $this->children = array_merge($this->children, $last_node_body);
         }
 
-        if($return === True){
+        if($expr){
+            $compile_func = "compile";
+        }else{
+            $compile_func = "compile_statement";
+        }
+
+        if($return === True || $prefix !== ""){
             $ret_stashed_children = $this->children;
-            $last_line = array_pop($this->children)->compile_return();
+            $last_node = array_pop($this->children);
+            if($prefix !== ""){
+                $last_line = $last_node->$compile_func($prefix);
+            }else{
+                $last_line = $last_node->compile_return();
+            }
         }
 
         foreach(array_slice($this->children, 2) as $line){
-            $body .= $line->compile_statement();
+            $body .= $line->$compile_func();
         }
 
         $lexings = $this->scope->init_lexical_scope();
@@ -2241,7 +2252,7 @@ class BindingNode extends Node{
         }
         $code = $this->scope->get_lexical_bindings().$code.$lexings.$body.$last_line;
 
-        if($return === True){
+        if($return === True || $prefix !== ""){
             $this->children = $ret_stashed_children;
         }
         // Restore children because only_return_body is TODO: MUTATING GAAH
@@ -2251,12 +2262,12 @@ class BindingNode extends Node{
         return $code;
     }
 
-    public function compile_return(){
-        return $this->compile_statement(True);
+    public function compile_return($prefix=""){
+        return $this->compile_statement($prefix, True);
     }
 
-    public function compile(){
-        return $this->compile_return();
+    public function compile($prefix=""){
+        return $this->compile_statement($prefix, False, True);
     }
 
     public function get_last_expr(){
