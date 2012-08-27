@@ -1037,7 +1037,11 @@ class UseNode extends KeywordCallNode{
             RootNode::$uses[RootNode::$ns] = array();
         }
         RootNode::$uses[RootNode::$ns] []= $use;
-        return parent::compile_statement();
+
+        $code =  parent::compile_statement();
+        // Require needs to be added after the compilation is done
+        Node::$tmp .= $this->format_line("require '" . $use[0] . ".php';");
+        return $code;
     }
 }
 
