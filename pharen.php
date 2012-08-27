@@ -637,10 +637,11 @@ class Node implements Iterator, ArrayAccess, Countable{
             if($tok instanceof Node){
                 $list[] = $tok->convert_to_list($return_as_array, $get_values);
             }else{
-                if($get_values)
+                if($get_values && ($tok instanceof StringToken || $tok instanceof NumberToken)){
                     $list[] = $tok->value;
-                else
+                }else{
                     $list[] = $tok;
+                }
             }
         }
         if($return_as_array){
@@ -1519,6 +1520,8 @@ class QuoteWrapper{
                     $val_node = $scope->find(LeafNode::phpfy_name(ltrim($tok->value, '-')), True, Null, False);
                     if($val_node instanceof Node){
                         $val = $val_node->convert_to_list();
+                    }else if($val_node instanceof PharenCachedList){
+                        $val = $val_node;
                     }else{
                         if(is_string($val_node)){
                             $val = new StringToken($val_node);
@@ -2191,6 +2194,9 @@ class BindingNode extends Node{
     }
 
     public function compile_statement($return=False){
+        if(MacroNode::$ghosting){
+            return "";
+        }
         $scope = $this->scope = new Scope($this);
         $scope->virtual = True;
 
