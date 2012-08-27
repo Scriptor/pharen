@@ -1527,6 +1527,8 @@ class QuoteWrapper{
                             $val = new StringToken($val_node);
                         }else if(is_integer($val_node) or is_double($val_node)){
                             $val = new NumberToken($val_node);
+                        }else{
+                            $val = $val_node;
                         }
                     }
                 }
