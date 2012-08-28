@@ -16,6 +16,11 @@
     (fwrite STDOUT prompt)
     (trim (fgets STDIN))))
 
+(fn get-prompt ()
+  (if-let [ns (:: RootNode ns)]
+    (. ns "> ")
+    "pharen> "))
+
 (fn add-uses (code)
   (let [use-str (if-let [uses (get (:: RootNode ns) (:: RootNode uses))]
                   (reduce-to-str 
@@ -50,7 +55,7 @@
   (prn (. "Initialized Pharen REPL. " (:greetings (array-rand greetings)) "\n")))
 
 (fn work ()
-  (let [code (prompt "pharen> ")]
+  (let [code (prompt (get-prompt))]
     (if (== code "quit")
       (exit 0)
       (let [compiled-code (compile-code code)]
