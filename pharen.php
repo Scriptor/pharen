@@ -1040,7 +1040,7 @@ class UseNode extends KeywordCallNode{
 
         $code =  parent::compile_statement();
         // Require needs to be added after the compilation is done
-        Node::$tmp .= $this->format_line("require '" . $use[0] . ".php';");
+        Node::$tmp .= $this->format_line("include_once '" . $use[0] . ".php';");
         return $code;
     }
 }
