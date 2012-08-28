@@ -250,7 +250,7 @@
 
 (fn filter (f coll)
   (if (empty? coll)
-    coll
+    []
     (let [x (first coll), xs (rest coll)]
       (if (not ($f x))
         (filter f xs)
