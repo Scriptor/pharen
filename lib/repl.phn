@@ -17,7 +17,7 @@
     (trim (fgets STDIN))))
 
 (fn get-prompt ()
-  (if-let [ns (:: RootNode ns)]
+  (if-let [ns (:: RootNode raw-ns)]
     (. ns "> ")
     "pharen> "))
 

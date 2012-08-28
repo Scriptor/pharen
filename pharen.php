@@ -860,6 +860,7 @@ class InfixNode extends Node{
 }
 
 class RootNode extends Node{
+    public static $raw_ns;
     public static $ns;
     public static $ns_string;
     public static $uses = array();
@@ -1011,6 +1012,7 @@ class NamespaceNode extends KeywordCallNode{
     public function compile_statement(){
         array_unshift($this->children, Null);
         $this->children[1]->value = "namespace";
+        RootNode::$raw_ns = $this->children[2]->value;
         RootNode::$ns = $this->children[2]->compile();
         RootNode::$ns_string = parent::compile_statement();
         return "";
