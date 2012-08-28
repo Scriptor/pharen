@@ -3,6 +3,9 @@
 (set-include-path (. (get-include-path) PATH_SEPARATOR LIB_PATH))
 (require "sequence.php")
 
+(defmacro comment (&exprs)
+  'NULL)
+
 (defmacro when (c &body)
   '(if ~c
      (do
