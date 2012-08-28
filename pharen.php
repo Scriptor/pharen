@@ -2239,7 +2239,7 @@ class BindingNode extends Node{
         if($return === True || $prefix !== ""){
             $ret_stashed_children = $this->children;
             $last_node = array_pop($this->children);
-            if($prefix !== ""){
+            if($prefix){
                 $last_line = $last_node->$compile_func($prefix);
             }else{
                 $last_line = $last_node->compile_return();
