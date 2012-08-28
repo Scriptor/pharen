@@ -43,10 +43,11 @@
 
 (fn wrap-compile (code)
   (let [embedded-code (. "(fn eval-func () " code ")")]
-        (compile embedded-code NULL (:: Node REPL_INPUT))))
+    (compile embedded-code NULL (:: Node REPL_INPUT))))
 
 (fn compile-code (code)
-  (if-let [compiled-code (wrap-compile code)]
+  (local compiled-code (wrap-compile code))
+  (if compiled-code
     (let [no-func-def (str-replace "function eval_func(){" "" compiled-code)
           with-uses (add-uses no-func-def)
           final-code (substr 
