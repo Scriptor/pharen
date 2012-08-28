@@ -16,10 +16,11 @@
     (fwrite STDOUT prompt)
     (trim (fgets STDIN))))
 
-(fn get-prompt ()
-  (if-let [ns (:: RootNode raw-ns)]
-    (. ns "> ")
-    "pharen> "))
+(fn get-prompt (expecting)
+  (let [suffix (if expecting "... " "> ")]
+    (if-let [ns (:: RootNode raw-ns)]
+        (. ns suffix)
+        (. "pharen" suffix))))
 
 (fn add-uses (code)
   (let [use-str (if-let [uses (get (:: RootNode ns) (:: RootNode uses))]
@@ -40,27 +41,35 @@
          ((is-string x) (. "\"" x "\""))
          (TRUE x))))
 
+(fn wrap-compile (code)
+  (let [embedded-code (. "(fn eval-func () " code ")")]
+        (compile embedded-code NULL (:: Node REPL_INPUT))))
+
 (fn compile-code (code)
-  (let [embedded-code (. "(fn eval-func () " code ")")
-        compiled-code (compile embedded-code NULL (:: Node REPL_INPUT))
-        no-func-def (str-replace "function eval_func(){" "" compiled-code)
-        with-uses (add-uses no-func-def)
-        final-code (substr 
-                    with-uses
-                    0
-                    (- (strrpos with-uses "}") 1))]
-    final-code))
+  (if-let [compiled-code (wrap-compile code)]
+    (let [no-func-def (str-replace "function eval_func(){" "" compiled-code)
+          with-uses (add-uses no-func-def)
+          final-code (substr 
+                       with-uses
+                       0
+                       (- (strrpos with-uses "}") 1))]
+      final-code)
+    FALSE))
 
 (fn intro ()
   (prn (. "Initialized Pharen REPL. " (:greetings (array-rand greetings)) "\n")))
 
-(fn work ()
-  (let [code (prompt (get-prompt))]
+(fn work ([previous-code ""])
+  (let [code (. previous-code " " (prompt (get-prompt previous-code)))]
     (if (== code "quit")
       (exit 0)
       (let [compiled-code (compile-code code)]
-        (prn-result (eval (. "?>" compiled-code)))
-        (work)))))
+        (if compiled-code
+          (do 
+            (prn-result (eval (. "?>" compiled-code)))
+            (local previous-code ""))
+          (local previous-code code))
+        (work previous-code)))))
 
 (intro)
 (compile-lang)

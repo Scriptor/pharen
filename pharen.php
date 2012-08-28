@@ -39,18 +39,21 @@ class Token{
 }
 
 class OpenParenToken extends Token{
+    public $closer = "CloseParenToken";
 }
 
 class CloseParenToken extends Token{
 }
 
 class OpenBracketToken extends Token{
+    public $closer = "CloseBracketToken";
 }
 
 class CloseBracketToken extends Token{
 }
 
 class OpenBraceToken extends Token{
+    public $closer = "CloseBraceToken";
 }
 
 class CloseBraceToken extends Token{
@@ -111,6 +114,25 @@ class Lexer{
 
         $prev_tok = $this->toks[$c-1];
         return $prev_tok instanceof OpenParenToken || $prev_tok instanceof ReaderMacroToken;
+    }
+
+    public function finished(){
+        $first_tok = $this->toks[0];
+        if(!($first_tok instanceof OpenParenToken || $first_tok instanceof OpenBraceToken || $first_tok instanceof OpenBracketToken))
+            return True;
+
+        $open_class = get_class($first_tok);
+        $close_class = $first_tok->closer;
+        $open_instances = 0;
+        $close_instances = 0;
+        foreach($this->toks as $tok){
+            if(get_class($tok) === $open_class){
+                $open_instances++;
+            }else if(get_class($tok) === $close_class){
+                $close_instances++;
+            }
+        }
+        return $close_instances >= $open_instances;
     }
 
     public function lex(){
@@ -898,6 +920,7 @@ class RootNode extends Node{
         $code .= $this->format_line("use Pharen\Lexical as Lexical;");
 
         $code .= $this->scope->init_namespace_scope();
+
         $body = "";
         foreach($this->children as $child){
             $body .= $child->compile_statement();
@@ -2606,7 +2629,10 @@ function compile($code, $root=Null, $ns=Null){
     }
     $lexer = new Lexer($code);
     $tokens = $lexer->lex();
- 
+
+    if(!$lexer->finished()){
+        return False;
+    }
     $parser = new Parser($tokens);
     $node_tree = $parser->parse($root);
     $phpcode = $node_tree->compile();
