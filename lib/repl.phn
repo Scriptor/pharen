@@ -1,3 +1,4 @@
+(ns pharen-repl)
 (require_once "path.php")
 (define "REPL_SYSTEM" (realpath (dirname __FILE__)))
 (define "PHAREN_SYSTEM" (path-join REPL-SYSTEM "../"))
@@ -18,12 +19,12 @@
 
 (fn get-prompt (expecting)
   (let [suffix (if expecting "... " "> ")]
-    (if-let [ns (:: RootNode raw-ns)]
+    (if-let [ns (:: .RootNode raw-ns)]
         (. ns suffix)
         (. "pharen" suffix))))
 
 (fn add-uses (code)
-  (let [use-str (if-let [uses (get (:: RootNode ns) (:: RootNode uses))]
+  (let [use-str (if-let [uses (get (:: .RootNode ns) (:: .RootNode uses))]
                   (reduce-to-str 
                     (lambda (ns)
                             (if (== (count ns) 2)
@@ -43,7 +44,7 @@
 
 (fn wrap-compile (code)
   (let [embedded-code (. "(fn eval-func () " code ")")]
-    (compile embedded-code NULL (:: Node REPL_INPUT))))
+    (compile embedded-code NULL (:: .Node REPL_INPUT))))
 
 (fn compile-code (code)
   (local compiled-code (wrap-compile code))
