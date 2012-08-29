@@ -103,6 +103,12 @@
 (fn identity (x)
   x)
 
+(fn inc (x)
+  (+ 1 x))
+
+(fn dec (x)
+  (- 1 x))
+
 (fn flip (f arg1 arg2)
   ($f arg2 arg1))
 
