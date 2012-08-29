@@ -1065,7 +1065,7 @@ class UseNode extends KeywordCallNode{
 
         $code =  parent::compile_statement();
         // Require needs to be added after the compilation is done
-        $file = $use[0].".php";
+        $file = str_replace("\\", "/", $use[0]).".php";
         if(stream_resolve_include_path($file)){
             Node::$tmp .= $this->format_line("include_once '" . $file . ";");
         }
