@@ -39,18 +39,21 @@ class Token{
 }
 
 class OpenParenToken extends Token{
+    public $closer = "CloseParenToken";
 }
 
 class CloseParenToken extends Token{
 }
 
 class OpenBracketToken extends Token{
+    public $closer = "CloseBracketToken";
 }
 
 class CloseBracketToken extends Token{
 }
 
 class OpenBraceToken extends Token{
+    public $closer = "CloseBraceToken";
 }
 
 class CloseBraceToken extends Token{
@@ -111,6 +114,25 @@ class Lexer{
 
         $prev_tok = $this->toks[$c-1];
         return $prev_tok instanceof OpenParenToken || $prev_tok instanceof ReaderMacroToken;
+    }
+
+    public function finished(){
+        $first_tok = $this->toks[0];
+        if(!($first_tok instanceof OpenParenToken || $first_tok instanceof OpenBraceToken || $first_tok instanceof OpenBracketToken))
+            return True;
+
+        $open_class = get_class($first_tok);
+        $close_class = $first_tok->closer;
+        $open_instances = 0;
+        $close_instances = 0;
+        foreach($this->toks as $tok){
+            if(get_class($tok) === $open_class){
+                $open_instances++;
+            }else if(get_class($tok) === $close_class){
+                $close_instances++;
+            }
+        }
+        return $close_instances >= $open_instances;
     }
 
     public function lex(){
@@ -637,10 +659,11 @@ class Node implements Iterator, ArrayAccess, Countable{
             if($tok instanceof Node){
                 $list[] = $tok->convert_to_list($return_as_array, $get_values);
             }else{
-                if($get_values)
+                if($get_values && ($tok instanceof StringToken || $tok instanceof NumberToken)){
                     $list[] = $tok->value;
-                else
+                }else{
                     $list[] = $tok;
+                }
             }
         }
         if($return_as_array){
@@ -859,6 +882,7 @@ class InfixNode extends Node{
 }
 
 class RootNode extends Node{
+    public static $raw_ns;
     public static $ns;
     public static $ns_string;
     public static $uses = array();
@@ -896,6 +920,7 @@ class RootNode extends Node{
         $code .= $this->format_line("use Pharen\Lexical as Lexical;");
 
         $code .= $this->scope->init_namespace_scope();
+
         $body = "";
         foreach($this->children as $child){
             $body .= $child->compile_statement();
@@ -1010,6 +1035,7 @@ class NamespaceNode extends KeywordCallNode{
     public function compile_statement(){
         array_unshift($this->children, Null);
         $this->children[1]->value = "namespace";
+        RootNode::$raw_ns = $this->children[2]->value;
         RootNode::$ns = $this->children[2]->compile();
         RootNode::$ns_string = parent::compile_statement();
         return "";
@@ -1036,7 +1062,14 @@ class UseNode extends KeywordCallNode{
             RootNode::$uses[RootNode::$ns] = array();
         }
         RootNode::$uses[RootNode::$ns] []= $use;
-        return parent::compile_statement();
+
+        $code =  parent::compile_statement();
+        // Require needs to be added after the compilation is done
+        $file = $use[0].".php";
+        if(stream_resolve_include_path($file)){
+            Node::$tmp .= $this->format_line("include_once '" . $file . ";");
+        }
+        return $code;
     }
 }
 
@@ -1519,11 +1552,15 @@ class QuoteWrapper{
                     $val_node = $scope->find(LeafNode::phpfy_name(ltrim($tok->value, '-')), True, Null, False);
                     if($val_node instanceof Node){
                         $val = $val_node->convert_to_list();
+                    }else if($val_node instanceof PharenCachedList){
+                        $val = $val_node;
                     }else{
                         if(is_string($val_node)){
                             $val = new StringToken($val_node);
                         }else if(is_integer($val_node) or is_double($val_node)){
                             $val = new NumberToken($val_node);
+                        }else{
+                            $val = $val_node;
                         }
                     }
                 }
@@ -2190,7 +2227,10 @@ class BindingNode extends Node{
         parent::__construct($parent);
     }
 
-    public function compile_statement($return=False){
+    public function compile_statement($prefix="", $return=False, $expr=False){
+        if(MacroNode::$ghosting){
+            return "";
+        }
         $scope = $this->scope = new Scope($this);
         $scope->virtual = True;
 
@@ -2218,13 +2258,24 @@ class BindingNode extends Node{
             $this->children = array_merge($this->children, $last_node_body);
         }
 
-        if($return === True){
+        if($expr){
+            $compile_func = "compile";
+        }else{
+            $compile_func = "compile_statement";
+        }
+
+        if($return === True || $prefix !== ""){
             $ret_stashed_children = $this->children;
-            $last_line = array_pop($this->children)->compile_return();
+            $last_node = array_pop($this->children);
+            if($prefix){
+                $last_line = $last_node->$compile_func($prefix);
+            }else{
+                $last_line = $last_node->compile_return();
+            }
         }
 
         foreach(array_slice($this->children, 2) as $line){
-            $body .= $line->compile_statement();
+            $body .= $line->$compile_func();
         }
 
         $lexings = $this->scope->init_lexical_scope();
@@ -2233,7 +2284,7 @@ class BindingNode extends Node{
         }
         $code = $this->scope->get_lexical_bindings().$code.$lexings.$body.$last_line;
 
-        if($return === True){
+        if($return === True || $prefix !== ""){
             $this->children = $ret_stashed_children;
         }
         // Restore children because only_return_body is TODO: MUTATING GAAH
@@ -2243,12 +2294,12 @@ class BindingNode extends Node{
         return $code;
     }
 
-    public function compile_return(){
-        return $this->compile_statement(True);
+    public function compile_return($prefix=""){
+        return $this->compile_statement($prefix, True);
     }
 
-    public function compile(){
-        return $this->compile_return();
+    public function compile($prefix=""){
+        return $this->compile_statement($prefix, False, True);
     }
 
     public function get_last_expr(){
@@ -2581,7 +2632,10 @@ function compile($code, $root=Null, $ns=Null){
     }
     $lexer = new Lexer($code);
     $tokens = $lexer->lex();
- 
+
+    if(!$lexer->finished()){
+        return False;
+    }
     $parser = new Parser($tokens);
     $node_tree = $parser->parse($root);
     $phpcode = $node_tree->compile();

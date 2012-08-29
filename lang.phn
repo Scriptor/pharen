@@ -3,6 +3,9 @@
 (set-include-path (. (get-include-path) PATH_SEPARATOR LIB_PATH))
 (require "sequence.php")
 
+(defmacro comment (&exprs)
+  'NULL)
+
 (defmacro when (c &body)
   '(if ~c
      (do
@@ -61,6 +64,19 @@
 (defmacro rest (xs)
   '(-> (seq ~xs) (rest)))
 
+(defmacro if-let (binding then else)
+  (def cond (:binding 1))
+  '(if ~cond
+     (let ~binding
+       ~then)
+     ~else))
+
+(defmacro when-let (binding then)
+  (def cond (:binding 1))
+  '(when ~cond
+     (let ~binding
+       ~then)))
+
 (fn prn (s)
   (do
     (print* s "\n")
@@ -74,6 +90,12 @@
 
 (fn neg? (n)
   (< n 0))
+
+(fn odd? (n)
+  (== (% n 2) 1))
+
+(fn even? (n)
+  (== (% n 2) 0))
 
 (fn str (s1 s2)
   (. s1 s2))
@@ -116,7 +138,7 @@
           pairs))
 
 (defmacro lazy (list-expr)
-  '(new PharenLazyList (lambda () ~list-expr)))
+  '(new .PharenLazyList (lambda () ~list-expr)))
 
 (fn arr (x)
   (cond
@@ -139,7 +161,9 @@
   (-> (hashify hm) (assoc key val)))
 
 (fn get (key hm)
-  (:hm key))
+  (if (isset (:hm key))
+    (:hm key)
+    NULL))
 
 (fn take (n xs)
   (if (zero-or-empty? n xs)
@@ -226,7 +250,7 @@
 
 (fn filter (f coll)
   (if (empty? coll)
-    coll
+    []
     (let [x (first coll), xs (rest coll)]
       (if (not ($f x))
         (filter f xs)
