@@ -37,7 +37,7 @@
                               (. path "/" file)
                               FALSE))
                     paths))
-  (compile-file lib-path)
+  (compile (file-get-contents lib-path))
   (= (:: RootNode ns) old-ns)
   (= (:: RootNode ns-string) old-ns-string)
   FALSE)
