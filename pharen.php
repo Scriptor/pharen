@@ -2270,10 +2270,16 @@ class LocalNode extends Node{
 }
 
 class BindingNode extends Node{
+    static $tmp_num;
+
     public $only_return_body = False;
 
     public function __construct($parent){
         parent::__construct($parent);
+    }
+
+    static function get_tmp_name(){
+        return "\$__lettmpvar".self::$tmp_num++;
     }
 
     public function compile_statement($prefix="", $return=False, $expr=False){
@@ -2308,23 +2314,22 @@ class BindingNode extends Node{
         }
 
         if($expr){
-            $compile_func = "compile";
-        }else{
-            $compile_func = "compile_statement";
+            $tmp_var = self::get_tmp_name();
+            $prefix = "$tmp_var = ";
         }
 
         if($return === True || $prefix !== ""){
             $ret_stashed_children = $this->children;
             $last_node = array_pop($this->children);
             if($prefix){
-                $last_line = $last_node->$compile_func($prefix);
+                $last_line = $last_node->compile_statement($prefix);
             }else{
                 $last_line = $last_node->compile_return();
             }
         }
 
         foreach(array_slice($this->children, 2) as $line){
-            $body .= $line->$compile_func();
+            $body .= $line->compile_statement();
         }
 
         $lexings = $this->scope->init_lexical_scope();
@@ -2340,7 +2345,12 @@ class BindingNode extends Node{
         if($this->only_return_body){
             $this->children = $stashed_children;
         }
-        return $code;
+        if($expr){
+            Node::$tmp .= $code;
+            return $tmp_var;
+        }else{
+            return $code;
+        }
     }
 
     public function compile_return($prefix=""){
