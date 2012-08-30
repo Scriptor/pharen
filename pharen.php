@@ -2602,9 +2602,17 @@ class Parser{
 class Flags{
     public static $lang_compiled = False;
     public static $flags = array();
+    public static $shortcuts = array(
+        'r' => 'repl',
+        'e' => 'executable',
+        'l' => 'no-import-lang'
+    );
 }
 
 function set_flag($flag, $setting=True){
+    if(isset(Flags::$shortcuts[$flag])){
+        $flag = Flags::$shortcuts[$flag];
+    }
     Flags::$flags[$flag] = $setting;
 }
 
