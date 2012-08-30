@@ -253,13 +253,21 @@ class FuncInfo{
         return Node::$ns."__partial".self::$tmp_counter++;
     }
 
-    public function __construct($name, $force_not_partial, $args){
-        $this->name = $name;
+    public function __construct($name, $force_not_partial, $args, $scope){
+        if(strstr($name, '$')){
+            if(($scoped_node = $scope->find($name, True, Null)) !== False){
+                if(isset($scoped_node->value)){
+                    $this->name = $scoped_node->value;
+                }
+            }
+        }else{
+            $this->name = $name;
+        }
         $this->args_given = $args;
         $this->force_not_partial = $force_not_partial;
 
-        if(FuncDefNode::is_pharen_func($name)){
-            $this->func = FuncDefNode::get_pharen_func($name);
+        if(FuncDefNode::is_pharen_func($this->name)){
+            $this->func = FuncDefNode::get_pharen_func($this->name);
         }else if(in_array($name, Parser::$INFIX_OPERATORS)){
             $this->func = new InfixFunc;
         }
@@ -740,7 +748,7 @@ class Node implements Iterator, ArrayAccess, Countable{
         $scope = $this->get_scope();
         $func_name = $this->get_func_name();
 
-        $func = new FuncInfo($func_name, $this->force_not_partial, array_slice($this->children, 1));
+        $func = new FuncInfo($func_name, $this->force_not_partial, array_slice($this->children, 1), $this->get_scope());
         if(MicroNode::is_micro($func_name)){
             $micro = MicroNode::get_micro($func_name);
             return $micro->get_body(array_slice($this->children, 1), $this->indent);
@@ -860,7 +868,7 @@ class InfixNode extends Node{
     public function compile(){
         $func_name = $this->get_func_name();
         $args = $this->compile_args(array_slice($this->children, 1));
-        $func = new FuncInfo($func_name, $this->force_not_partial, array_slice($this->children, 1));
+        $func = new FuncInfo($func_name, $this->force_not_partial, array_slice($this->children, 1), $this->get_scope());
         if(!$this->has_splice && $func->is_partial()){
             return $this->create_partial($func);
         }
