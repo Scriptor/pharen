@@ -1263,9 +1263,8 @@ class FuncDefNode extends SpecialForm{
     public function add_to_functions_list($name){
         if(RootNode::$ns){
             self::$functions[RootNode::$ns."\\".$this->name] = $this;
-        }else{
-            self::$functions[$this->name] = $this;
         }
+        self::$functions[$this->name] = $this;
     }
 
     public function compile_statement($prefix=""){
