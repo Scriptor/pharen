@@ -35,9 +35,12 @@ if(__FILE__ === realpath($_SERVER['SCRIPT_NAME'])){
     foreach($input_files as $file){
         $php_code .= compile_file($file);
     }
-    if(count($input_files) === 0 || isset(Flags::$flags['repl'])){
-        $last_file_php = str_replace(".phn", ".php", $input_files[count($input_files)-1]);
-        include_once($last_file_php);
+    $num_input_files = count($input_files);
+    if($num_input_files === 0 || isset(Flags::$flags['repl'])){
+        if($num_input_files > 0){
+            $last_file_php = str_replace(".phn", ".php", $input_files[$num_input_files-1]);
+            include_once($last_file_php);
+        }
         include($pharen_dir.DIRECTORY_SEPARATOR."lib".DIRECTORY_SEPARATOR."repl.php");
     }
     if(isset($_SERVER['REQUEST_METHOD'])){
