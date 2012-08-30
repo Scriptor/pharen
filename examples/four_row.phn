@@ -10,6 +10,12 @@
   (array-fill 0 y
               (array-fill 0 x 0)))
 
+(fn prn-board (brd)
+  (if (empty? brd)
+    (prn "")
+    (do
+      (prn-board (rest brd))
+      (prn (seq (first brd))))))
 
 (fn place-in-row (row col coin)
   (concat (take col row)
