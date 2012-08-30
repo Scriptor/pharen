@@ -898,13 +898,14 @@ class RootNode extends Node{
     public static $ns;
     public static $ns_string;
     public static $uses = array();
+    public static $last_scope = Null;
 
-    public function __construct(){
+    public function __construct($scope=Null){
         // No parent to be passed to the constructor. It's Root all the way down.
         $this->parent = Null;
         $this->children = array();
-        $this->scope = new Scope($this);
         $this->indent = "";
+        $this->scope = $scope ? $scope : new Scope($this);
     }
 
     public function format_line_indent($code, $prefix=""){
@@ -2501,8 +2502,8 @@ class Parser{
 
     }
     
-    public function parse($root=Null){
-        $curnode = $root ? $root : new RootNode;
+    public function parse($root=Null, $scope=Null){
+        $curnode = $root ? $root : new RootNode($scope);
         $rootnode = $curnode;
         $state = array();
 
@@ -2679,7 +2680,7 @@ function compile_file($fname, $output_dir=Null){
     return $phpcode;
 }
  
-function compile($code, $root=Null, $ns=Null){
+function compile($code, $root=Null, $ns=Null, $scope=Null){
     if($ns !== Null){
         Node::$ns = $ns;
     }
@@ -2690,7 +2691,7 @@ function compile($code, $root=Null, $ns=Null){
         return False;
     }
     $parser = new Parser($tokens);
-    $node_tree = $parser->parse($root);
+    $node_tree = $parser->parse($root, $scope);
     $phpcode = $node_tree->compile();
     return $phpcode;
 }
