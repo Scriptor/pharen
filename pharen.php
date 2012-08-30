@@ -397,14 +397,14 @@ class Scope{
         }
     }
 
-    public function get_lexing($var_name, $force=False){
+    public function get_lexing($var_name, $force=False, $prefix=""){
         if($force){
             $this->lexically_needed[$var_name] = True;
         }
         if(!isset($this->lexically_needed[$var_name])){
             return "";
         }
-        return $this->owner->format_line_indent('Lexical::bind_lexing("'.Node::$ns."\", {$this->id}, '$var_name', $var_name);");
+        return $this->owner->format_line_indent($prefix.'Lexical::bind_lexing("'.Node::$ns."\", {$this->id}, '$var_name', $var_name);");
     }
 
     public function get_lexical_bindings(){
@@ -2225,9 +2225,10 @@ class ListNode extends LiteralNode{
 }
 
 class DefNode extends Node{
+    static $tmp_num = 0;
 
-    public function compile(){
-        return $this->compile_statement();
+    static function get_tmp_name(){
+        return "\$__deftmpvar".self::$tmp_num++;
     }
 
     public function compile_statement($prefix=""){
@@ -2235,10 +2236,17 @@ class DefNode extends Node{
         $varname = $this->children[1]->compile();
 
         $this->scope->bind($varname, $this->children[2]);
-        $code = $this->format_statement($this->scope->get_binding($varname), $prefix);
-        $code .= $this->scope->get_lexing($varname, True);
+        $code = $this->format_statement($this->scope->get_binding($varname));
+        $code .= $this->scope->get_lexing($varname, True, $prefix);
 
         return $code;
+    }
+
+    public function compile(){
+        $tmp_name = self::get_tmp_name();
+        $code = $this->compile_statement($tmp_name." = ");
+        Node::$tmp .= ($code);
+        return $tmp_name;
     }
 
     public function compile_return(){
