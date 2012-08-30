@@ -212,6 +212,9 @@
 (fn repeat (x)
   (lazy (cons x (repeat x))))
 
+(fn repeatedly (f)
+  (lazy (cons ($f) (repeatedly f))))
+
 (fn iterate (f init)
   (lazy (cons init (iterate f ($f init)))))
 
