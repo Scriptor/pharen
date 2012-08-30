@@ -43,18 +43,14 @@
          (TRUE x))))
 
 (fn wrap-compile (code)
-  (let [embedded-code (. "(fn eval-func () " code ")")]
-    (compile embedded-code NULL (:: .Node REPL_INPUT))))
+  (let [embedded-code (. "(local c " code ") (lambda () "") (return c)")]
+    (compile embedded-code NULL (:: .RootNode ns) (:: .RootNode last-scope))))
 
 (fn compile-code (code)
   (local compiled-code (wrap-compile code))
   (if compiled-code
-    (let [no-func-def (str-replace "function eval_func(){" "" compiled-code)
-          with-uses (add-uses no-func-def)
-          final-code (substr 
-                       with-uses
-                       0
-                       (- (strrpos with-uses "}") 1))]
+    (let [with-uses (add-uses compiled-code)
+          final-code with-uses]
       final-code)
     FALSE))
 
