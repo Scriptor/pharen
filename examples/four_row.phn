@@ -6,8 +6,10 @@
    [0 0 0]
    [0 0 0]])
 
-(fn board ()
-  board)
+(fn board ([x 7] [y 6])
+  (array-fill 0 y
+              (array-fill 0 x 0)))
+
 
 (fn place-in-row (row col coin)
   (concat (take col row)
