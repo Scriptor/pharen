@@ -196,6 +196,11 @@
     xs
     (cons (take n xs) (partition n (drop n xs)))))
 
+(fn interleave (xs ys)
+  (if (or (empty? xs) (empty? ys))
+    []
+    (cons (first xs) (cons (first ys) (interleave (rest xs) (rest ys))))))
+
 (fn zip-with (f xs ys)
   (if (or (empty? xs) (empty? ys))
     []
