@@ -382,7 +382,11 @@ class Scope{
     }
 
     public function init_namespace_scope(){
-        return $this->owner->format_line("Lexical::\$scopes['".Node::$ns."'] = array();");
+        if(!RootNode::$ns){
+            return $this->owner->format_line("Lexical::\$scopes['".Node::$ns."'] = array();");
+        }else{
+            return "";
+        }
     }
 
     public function init_lexical_scope(){
