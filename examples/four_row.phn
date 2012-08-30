@@ -51,4 +51,4 @@
       p1moves (repeatedly (thunk (prompt-move "1")))
       p2moves (repeatedly (thunk (prompt-move "2")))
       moves (lazy.interleave p1moves p2moves)]
-  (prn-board (reduce-fns players (board) (take num-moves moves))))
+  (prn-board (reduce-fns players (board) (lazy.take num-moves moves))))
