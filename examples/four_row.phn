@@ -1,0 +1,23 @@
+(ns four-row)
+
+; Defined bottom-up: Row of index 0 is the bottom row
+(def board
+  [[0 0 0]
+   [0 0 0]
+   [0 0 0]])
+
+(fn board ()
+  board)
+
+(fn place-in-row (row col coin)
+  (concat (take col row)
+          (cons coin (drop (inc col) row))))
+
+(fn drop-coin (col coin brd)
+  (if (empty? brd)
+    FALSE
+    (let [row (first brd)
+          rst (rest brd)]
+      (if (:row col)
+        (cons row (drop-coin col coin rst))
+        (cons (place-in-row row col coin) rst)))))

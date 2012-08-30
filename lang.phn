@@ -37,7 +37,7 @@
                               (. path "/" file)
                               FALSE))
                     paths))
-  (compile-file lib-path)
+  (compile (file-get-contents lib-path))
   (= (:: RootNode ns) old-ns)
   (= (:: RootNode ns-string) old-ns-string)
   FALSE)
@@ -102,6 +102,12 @@
 
 (fn identity (x)
   x)
+
+(fn inc (x)
+  (+ 1 x))
+
+(fn dec (x)
+  (- 1 x))
 
 (fn flip (f arg1 arg2)
   ($f arg2 arg1))

@@ -1065,9 +1065,9 @@ class UseNode extends KeywordCallNode{
 
         $code =  parent::compile_statement();
         // Require needs to be added after the compilation is done
-        $file = $use[0].".php";
+        $file = str_replace("\\", "/", $use[0]).".php";
         if(stream_resolve_include_path($file)){
-            Node::$tmp .= $this->format_line("include_once '" . $file . ";");
+            Node::$tmp .= $this->format_line("include_once '" . $file . "';");
         }
         return $code;
     }
@@ -1235,6 +1235,19 @@ class FuncDefNode extends SpecialForm{
     public $is_partial;
 
     static function is_pharen_func($func_name){
+        if(strpos($func_name, "\\")){
+            $last_slash = strrpos($func_name, "\\");
+            $ns = substr($func_name, 0, $last_slash);
+            $name = substr($func_name, $last_slash+1);
+            foreach(RootNode::$uses[RootNode::$ns] as $use){
+                if(count($use) == 2 && $use[1] == $ns && isset(self::$functions[$use[0]."\\".$name])){
+                    $usename = $use[1]."\\".$name;
+                    self::$functions[$usename] = self::$functions[$use[0]."\\".$name];
+                    $func_name = $usename;
+                    break;
+                }
+            }
+        }
         return isset(self::$functions[$func_name]);
     }
 
@@ -1247,11 +1260,19 @@ class FuncDefNode extends SpecialForm{
         return '"'.$this->name.'"';
     }
 
+    public function add_to_functions_list($name){
+        if(RootNode::$ns){
+            self::$functions[RootNode::$ns."\\".$this->name] = $this;
+        }else{
+            self::$functions[$this->name] = $this;
+        }
+    }
+
     public function compile_statement($prefix=""){
         $this->scope = $this->scope == Null ? new Scope($this) : $this->scope;
 
         $this->name = $this->children[1]->compile();
-        self::$functions[$this->name] = $this;
+        $this->add_to_functions_list($this->name);
         $this->params = $this->children[2]->children;
 
         $params = $this->get_param_names($this->params);
@@ -1419,6 +1440,7 @@ class MacroNode extends FuncDefNode{
     static $rescope_vars = False;
 
     public $args;
+    public $macro_ns;
     public $evaluated = False;
 
     static function is_macro($name){
@@ -1463,7 +1485,10 @@ class MacroNode extends FuncDefNode{
                 $scope->bind($param_node->compile(True), $tok->value);
             }
         }
+        $old_ns = RootNode::$ns;
+        RootNode::$ns = $macronode->macro_ns;
         $code = $macronode->parent_compile();
+        RootNode::$ns = $old_ns;
         if($macronode->evaluated || function_exists($name)){
             Node::add_tmpfunc('');
             return;
@@ -1495,6 +1520,7 @@ class MacroNode extends FuncDefNode{
     }
 
     public function compile_statement(){
+        $this->macro_ns = RootNode::$ns;
         self::upghost();
         $this->parent_compile();
         self::$current_params = array();
@@ -2545,7 +2571,7 @@ class Parser{
             $expected = $this->reduce_state($expected);
         }
 
-        if($tok instanceof NameToken and strToUpper($tok->value) == $tok->value){
+        if($tok instanceof NameToken and (strstr($tok->value, ".") || strToUpper($tok->value) == $tok->value)){
             // Check if the token is all upper case, which means it's a constant
             $class = "LeafNode";
             array_shift($cur_state);
