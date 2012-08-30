@@ -494,8 +494,10 @@ class Node implements Iterator, ArrayAccess, Countable{
             $code = Node::$lambda_tmp.$code;
             Node::$lambda_tmp = '';
         }
-        Node::$prev_tmp = '';
-        Node::$tmp = '';
+        if(!MacroNode::$ghosting && !MacroNode::$rescope_vars){
+            Node::$prev_tmp = '';
+            Node::$tmp = '';
+        }
         Node::$post_tmp = '';
         return $code;
     }
@@ -1327,10 +1329,12 @@ class FuncDefNode extends SpecialForm{
             
             $new_param_values = array_slice($last_expr->get_last_expr()->children, 1);
             $params_len = count($new_param_values);
+            $recur = "";
             for($x=0; $x<$params_len; $x++){
                 $val_node = $new_param_values[$x];
-                $body .= $this->format_line_indent("\$__tailrecursetmp$x = " . $val_node->compile().";");
+                $recur .= $this->format_line_indent("\$__tailrecursetmp$x = " . $val_node->compile().";");
             }
+            $body .= Node::add_tmp($recur);
             $x=0;
             foreach($params as $param){
                 if(is_array($param)){
