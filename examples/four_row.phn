@@ -37,10 +37,14 @@
   (intval (repl.prompt (. "Player " player "> "))))
 
 (fn player1 (col brd)
-  (drop-coin 1 col brd))
+  (let [b (drop-coin 1 col brd)]
+    (prn-board b)
+    b))
 
 (fn player2 (col brd)
-  (drop-coin 2 col brd))
+  (let [b (drop-coin 2 col brd)]
+    (prn-board b)
+    b))
 
 (let [players (cycle [#player1 #player2])
       num-moves (repl.prompt "How many moves? ")
