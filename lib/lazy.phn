@@ -1,0 +1,18 @@
+(ns lazy)
+(fn map (f coll)
+  (lazy
+    (if (empty? coll)
+      []
+      (cons ($f (first coll)) (map f (rest coll))))))
+
+(fn take (n coll)
+  (lazy
+    (if (zero-or-empty? n coll)
+      []
+      (cons (first coll) (take (- n 1) (rest coll))))))
+
+(fn interleave (xs ys)
+  (lazy
+    (if (or (empty? xs) (empty? ys))
+      []
+      (cons (first xs) (interleave ys (rest xs)))))))
