@@ -1065,7 +1065,7 @@ class UseNode extends KeywordCallNode{
         if(Node::$ns != "repl_input"){
             Node::$tmp .= $c;
         }
-        return "";
+        return "NULL";
     }
 
     public function compile_statement(){
