@@ -11,6 +11,8 @@ if(__FILE__ === realpath($_SERVER['SCRIPT_NAME'])){
         foreach($argv as $arg){
             if(strpos($arg, "--") === 0){
                 set_flag(substr($arg, 2));
+            }else if(strpos($arg, "-") === 0){
+                set_flag(substr($arg, 1));
             }else{
                 $input_files[] = $arg;
             }
@@ -26,16 +28,19 @@ if(__FILE__ === realpath($_SERVER['SCRIPT_NAME'])){
         $php_code = "";
     }
 
-    if(count($input_files) === 0){
+    if(count($input_files) === 0 || isset(Flags::$flags['repl'])){
         compile_file($pharen_dir.DIRECTORY_SEPARATOR."lib".DIRECTORY_SEPARATOR."repl.phn");
         compile_file($pharen_dir.DIRECTORY_SEPARATOR."lib".DIRECTORY_SEPARATOR."path.phn");
+    }
+    foreach($input_files as $file){
+        $php_code .= compile_file($file);
+    }
+    if(count($input_files) === 0 || isset(Flags::$flags['repl'])){
+        $last_file_php = str_replace(".phn", ".php", $input_files[count($input_files)-1]);
+        include_once($last_file_php);
         include($pharen_dir.DIRECTORY_SEPARATOR."lib".DIRECTORY_SEPARATOR."repl.php");
-    }else{
-        foreach($input_files as $file){
-            $php_code .= compile_file($file);
-        }
-        if(isset($_SERVER['REQUEST_METHOD'])){
-            echo "<pre>$php_code</pre>";
-        }
+    }
+    if(isset($_SERVER['REQUEST_METHOD'])){
+        echo "<pre>$php_code</pre>";
     }
 }
