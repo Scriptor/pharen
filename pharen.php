@@ -1092,7 +1092,7 @@ class UseNode extends KeywordCallNode{
 class FuncValNode extends LeafNode{
 
     public function compile(){
-        return '"'.parent::compile().'"';
+        return '"'.RootNode::$ns."\\".parent::compile().'"';
     }
 }
 
