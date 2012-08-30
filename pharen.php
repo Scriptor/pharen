@@ -1270,7 +1270,9 @@ class FuncDefNode extends SpecialForm{
     }
 
     public function compile(){
+        Node::$in_func++;
         $this->compile_statement();
+        Node::$in_func--;
         return '"'.$this->name.'"';
     }
 
@@ -1821,7 +1823,7 @@ class LambdaNode extends FuncDefNode{
     }
 
     public function compile_statement(){
-        return $this->format_statement($this->compile());
+        return $this->format_statement($this->compile().";");
     }
 
     public function compile_return(){
