@@ -13,11 +13,11 @@
   (concat (take col row)
           (cons coin (drop (inc col) row))))
 
-(fn drop-coin (col coin brd)
+(fn drop-coin (coin col brd)
   (if (empty? brd)
     FALSE
     (let [row (first brd)
           rst (rest brd)]
       (if (:row col)
-        (cons row (drop-coin col coin rst))
+        (cons row (drop-coin coin col rst))
         (cons (place-in-row row col coin) rst)))))
