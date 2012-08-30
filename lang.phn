@@ -52,6 +52,9 @@
      (print (. "Elapsed time: " time-to-display "\n"))
      NULL))
 
+(defmacro thunk (&exprs)
+  '(lambda () ~@exprs))
+
 (defmacro inst? (var cls)
   '(instanceof ~var ~-cls))
 
