@@ -242,6 +242,11 @@
     acc
     (reduce f ($f (first xs) acc) (rest xs))))
 
+(fn reduce-fns (fns acc xs)
+  (if (empty? xs)
+    acc
+    (reduce-fns (rest fns) ((first fns) (first xs) acc) (rest xs))))
+
 (fn reduce-to-str (new-val-func xs)
   (reduce (lambda (val acc)
                   (. acc ($new-val-func val)))
