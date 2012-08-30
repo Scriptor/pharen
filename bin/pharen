@@ -41,7 +41,10 @@ if(__FILE__ === realpath($_SERVER['SCRIPT_NAME'])){
             $last_file_php = str_replace(".phn", ".php", $input_files[$num_input_files-1]);
             include_once($last_file_php);
         }
-        include($pharen_dir.DIRECTORY_SEPARATOR."lib".DIRECTORY_SEPARATOR."repl.php");
+        include_once($pharen_dir.DIRECTORY_SEPARATOR."lib".DIRECTORY_SEPARATOR."repl.php");
+        pharen_repl\intro();
+        compile_lang();
+        pharen_repl\work();
     }
     if(isset($_SERVER['REQUEST_METHOD'])){
         echo "<pre>$php_code</pre>";
