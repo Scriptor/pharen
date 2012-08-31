@@ -1062,9 +1062,6 @@ class UseNode extends KeywordCallNode{
 
     public function compile(){
         $c = $this->compile_statement();
-        if(Node::$ns != "repl_input"){
-            Node::$tmp .= $c;
-        }
         return "NULL";
     }
 
