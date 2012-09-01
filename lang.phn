@@ -125,7 +125,7 @@
   (or (zero? n) (empty? xs)))
 
 (fn empty? (xs)
-  (or (inst? xs PharenEmptyList) (empty xs)))
+  (or (inst? (seq xs) PharenEmptyList) (not (seq xs))))
 
 (fn seq? (x)
   (inst? x IPharenSeq))
