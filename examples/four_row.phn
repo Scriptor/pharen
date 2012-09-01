@@ -31,7 +31,7 @@
 
 (fn drop-coin (coin col brd)
   (if (empty? brd)
-    FALSE
+    []
     (let [row (first brd)
           rst (rest brd)]
       (if (:row col)
@@ -51,9 +51,10 @@
     (prn-board b)
     b))
 
-(let [players (cycle [#player1 #player2])
-      num-moves (repl.prompt "How many moves? ")
-      p1moves (repeatedly (thunk (prompt-move "1")))
-      p2moves (repeatedly (thunk (prompt-move "2")))
-      moves (lazy.interleave p1moves p2moves)]
-  (prn-board (reduce-fns players (board) (lazy.take num-moves moves))))
+(if (repling)
+  (let [players (cycle [#four-row.player1 #four-row.player2])
+        num-moves (repl.prompt "How many moves? ")
+        p1moves (repeatedly (thunk (prompt-move "1")))
+        p2moves (repeatedly (thunk (prompt-move "2")))
+        moves (lazy.interleave p1moves p2moves)]
+    (prn-board (reduce-fns players (board) (lazy.take num-moves moves)))))
