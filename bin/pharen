@@ -38,6 +38,7 @@ if(__FILE__ === realpath($_SERVER['SCRIPT_NAME'])){
     $num_input_files = count($input_files);
     if($num_input_files === 0 || isset(Flags::$flags['repl'])){
         if($num_input_files > 0){
+            define("PHARENREPLMODE", True);
             $last_file_php = str_replace(".phn", ".php", $input_files[$num_input_files-1]);
             include_once($last_file_php);
         }

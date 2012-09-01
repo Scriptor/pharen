@@ -292,6 +292,9 @@
                 []
                 pairs))
 
+(fn repling ()
+  (and (defined "PHARENREPLMODE") (constant "PHARENREPLMODE")))
+
 (defmacro attr* (access-modifier name val)
   '(access ~access-modifier (local ~name ~val)))
 
