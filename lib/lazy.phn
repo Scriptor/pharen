@@ -15,4 +15,13 @@
   (lazy
     (if (or (empty? xs) (empty? ys))
       []
-      (cons (first xs) (interleave ys (rest xs)))))))
+      (cons (first xs) (interleave ys (rest xs))))))
+
+(fn filter (f coll)
+  (lazy
+    (if (empty? coll)
+      []
+      (let [x (first coll), xs (rest coll)]
+        (if (not ($f x))
+          (filter f xs)
+          (cons x (filter f xs)))))))
