@@ -1503,10 +1503,12 @@ class MacroNode extends FuncDefNode{
         }
         $old_ns = RootNode::$ns;
         RootNode::$ns = $macronode->macro_ns;
+        $old_tmpfunc = Node::$tmpfunc;
         $code = $macronode->parent_compile();
         RootNode::$ns = $old_ns;
         if($macronode->evaluated || function_exists($name)){
             Node::add_tmpfunc('');
+            Node::$tmpfunc = $old_tmpfunc;
             return;
         }else{
             $code = "use Pharen\Lexical as Lexical;\n"
