@@ -18,7 +18,12 @@
     (prn "")
     (do
       (prn-board (rest brd))
-      (prn (seq (first brd))))))
+      (map (lambda (x)
+                   (if (not x)
+                     (print ". ")
+                     (print* x " ")))
+           (first brd))
+      (prn ""))))
 
 (fn place-in-row (row col coin)
   (concat (take col row)
