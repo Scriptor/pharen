@@ -146,7 +146,13 @@
           {}
           pairs))
 
-(defmacro lazy (list-expr)
+(fn force (x)
+  (-> x (force)))
+
+(fn realized? (x)
+  (-> x (realized)))
+
+(defmacro lazy-seq (list-expr)
   '(new .PharenLazyList (lambda () ~list-expr)))
 
 (fn arr (x)
@@ -215,22 +221,22 @@
   (implode glue (arr xs)))
 
 (fn infinity ([n 0])
-  (lazy (cons n (infinity (+ n 1)))))
+  (lazy-seq (cons n (infinity (+ n 1)))))
 
 (fn repeat (x)
-  (lazy (cons x (repeat x))))
+  (lazy-seq (cons x (repeat x))))
 
 (fn repeatedly (f)
-  (lazy (cons ($f) (repeatedly f))))
+  (lazy-seq (cons ($f) (repeatedly f))))
 
 (fn iterate (f init)
-  (lazy (cons init (iterate f ($f init)))))
+  (lazy-seq (cons init (iterate f ($f init)))))
 
 (fn cycle (xs)
-  (lazy (concat xs (cycle xs))))
+  (lazy-seq (concat xs (cycle xs))))
 
 (fn cycle-with (f xs)
-  (lazy
+  (lazy-seq
     (let [new-xs (map f xs)]
       (concat xs (cycle-with f new-xs)))))
 
