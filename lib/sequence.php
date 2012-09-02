@@ -218,7 +218,7 @@ class PharenEmptyList extends PharenList{
     }
 }
 
-class PharenLazyList implements IPharenSeq{
+class PharenLazyList implements IPharenSeq, IPharenLazy{
     public $first = Null;
     public $rest = Null;
     public $length = Null;
@@ -234,16 +234,21 @@ class PharenLazyList implements IPharenSeq{
     }
 
     public function seq(){
-        $this->set_first_and_rest();
+        $this->force();
         return $this->lambda_result;
     }
 
     public function first(){
-        $this->set_first_and_rest();
+        $this->force();
         return $this->first;
     }
 
-    public function set_first_and_rest(){
+    public function rest(){
+        $this->force();
+        return $this->rest;
+    }
+
+    public function force(){
         if(!$this->lambda_result){
             list($lambda, $scope_id) = $this->lambda;
             $result = $lambda($scope_id);
@@ -257,9 +262,8 @@ class PharenLazyList implements IPharenSeq{
         }
     }
 
-    public function rest(){
-        $this->set_first_and_rest();
-        return $this->rest;
+    public function realized(){
+        return $this->lambda_result !== Null;
     }
 
     public function count(){
