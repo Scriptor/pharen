@@ -938,7 +938,7 @@ class RootNode extends Node{
 
         $body = "";
         foreach($this->children as $child){
-            $body .= $child->compile_statement();
+            $body .= Node::add_tmpfunc($child->compile_statement());
         }
 
         $code .= $this->scope->init_lexical_scope().$body;
@@ -1272,7 +1272,7 @@ class FuncDefNode extends SpecialForm{
         Node::$in_func++;
         $this->compile_statement();
         Node::$in_func--;
-        return '"'.$this->name.'"';
+        return '"'.RootNode::$ns."\\\\".$this->name.'"';
     }
 
     public function add_to_functions_list($name){
