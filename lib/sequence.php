@@ -5,6 +5,11 @@ interface IPharenSeq{
     public function cons($item);
 }
 
+interface IPharenLazy{
+    public function force();
+    public function realized();
+}
+
 class PharenList implements IPharenSeq, Countable, ArrayAccess, Iterator{
     public $first;
     public $rest;
