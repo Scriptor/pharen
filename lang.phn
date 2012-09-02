@@ -61,11 +61,11 @@
 (defmacro print* (&s)
   '(print (. ~@s)))
 
-(defmacro first (xs)
-  '(-> (seq ~xs) (first)))
+(fn first (xs)
+  (-> (seq xs) (first)))
 
-(defmacro rest (xs)
-  '(-> (seq ~xs) (rest)))
+(fn rest (xs)
+  (-> (seq xs) (rest)))
 
 (defmacro if-let (binding then else)
   (def cond (:binding 1))
