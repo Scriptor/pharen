@@ -51,7 +51,7 @@
     (prn-board b)
     b))
 
-(if (repling)
+(if (not (repling))
   (let [players (cycle [#four-row.player1 #four-row.player2])
         num-moves (repl.prompt "How many moves? ")
         p1moves (repeatedly (thunk (prompt-move "1")))
