@@ -17,6 +17,7 @@ class PharenList implements IPharenSeq, Countable, ArrayAccess, Iterator{
     public $iterator_key = 0;
     public $iterator_el;
     public $arr;
+    public $delimiter_tokens = array("OpenParenToken", "CloseParenToken");
 
     public static function create_from_array(&$xs){
         $cache = SplFixedArray::fromArray($xs);
@@ -155,6 +156,10 @@ class PharenList implements IPharenSeq, Countable, ArrayAccess, Iterator{
     }
 }
 
+class PharenVector extends PharenList{
+    public $delimiter_tokens = array("OpenBracketToken", "CloseBracketToken");
+}
+
 class PharenCachedList extends PharenList{
     public $cached_array;
     public $index;
@@ -280,9 +285,43 @@ class PharenLazyList implements IPharenSeq, IPharenLazy{
     }
 }
 
+class PharenDelay implements IPharenLazy{
+    public $lambda;
+    public $value = Null;
+    public $realized = False;
+
+    public function __toString(){
+        return "<".__CLASS__.">";
+    }
+
+    public function __construct($lambda){
+        $this->lambda = $lambda;
+    }
+
+    public function force(){
+        if(!$this->realized){
+            $fn = $this->lambda;
+            if(is_array($fn)){
+                $this->value = $fn[0]($fn[1]);
+            }else{
+                $this->value = $fn();
+            }
+            $this->realized = True;
+            return $this->value;
+        }else{
+            return $this->value;
+        }
+    }
+
+    public function realized(){
+        return $this->realized;
+    }
+}
+
 class PharenHashMap implements Countable, ArrayAccess, Iterator{
     public $hashmap;
     public $count;
+    public $delimiter_tokens = array("OpenBraceToken", "CloseBraceToken");
 
     public function __construct($hashmap, $count=Null){
         $this->hashmap = $hashmap;
