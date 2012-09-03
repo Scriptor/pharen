@@ -95,7 +95,7 @@ class Lexer{
         'and' => 'pharen-and'
     );
 
-    private $code;
+    public $code;
     private $char;
     private $tok;
     private $state = "new-expression";
@@ -103,6 +103,10 @@ class Lexer{
     private $escaping = false;
     private $i=0;
 	
+    public function __toString(){
+        return "<".__CLASS__.">";
+    }
+
     public function __construct($code){
         $this->code = trim($code);
     }
@@ -133,6 +137,15 @@ class Lexer{
             }
         }
         return $close_instances >= $open_instances;
+    }
+
+    public function reset(){
+        $this->i = 0;
+        $this->code = "";
+        $this->toks = array();
+        $this->state = "new-expression";
+        $this->esaping = False;
+        $this->char = "";
     }
 
     public function lex(){
@@ -1562,6 +1575,7 @@ class QuoteWrapper{
     public $node;
     public $parent;
     public $children;
+    public $lexer;
     private $literal_id;
 
     function __construct(Node $node, $literal_id){
@@ -1587,6 +1601,7 @@ class QuoteWrapper{
         $tokens = $this->node->get_tokens();
         $scope = $this->node->parent->get_scope();
         $new_tokens = array();
+        $this->lexer = new Lexer("");
         foreach($tokens as $key=>$tok){
             if($tok->unquoted){
                 $val = $scope->find(LeafNode::phpfy_name(ltrim($tok->value, '-')), True, Null, True);
@@ -1599,13 +1614,7 @@ class QuoteWrapper{
                     }else if($val_node instanceof PharenCachedList){
                         $val = $val_node;
                     }else{
-                        if(is_string($val_node)){
-                            $val = new StringToken($val_node);
-                        }else if(is_integer($val_node) or is_double($val_node)){
-                            $val = new NumberToken($val_node);
-                        }else{
-                            $val = $val_node;
-                        }
+                        $val = $this->lex_val($val_node);
                     }
                 }
                 if($val instanceof PharenCachedList){
@@ -1619,12 +1628,20 @@ class QuoteWrapper{
                 }
             }else if($tok->unquote_spliced){
                 $els = $scope->find($tok->value, True, Null, True);
+                if($els === False){
+                    $els_node = $scope->find($tok->value, True, Null, False);
+                    if($els_node instanceof PharenCachedList){
+                        $els = $els_node;
+                    }else{
+                        $els = $els_node;
+                    }
+                }
                 foreach($els as $el){
-                    if($el instanceof PharenCachedList){
-                        $flattened = $el->flatten($el->delimiter_tokens);
+                    if($el instanceof PharenList && isset($el->delimiter_tokens)){
+                        $flattened = $this->flatten($el);
                         $new_tokens = array_merge($new_tokens, $flattened);
                     }else{
-                        $new_tokens[] = $el;
+                        $new_tokens[] = $this->lex_val($el);
                     }
                 }
             }else{
@@ -1632,6 +1649,32 @@ class QuoteWrapper{
             }
         }
         return $new_tokens;
+    }
+
+    public function lex_val($val){
+        if($val instanceof Token){
+            return $val;
+        }else{
+            $this->lexer->reset();
+            $this->lexer->code = (string)$val;
+            $toks = $this->lexer->lex();
+            return $toks[0];
+        }
+    }
+
+    public function flatten(PharenList $list){
+        $delims = $list->delimiter_tokens;
+        $tokens = array();
+        $tokens []= new $delims[0];
+        foreach($list as $el){
+            if($el instanceof PharenList){
+                $tokens = array_merge($tokens, $this->flatten($el));
+            }else{
+                $tokens[] = $this->lex_val($el);
+            }
+        }
+        $tokens []= new $delims[1];
+        return $tokens;
     }
 
     public function __get($name){
