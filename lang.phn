@@ -152,8 +152,14 @@
 (fn realized? (x)
   (-> x (realized)))
 
+(defmacro lazy-obj (cls &exprs)
+  '(new ~cls (lambda () ~@exprs)))
+
+(defmacro delay (expr)
+  '(lazy-obj .PharenDelay ~expr))
+
 (defmacro lazy-seq (list-expr)
-  '(new .PharenLazyList (lambda () ~list-expr)))
+  '(lazy-obj .PharenLazyList ~list-expr))
 
 (fn arr (x)
   (cond
