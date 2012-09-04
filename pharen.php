@@ -3,8 +3,8 @@ error_reporting(E_ALL | E_NOTICE);
 define("COMPILER_SYSTEM", dirname(__FILE__));
 define("EXTENSION", ".phn");
 
-require_once(COMPILER_SYSTEM.DIRECTORY_SEPARATOR."lang.php");
-require_once(COMPILER_SYSTEM.DIRECTORY_SEPARATOR."lib/"."sequence.php");
+require_once(COMPILER_SYSTEM."/lang.php");
+require_once(COMPILER_SYSTEM."/lib/sequence.php");
 use Pharen\Lexical as Lexical;
 
 // Some utility functions for use in Pharen
@@ -936,14 +936,14 @@ class RootNode extends Node{
 
         $php_tag = $this->format_line("<?php");
         if(!isset(Flags::$flags['no-import-lang']) or Flags::$flags['no-import-lang'] == False){
-            $code .= $this->format_line("require_once('".COMPILER_SYSTEM.DIRECTORY_SEPARATOR."lang.php"."');");
+            $code .= $this->format_line("require_once('".COMPILER_SYSTEM."/"."lang.php"."');");
         }else if(Flags::$flags['no-import-lang'] == True){
             if(!isset(Flags::$flags['import-lexi-relative']) or Flags::$flags['import-lexi-relative'] == False){
                 $prefix = "'".COMPILER_SYSTEM."'";
             } else {
                 $prefix = "dirname(__FILE__)";
             }
-            $code .= $this->format_line("require_once(".$prefix.".'".DIRECTORY_SEPARATOR."lexical.php"."');");
+            $code .= $this->format_line("require_once(".$prefix.".'"."/"."lexical.php"."');");
         }
         $code .= $this->format_line("use Pharen\Lexical as Lexical;");
 
