@@ -19,15 +19,18 @@ class PharenList implements IPharenSeq, Countable, ArrayAccess, Iterator{
     public $arr;
     public $delimiter_tokens = array("OpenParenToken", "CloseParenToken");
 
-    public static function create_from_array(&$xs){
+    public static function create_from_array(&$xs, $cls="PharenCachedList"){
+        if(empty($xs)){
+            return new PharenEmptyList;
+        }
         $cache = SplFixedArray::fromArray($xs);
         $reversed = array_reverse($xs, True);
         $last_el = array_shift($reversed);
         $len = count($xs);
-        $el1 = new PharenCachedList($last_el, new PharenEmptyList, 1, $cache, $len-1);
+        $el1 = new $cls($last_el, new PharenEmptyList, 1, $cache, $len-1);
         foreach($reversed as $i=>$x){
             $index = $len-($i+2);
-            $el2 = $el1->cached_cons($x, $cache, $index);
+            $el2 = $el1->cached_cons($x, $cache, $index, $cls);
             $el1 = $el2;
         }
         return $el1;
@@ -151,13 +154,9 @@ class PharenList implements IPharenSeq, Countable, ArrayAccess, Iterator{
         return new PharenList($value, $this, $this->length+1);
     }
 
-    public function cached_cons($value, $cached_array, $index){
-        return new PharenCachedList($value, $this, $this->length+1, $cached_array, $index);
+    public function cached_cons($value, $cached_array, $index, $cls="PharenCachedList"){
+        return new $cls($value, $this, $this->length+1, $cached_array, $index);
     }
-}
-
-class PharenVector extends PharenList{
-    public $delimiter_tokens = array("OpenBracketToken", "CloseBracketToken");
 }
 
 class PharenCachedList extends PharenList{
@@ -384,3 +383,16 @@ class PharenHashMap implements Countable, ArrayAccess, Iterator{
         return isset($this->hashmap[key($this->hashmap)]);
     }
 }
+
+class PharenVector extends PharenCachedList{
+    public $delimiter_tokens = array("OpenBracketToken", "CloseBracketToken");
+
+    public static function create_from_array($array){
+        return PharenList::create_from_array($array, __CLASS__);
+    }
+
+    public function __invoke($n){
+        return $this->offsetGet($n);
+    }
+}
+
