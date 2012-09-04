@@ -95,7 +95,7 @@ class Lexer{
         'and' => 'pharen-and'
     );
 
-    private $code;
+    public $code;
     private $char;
     private $tok;
     private $state = "new-expression";
@@ -103,6 +103,10 @@ class Lexer{
     private $escaping = false;
     private $i=0;
 	
+    public function __toString(){
+        return "<".__CLASS__.">";
+    }
+
     public function __construct($code){
         $this->code = trim($code);
     }
@@ -133,6 +137,15 @@ class Lexer{
             }
         }
         return $close_instances >= $open_instances;
+    }
+
+    public function reset(){
+        $this->i = 0;
+        $this->code = "";
+        $this->toks = array();
+        $this->state = "new-expression";
+        $this->esaping = False;
+        $this->char = "";
     }
 
     public function lex(){
@@ -253,13 +266,21 @@ class FuncInfo{
         return Node::$ns."__partial".self::$tmp_counter++;
     }
 
-    public function __construct($name, $force_not_partial, $args){
-        $this->name = $name;
+    public function __construct($name, $force_not_partial, $args, $scope){
+        if(strstr($name, '$')){
+            if(($scoped_node = $scope->find($name, True, Null)) !== False){
+                if(isset($scoped_node->value)){
+                    $this->name = $scoped_node->value;
+                }
+            }
+        }else{
+            $this->name = $name;
+        }
         $this->args_given = $args;
         $this->force_not_partial = $force_not_partial;
 
-        if(FuncDefNode::is_pharen_func($name)){
-            $this->func = FuncDefNode::get_pharen_func($name);
+        if(FuncDefNode::is_pharen_func($this->name)){
+            $this->func = FuncDefNode::get_pharen_func($this->name);
         }else if(in_array($name, Parser::$INFIX_OPERATORS)){
             $this->func = new InfixFunc;
         }
@@ -374,7 +395,11 @@ class Scope{
     }
 
     public function init_namespace_scope(){
-        return $this->owner->format_line("Lexical::\$scopes['".Node::$ns."'] = array();");
+        if(!RootNode::$ns){
+            return $this->owner->format_line("Lexical::\$scopes['".Node::$ns."'] = array();");
+        }else{
+            return "";
+        }
     }
 
     public function init_lexical_scope(){
@@ -385,14 +410,14 @@ class Scope{
         }
     }
 
-    public function get_lexing($var_name, $force=False){
+    public function get_lexing($var_name, $force=False, $prefix=""){
         if($force){
             $this->lexically_needed[$var_name] = True;
         }
         if(!isset($this->lexically_needed[$var_name])){
             return "";
         }
-        return $this->owner->format_line_indent('Lexical::bind_lexing("'.Node::$ns."\", {$this->id}, '$var_name', $var_name);");
+        return $this->owner->format_line_indent($prefix.'Lexical::bind_lexing("'.Node::$ns."\", {$this->id}, '$var_name', $var_name);");
     }
 
     public function get_lexical_bindings(){
@@ -482,8 +507,10 @@ class Node implements Iterator, ArrayAccess, Countable{
             $code = Node::$lambda_tmp.$code;
             Node::$lambda_tmp = '';
         }
-        Node::$prev_tmp = '';
-        Node::$tmp = '';
+        if(!MacroNode::$ghosting && !MacroNode::$rescope_vars){
+            Node::$prev_tmp = '';
+            Node::$tmp = '';
+        }
         Node::$post_tmp = '';
         return $code;
     }
@@ -732,7 +759,7 @@ class Node implements Iterator, ArrayAccess, Countable{
 
     public function create_partial($func){
         list($tmp_func, $tmp_name) = $func->get_tmp_func($this->parent);
-        Node::$tmpfunc .= $tmp_func;
+        Node::$tmp .= $tmp_func;
         return '"'.RootNode::$ns.'\\\\'.$tmp_name.'"';
     }
 
@@ -740,7 +767,7 @@ class Node implements Iterator, ArrayAccess, Countable{
         $scope = $this->get_scope();
         $func_name = $this->get_func_name();
 
-        $func = new FuncInfo($func_name, $this->force_not_partial, array_slice($this->children, 1));
+        $func = new FuncInfo($func_name, $this->force_not_partial, array_slice($this->children, 1), $this->get_scope());
         if(MicroNode::is_micro($func_name)){
             $micro = MicroNode::get_micro($func_name);
             return $micro->get_body(array_slice($this->children, 1), $this->indent);
@@ -860,7 +887,7 @@ class InfixNode extends Node{
     public function compile(){
         $func_name = $this->get_func_name();
         $args = $this->compile_args(array_slice($this->children, 1));
-        $func = new FuncInfo($func_name, $this->force_not_partial, array_slice($this->children, 1));
+        $func = new FuncInfo($func_name, $this->force_not_partial, array_slice($this->children, 1), $this->get_scope());
         if(!$this->has_splice && $func->is_partial()){
             return $this->create_partial($func);
         }
@@ -886,13 +913,14 @@ class RootNode extends Node{
     public static $ns;
     public static $ns_string;
     public static $uses = array();
+    public static $last_scope = Null;
 
-    public function __construct(){
+    public function __construct($scope=Null){
         // No parent to be passed to the constructor. It's Root all the way down.
         $this->parent = Null;
         $this->children = array();
-        $this->scope = new Scope($this);
         $this->indent = "";
+        $this->scope = $scope ? $scope : new Scope($this);
     }
 
     public function format_line_indent($code, $prefix=""){
@@ -923,7 +951,7 @@ class RootNode extends Node{
 
         $body = "";
         foreach($this->children as $child){
-            $body .= $child->compile_statement();
+            $body .= Node::add_tmpfunc($child->compile_statement());
         }
 
         $code .= $this->scope->init_lexical_scope().$body;
@@ -1037,6 +1065,7 @@ class NamespaceNode extends KeywordCallNode{
         $this->children[1]->value = "namespace";
         RootNode::$raw_ns = $this->children[2]->value;
         RootNode::$ns = $this->children[2]->compile();
+        Node::$ns = RootNode::$ns;
         RootNode::$ns_string = parent::compile_statement();
         return "";
     }
@@ -1046,10 +1075,7 @@ class UseNode extends KeywordCallNode{
 
     public function compile(){
         $c = $this->compile_statement();
-        if(Node::$ns != "repl_input"){
-            Node::$tmp .= $c;
-        }
-        return "";
+        return "NULL";
     }
 
     public function compile_statement(){
@@ -1065,9 +1091,9 @@ class UseNode extends KeywordCallNode{
 
         $code =  parent::compile_statement();
         // Require needs to be added after the compilation is done
-        $file = $use[0].".php";
+        $file = str_replace("\\", "/", $use[0]).".php";
         if(stream_resolve_include_path($file)){
-            Node::$tmp .= $this->format_line("include_once '" . $file . ";");
+            Node::$tmp .= $this->format_line("include_once '" . $file . "';");
         }
         return $code;
     }
@@ -1235,6 +1261,19 @@ class FuncDefNode extends SpecialForm{
     public $is_partial;
 
     static function is_pharen_func($func_name){
+        if(strpos($func_name, "\\")){
+            $last_slash = strrpos($func_name, "\\");
+            $ns = substr($func_name, 0, $last_slash);
+            $name = substr($func_name, $last_slash+1);
+            foreach(RootNode::$uses[RootNode::$ns] as $use){
+                if(count($use) == 2 && $use[1] == $ns && isset(self::$functions[$use[0]."\\".$name])){
+                    $usename = $use[1]."\\".$name;
+                    self::$functions[$usename] = self::$functions[$use[0]."\\".$name];
+                    $func_name = $usename;
+                    break;
+                }
+            }
+        }
         return isset(self::$functions[$func_name]);
     }
 
@@ -1243,15 +1282,24 @@ class FuncDefNode extends SpecialForm{
     }
 
     public function compile(){
+        Node::$in_func++;
         $this->compile_statement();
-        return '"'.$this->name.'"';
+        Node::$in_func--;
+        return '"'.RootNode::$ns."\\\\".$this->name.'"';
+    }
+
+    public function add_to_functions_list($name){
+        if(RootNode::$ns){
+            self::$functions[RootNode::$ns."\\".$this->name] = $this;
+        }
+        self::$functions[$this->name] = $this;
     }
 
     public function compile_statement($prefix=""){
         $this->scope = $this->scope == Null ? new Scope($this) : $this->scope;
 
         $this->name = $this->children[1]->compile();
-        self::$functions[$this->name] = $this;
+        $this->add_to_functions_list($this->name);
         $this->params = $this->children[2]->children;
 
         $params = $this->get_param_names($this->params);
@@ -1291,10 +1339,12 @@ class FuncDefNode extends SpecialForm{
             
             $new_param_values = array_slice($last_expr->get_last_expr()->children, 1);
             $params_len = count($new_param_values);
+            $recur = "";
             for($x=0; $x<$params_len; $x++){
                 $val_node = $new_param_values[$x];
-                $body .= $this->format_line_indent("\$__tailrecursetmp$x = " . $val_node->compile().";");
+                $recur .= $this->format_line_indent("\$__tailrecursetmp$x = " . $val_node->compile().";");
             }
+            $body .= Node::add_tmp($recur);
             $x=0;
             foreach($params as $param){
                 if(is_array($param)){
@@ -1395,7 +1445,12 @@ class FuncDefNode extends SpecialForm{
 
     public function add_param($params, $param){
         if(is_array($param)){
-            $params .= ", ".$param[0].'='.$param[1]->compile();
+            if($param[1] instanceof ListNode){
+                $default = $param[1]->compile(True);
+            }else{
+                $default = $param[1]->compile();
+            }
+            $params .= ", ".$param[0].'='.$default;
         }else{
             $params .= ", $param";
         }
@@ -1419,6 +1474,7 @@ class MacroNode extends FuncDefNode{
     static $rescope_vars = False;
 
     public $args;
+    public $macro_ns;
     public $evaluated = False;
 
     static function is_macro($name){
@@ -1463,9 +1519,14 @@ class MacroNode extends FuncDefNode{
                 $scope->bind($param_node->compile(True), $tok->value);
             }
         }
+        $old_ns = RootNode::$ns;
+        RootNode::$ns = $macronode->macro_ns;
+        $old_tmpfunc = Node::$tmpfunc;
         $code = $macronode->parent_compile();
+        RootNode::$ns = $old_ns;
         if($macronode->evaluated || function_exists($name)){
             Node::add_tmpfunc('');
+            Node::$tmpfunc = $old_tmpfunc;
             return;
         }else{
             $code = "use Pharen\Lexical as Lexical;\n"
@@ -1495,6 +1556,7 @@ class MacroNode extends FuncDefNode{
     }
 
     public function compile_statement(){
+        $this->macro_ns = RootNode::$ns;
         self::upghost();
         $this->parent_compile();
         self::$current_params = array();
@@ -1518,6 +1580,7 @@ class QuoteWrapper{
     public $node;
     public $parent;
     public $children;
+    public $lexer;
     private $literal_id;
 
     function __construct(Node $node, $literal_id){
@@ -1543,6 +1606,7 @@ class QuoteWrapper{
         $tokens = $this->node->get_tokens();
         $scope = $this->node->parent->get_scope();
         $new_tokens = array();
+        $this->lexer = new Lexer("");
         foreach($tokens as $key=>$tok){
             if($tok->unquoted){
                 $val = $scope->find(LeafNode::phpfy_name(ltrim($tok->value, '-')), True, Null, True);
@@ -1555,13 +1619,7 @@ class QuoteWrapper{
                     }else if($val_node instanceof PharenCachedList){
                         $val = $val_node;
                     }else{
-                        if(is_string($val_node)){
-                            $val = new StringToken($val_node);
-                        }else if(is_integer($val_node) or is_double($val_node)){
-                            $val = new NumberToken($val_node);
-                        }else{
-                            $val = $val_node;
-                        }
+                        $val = $this->lex_val($val_node);
                     }
                 }
                 if($val instanceof PharenCachedList){
@@ -1575,12 +1633,20 @@ class QuoteWrapper{
                 }
             }else if($tok->unquote_spliced){
                 $els = $scope->find($tok->value, True, Null, True);
+                if($els === False){
+                    $els_node = $scope->find($tok->value, True, Null, False);
+                    if($els_node instanceof PharenCachedList){
+                        $els = $els_node;
+                    }else{
+                        $els = $els_node;
+                    }
+                }
                 foreach($els as $el){
-                    if($el instanceof PharenCachedList){
-                        $flattened = $el->flatten($el->delimiter_tokens);
+                    if($el instanceof PharenList && isset($el->delimiter_tokens)){
+                        $flattened = $this->flatten($el);
                         $new_tokens = array_merge($new_tokens, $flattened);
                     }else{
-                        $new_tokens[] = $el;
+                        $new_tokens[] = $this->lex_val($el);
                     }
                 }
             }else{
@@ -1588,6 +1654,32 @@ class QuoteWrapper{
             }
         }
         return $new_tokens;
+    }
+
+    public function lex_val($val){
+        if($val instanceof Token){
+            return $val;
+        }else{
+            $this->lexer->reset();
+            $this->lexer->code = (string)$val;
+            $toks = $this->lexer->lex();
+            return $toks[0];
+        }
+    }
+
+    public function flatten(PharenList $list){
+        $delims = $list->delimiter_tokens;
+        $tokens = array();
+        $tokens []= new $delims[0];
+        foreach($list as $el){
+            if($el instanceof PharenList){
+                $tokens = array_merge($tokens, $this->flatten($el));
+            }else{
+                $tokens[] = $this->lex_val($el);
+            }
+        }
+        $tokens []= new $delims[1];
+        return $tokens;
     }
 
     public function __get($name){
@@ -1782,7 +1874,7 @@ class LambdaNode extends FuncDefNode{
     }
 
     public function compile_statement(){
-        return $this->format_statement($this->compile());
+        return $this->format_statement($this->compile().";");
     }
 
     public function compile_return(){
@@ -1804,14 +1896,21 @@ class LambdaNode extends FuncDefNode{
 
 class DoNode extends SpecialForm{
     public $body_index = 1;
+    public static $tmp_num;
 
+    static function get_tmp_name(){
+        return "\$__dotmpvar".self::$tmp_num++;
+    }
+    
     public function __construct($parent){
         parent::__construct($parent);
         $this->indent = $this->parent->indent;
     }
 
     public function compile(){
-        return $this->compile_body();
+        $tmp_var = self::get_tmp_name();
+        Node::$tmp .= $this->compile_body(False, $tmp_var." = ");
+        return $tmp_var;
     }
 
     public function compile_return($prefix=""){
@@ -2147,19 +2246,30 @@ class ListNode extends LiteralNode{
 
     static $delimiter_tokens = array("OpenBracketToken", "CloseBracketToken");
 
-    public function compile(){
+    public function compile($no_vector=False){
         if(($x = $this->is_range()) !== False){
             $step = $x > 1 ? $this->get_range_step() : 1;
             $first = intval($this->children[0]->compile());
             $end = intval(last($this->children)->compile());
 
             if($step == 1){
-                return "range($first, $end)";
+                $code = "range($first, $end)";
             }else{
-                return "range($first, $end, $step)";
+                $code = "range($first, $end, $step)";
+            }
+            if($no_vector){
+                return $code;
+            }else{
+                return "\\PharenVector::create_from_array($code)";
+            }
+        }else{
+            $code = "array".parent::compile();
+            if($no_vector){
+                return $code;
+            }else{
+                return "\\PharenVector::create_from_array($code)";
             }
         }
-        return "array".parent::compile();
     }
 
     public function is_range(){
@@ -2188,9 +2298,10 @@ class ListNode extends LiteralNode{
 }
 
 class DefNode extends Node{
+    static $tmp_num = 0;
 
-    public function compile(){
-        return $this->compile_statement();
+    static function get_tmp_name(){
+        return "\$__deftmpvar".self::$tmp_num++;
     }
 
     public function compile_statement($prefix=""){
@@ -2198,10 +2309,17 @@ class DefNode extends Node{
         $varname = $this->children[1]->compile();
 
         $this->scope->bind($varname, $this->children[2]);
-        $code = $this->format_statement($this->scope->get_binding($varname), $prefix);
-        $code .= $this->scope->get_lexing($varname, True);
+        $code = $this->format_statement($this->scope->get_binding($varname));
+        $code .= $this->scope->get_lexing($varname, True, $prefix);
 
         return $code;
+    }
+
+    public function compile(){
+        $tmp_name = self::get_tmp_name();
+        $code = $this->compile_statement($tmp_name." = ");
+        Node::$tmp .= ($code);
+        return $tmp_name;
     }
 
     public function compile_return(){
@@ -2221,10 +2339,16 @@ class LocalNode extends Node{
 }
 
 class BindingNode extends Node{
+    static $tmp_num;
+
     public $only_return_body = False;
 
     public function __construct($parent){
         parent::__construct($parent);
+    }
+
+    static function get_tmp_name(){
+        return "\$__lettmpvar".self::$tmp_num++;
     }
 
     public function compile_statement($prefix="", $return=False, $expr=False){
@@ -2259,23 +2383,22 @@ class BindingNode extends Node{
         }
 
         if($expr){
-            $compile_func = "compile";
-        }else{
-            $compile_func = "compile_statement";
+            $tmp_var = self::get_tmp_name();
+            $prefix = "$tmp_var = ";
         }
 
         if($return === True || $prefix !== ""){
             $ret_stashed_children = $this->children;
             $last_node = array_pop($this->children);
             if($prefix){
-                $last_line = $last_node->$compile_func($prefix);
+                $last_line = $last_node->compile_statement($prefix);
             }else{
                 $last_line = $last_node->compile_return();
             }
         }
 
         foreach(array_slice($this->children, 2) as $line){
-            $body .= $line->$compile_func();
+            $body .= $line->compile_statement();
         }
 
         $lexings = $this->scope->init_lexical_scope();
@@ -2291,7 +2414,12 @@ class BindingNode extends Node{
         if($this->only_return_body){
             $this->children = $stashed_children;
         }
-        return $code;
+        if($expr){
+            Node::$tmp .= $code;
+            return $tmp_var;
+        }else{
+            return $code;
+        }
     }
 
     public function compile_return($prefix=""){
@@ -2456,8 +2584,8 @@ class Parser{
 
     }
     
-    public function parse($root=Null){
-        $curnode = $root ? $root : new RootNode;
+    public function parse($root=Null, $scope=Null){
+        $curnode = $root ? $root : new RootNode($scope);
         $rootnode = $curnode;
         $state = array();
 
@@ -2545,7 +2673,7 @@ class Parser{
             $expected = $this->reduce_state($expected);
         }
 
-        if($tok instanceof NameToken and strToUpper($tok->value) == $tok->value){
+        if($tok instanceof NameToken and (strstr($tok->value, ".") || strToUpper($tok->value) == $tok->value)){
             // Check if the token is all upper case, which means it's a constant
             $class = "LeafNode";
             array_shift($cur_state);
@@ -2602,9 +2730,17 @@ class Parser{
 class Flags{
     public static $lang_compiled = False;
     public static $flags = array();
+    public static $shortcuts = array(
+        'r' => 'repl',
+        'e' => 'executable',
+        'l' => 'no-import-lang'
+    );
 }
 
 function set_flag($flag, $setting=True){
+    if(isset(Flags::$shortcuts[$flag])){
+        $flag = Flags::$shortcuts[$flag];
+    }
     Flags::$flags[$flag] = $setting;
 }
 
@@ -2626,7 +2762,7 @@ function compile_file($fname, $output_dir=Null){
     return $phpcode;
 }
  
-function compile($code, $root=Null, $ns=Null){
+function compile($code, $root=Null, $ns=Null, $scope=Null){
     if($ns !== Null){
         Node::$ns = $ns;
     }
@@ -2637,7 +2773,7 @@ function compile($code, $root=Null, $ns=Null){
         return False;
     }
     $parser = new Parser($tokens);
-    $node_tree = $parser->parse($root);
+    $node_tree = $parser->parse($root, $scope);
     $phpcode = $node_tree->compile();
     return $phpcode;
 }

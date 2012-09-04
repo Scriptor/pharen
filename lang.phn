@@ -37,7 +37,7 @@
                               (. path "/" file)
                               FALSE))
                     paths))
-  (compile-file lib-path)
+  (compile (file-get-contents lib-path))
   (= (:: RootNode ns) old-ns)
   (= (:: RootNode ns-string) old-ns-string)
   FALSE)
@@ -52,17 +52,20 @@
      (print (. "Elapsed time: " time-to-display "\n"))
      NULL))
 
+(defmacro thunk (&exprs)
+  '(lambda () ~@exprs))
+
 (defmacro inst? (var cls)
   '(instanceof ~var ~-cls))
 
 (defmacro print* (&s)
   '(print (. ~@s)))
 
-(defmacro first (xs)
-  '(-> (seq ~xs) (first)))
+(fn first (xs)
+  (-> (seq xs) (first)))
 
-(defmacro rest (xs)
-  '(-> (seq ~xs) (rest)))
+(fn rest (xs)
+  (-> (seq xs) (rest)))
 
 (defmacro if-let (binding then else)
   (def cond (:binding 1))
@@ -76,6 +79,13 @@
   '(when ~cond
      (let ~binding
        ~then)))
+
+(defmacro dotimes (binding &exprs)
+  (def varname (:binding 0))
+  (def n (:binding 1))
+  '(do
+     (map (lambda (~varname) ~@exprs) [0 .. ~n])
+     NULL))
 
 (fn prn (s)
   (do
@@ -103,8 +113,15 @@
 (fn identity (x)
   x)
 
-(fn flip (f arg1 arg2)
-  ($f arg2 arg1))
+(fn inc (x)
+  (+ 1 x))
+
+(fn dec (x)
+  (- 1 x))
+
+(fn flip (f)
+  (lambda (arg1 arg2)
+          ($f arg2 arg1)))
 
 (fn comp (&fs)
   (let [rfs (reverse fs)]
@@ -116,7 +133,7 @@
   (or (zero? n) (empty? xs)))
 
 (fn empty? (xs)
-  (or (inst? xs PharenEmptyList) (empty xs)))
+  (or (inst? (seq xs) PharenEmptyList) (not (seq xs))))
 
 (fn seq? (x)
   (inst? x IPharenSeq))
@@ -137,8 +154,20 @@
           {}
           pairs))
 
-(defmacro lazy (list-expr)
-  '(new .PharenLazyList (lambda () ~list-expr)))
+(fn force (x)
+  (-> x (force)))
+
+(fn realized? (x)
+  (-> x (realized)))
+
+(defmacro lazy-obj (cls &exprs)
+  '(new ~cls (lambda () ~@exprs)))
+
+(defmacro delay (expr)
+  '(lazy-obj .PharenDelay ~expr))
+
+(defmacro lazy-seq (list-expr)
+  '(lazy-obj .PharenLazyList ~list-expr))
 
 (fn arr (x)
   (cond
@@ -190,6 +219,11 @@
     xs
     (cons (take n xs) (partition n (drop n xs)))))
 
+(fn interleave (xs ys)
+  (if (or (empty? xs) (empty? ys))
+    []
+    (cons (first xs) (cons (first ys) (interleave (rest xs) (rest ys))))))
+
 (fn zip-with (f xs ys)
   (if (or (empty? xs) (empty? ys))
     []
@@ -201,16 +235,22 @@
   (implode glue (arr xs)))
 
 (fn infinity ([n 0])
-  (lazy (cons n (infinity (+ n 1)))))
+  (lazy-seq (cons n (infinity (+ n 1)))))
 
 (fn repeat (x)
-  (lazy (cons x (repeat x))))
+  (lazy-seq (cons x (repeat x))))
+
+(fn repeatedly (f)
+  (lazy-seq (cons ($f) (repeatedly f))))
+
+(fn iterate (f init)
+  (lazy-seq (cons init (iterate f ($f init)))))
 
 (fn cycle (xs)
-  (lazy (concat xs (cycle xs))))
+  (lazy-seq (concat xs (cycle xs))))
 
 (fn cycle-with (f xs)
-  (lazy
+  (lazy-seq
     (let [new-xs (map f xs)]
       (concat xs (cycle-with f new-xs)))))
 
@@ -228,10 +268,18 @@
     xs2
     (cons (first xs1) (concat (rest xs1) xs2))))
 
+(fn into (to from)
+  (reduce #cons to from))
+
 (fn reduce (f acc xs)
   (if (empty? xs)
     acc
     (reduce f ($f (first xs) acc) (rest xs))))
+
+(fn reduce-fns (fns acc xs)
+  (if (empty? xs)
+    acc
+    (reduce-fns (rest fns) ((first fns) (first xs) acc) (rest xs))))
 
 (fn reduce-to-str (new-val-func xs)
   (reduce (lambda (val acc)
@@ -266,6 +314,9 @@
   (reduce-pairs (lambda (pair acc) (append ($f (:pair 0) (:pair 1)) acc))
                 []
                 pairs))
+
+(fn repling ()
+  (and (defined "PHARENREPLMODE") (constant "PHARENREPLMODE")))
 
 (defmacro attr* (access-modifier name val)
   '(access ~access-modifier (local ~name ~val)))

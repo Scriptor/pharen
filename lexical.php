@@ -23,6 +23,7 @@ class Lexical{
     public static function bind_lexing($ns, $id, $var, &$val){
         $closure_id = self::get_closure_id($ns, $id);
         self::$scopes[$ns][$id][$closure_id][$var] =& $val;
+        return $val;
     }
 
     public static function get_lexical_binding($ns, $id, $var, $closure_id){

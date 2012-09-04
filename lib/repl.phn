@@ -1,3 +1,4 @@
+(ns pharen-repl)
 (require_once "path.php")
 (define "REPL_SYSTEM" (realpath (dirname __FILE__)))
 (define "PHAREN_SYSTEM" (path-join REPL-SYSTEM "../"))
@@ -18,12 +19,12 @@
 
 (fn get-prompt (expecting)
   (let [suffix (if expecting "... " "> ")]
-    (if-let [ns (:: RootNode raw-ns)]
+    (if-let [ns (:: .RootNode raw-ns)]
         (. ns suffix)
         (. "pharen" suffix))))
 
 (fn add-uses (code)
-  (let [use-str (if-let [uses (get (:: RootNode ns) (:: RootNode uses))]
+  (let [use-str (if-let [uses (get (:: .RootNode ns) (:: .RootNode uses))]
                   (reduce-to-str 
                     (lambda (ns)
                             (if (== (count ns) 2)
@@ -42,22 +43,19 @@
          (TRUE x))))
 
 (fn wrap-compile (code)
-  (let [embedded-code (. "(fn eval-func () " code ")")]
-        (compile embedded-code NULL (:: Node REPL_INPUT))))
+  (let [embedded-code (. "(local c " code ") (lambda () "") (return c)")]
+    (compile embedded-code NULL (:: .RootNode ns) (:: .RootNode last-scope))))
 
 (fn compile-code (code)
-  (if-let [compiled-code (wrap-compile code)]
-    (let [no-func-def (str-replace "function eval_func(){" "" compiled-code)
-          with-uses (add-uses no-func-def)
-          final-code (substr 
-                       with-uses
-                       0
-                       (- (strrpos with-uses "}") 1))]
+  (local compiled-code (wrap-compile code))
+  (if compiled-code
+    (let [with-uses (add-uses compiled-code)
+          final-code with-uses]
       final-code)
     FALSE))
 
 (fn intro ()
-  (prn (. "Initialized Pharen REPL. " (:greetings (array-rand greetings)) "\n")))
+  (prn (. "Initialized Pharen REPL. " (:greetings (array-rand (arr greetings))) "\n")))
 
 (fn work ([previous-code ""])
   (let [code (. previous-code " " (prompt (get-prompt previous-code)))]
@@ -70,7 +68,3 @@
             (local previous-code ""))
           (local previous-code code))
         (work previous-code)))))
-
-(intro)
-(compile-lang)
-(work)

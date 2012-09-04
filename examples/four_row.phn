@@ -1,0 +1,60 @@
+(ns four-row)
+(use pharen-repl as repl)
+(require-once "repl.php")
+(use lazy)
+
+; Defined bottom-up: Row of index 0 is the bottom row
+(def board
+  [[0 0 0]
+   [0 0 0]
+   [0 0 0]])
+
+(fn board ([x 7] [y 6])
+  (array-fill 0 y
+              (array-fill 0 x 0)))
+
+(fn prn-board (brd)
+  (if (empty? brd)
+    (prn "")
+    (do
+      (prn-board (rest brd))
+      (map (lambda (x)
+                   (if (not x)
+                     (print ". ")
+                     (print* x " ")))
+           (first brd))
+      (prn ""))))
+
+(fn place-in-row (row col coin)
+  (concat (take col row)
+          (cons coin (drop (inc col) row))))
+
+(fn drop-coin (coin col brd)
+  (if (empty? brd)
+    []
+    (let [row (first brd)
+          rst (rest brd)]
+      (if (:row col)
+        (cons row (drop-coin coin col rst))
+        (cons (place-in-row row col coin) rst)))))
+
+(fn prompt-move (player)
+  (intval (repl.prompt (. "Player " player "> "))))
+
+(fn player1 (col brd)
+  (let [b (drop-coin 1 col brd)]
+    (prn-board b)
+    b))
+
+(fn player2 (col brd)
+  (let [b (drop-coin 2 col brd)]
+    (prn-board b)
+    b))
+
+(if (not (repling))
+  (let [players (cycle [#four-row.player1 #four-row.player2])
+        num-moves (repl.prompt "How many moves? ")
+        p1moves (repeatedly (thunk (prompt-move "1")))
+        p2moves (repeatedly (thunk (prompt-move "2")))
+        moves (lazy.interleave p1moves p2moves)]
+    (prn-board (reduce-fns players (board) (lazy.take num-moves moves)))))

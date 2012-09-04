@@ -5,6 +5,11 @@ interface IPharenSeq{
     public function cons($item);
 }
 
+interface IPharenLazy{
+    public function force();
+    public function realized();
+}
+
 class PharenList implements IPharenSeq, Countable, ArrayAccess, Iterator{
     public $first;
     public $rest;
@@ -12,16 +17,20 @@ class PharenList implements IPharenSeq, Countable, ArrayAccess, Iterator{
     public $iterator_key = 0;
     public $iterator_el;
     public $arr;
+    public $delimiter_tokens = array("OpenParenToken", "CloseParenToken");
 
-    public static function create_from_array(&$xs){
+    public static function create_from_array(&$xs, $cls="PharenCachedList"){
+        if(empty($xs)){
+            return new PharenEmptyList;
+        }
         $cache = SplFixedArray::fromArray($xs);
         $reversed = array_reverse($xs, True);
         $last_el = array_shift($reversed);
         $len = count($xs);
-        $el1 = new PharenCachedList($last_el, new PharenEmptyList, 1, $cache, $len-1);
+        $el1 = new $cls($last_el, new PharenEmptyList, 1, $cache, $len-1);
         foreach($reversed as $i=>$x){
             $index = $len-($i+2);
-            $el2 = $el1->cached_cons($x, $cache, $index);
+            $el2 = $el1->cached_cons($x, $cache, $index, $cls);
             $el1 = $el2;
         }
         return $el1;
@@ -48,11 +57,17 @@ class PharenList implements IPharenSeq, Countable, ArrayAccess, Iterator{
     }
 
     public function __toString(){
-        $nums = array();
-        foreach($this as $num){
-            $nums []= $num;
+        $vals = array();
+        foreach($this as $val){
+            if(is_object($val)){
+                $vals []= $val->__toString();
+            }else if(is_array($val)){
+                $vals []= "[".implode(", ", $val)."]";
+            }else{
+                $vals []= $val;
+            }
         }
-        return "[" . implode(", ", $nums) . "]";
+        return "[" . implode(", ", $vals) . "]";
     }
 
     public function seq(){
@@ -139,8 +154,8 @@ class PharenList implements IPharenSeq, Countable, ArrayAccess, Iterator{
         return new PharenList($value, $this, $this->length+1);
     }
 
-    public function cached_cons($value, $cached_array, $index){
-        return new PharenCachedList($value, $this, $this->length+1, $cached_array, $index);
+    public function cached_cons($value, $cached_array, $index, $cls="PharenCachedList"){
+        return new $cls($value, $this, $this->length+1, $cached_array, $index);
     }
 }
 
@@ -207,7 +222,7 @@ class PharenEmptyList extends PharenList{
     }
 }
 
-class PharenLazyList implements IPharenSeq{
+class PharenLazyList implements IPharenSeq, IPharenLazy{
     public $first = Null;
     public $rest = Null;
     public $length = Null;
@@ -223,16 +238,21 @@ class PharenLazyList implements IPharenSeq{
     }
 
     public function seq(){
-        $this->set_first_and_rest();
+        $this->force();
         return $this->lambda_result;
     }
 
     public function first(){
-        $this->set_first_and_rest();
+        $this->force();
         return $this->first;
     }
 
-    public function set_first_and_rest(){
+    public function rest(){
+        $this->force();
+        return $this->rest;
+    }
+
+    public function force(){
         if(!$this->lambda_result){
             list($lambda, $scope_id) = $this->lambda;
             $result = $lambda($scope_id);
@@ -246,9 +266,8 @@ class PharenLazyList implements IPharenSeq{
         }
     }
 
-    public function rest(){
-        $this->set_first_and_rest();
-        return $this->rest;
+    public function realized(){
+        return $this->lambda_result !== Null;
     }
 
     public function count(){
@@ -265,9 +284,43 @@ class PharenLazyList implements IPharenSeq{
     }
 }
 
+class PharenDelay implements IPharenLazy{
+    public $lambda;
+    public $value = Null;
+    public $realized = False;
+
+    public function __toString(){
+        return "<".__CLASS__.">";
+    }
+
+    public function __construct($lambda){
+        $this->lambda = $lambda;
+    }
+
+    public function force(){
+        if(!$this->realized){
+            $fn = $this->lambda;
+            if(is_array($fn)){
+                $this->value = $fn[0]($fn[1]);
+            }else{
+                $this->value = $fn();
+            }
+            $this->realized = True;
+            return $this->value;
+        }else{
+            return $this->value;
+        }
+    }
+
+    public function realized(){
+        return $this->realized;
+    }
+}
+
 class PharenHashMap implements Countable, ArrayAccess, Iterator{
     public $hashmap;
     public $count;
+    public $delimiter_tokens = array("OpenBraceToken", "CloseBraceToken");
 
     public function __construct($hashmap, $count=Null){
         $this->hashmap = $hashmap;
@@ -330,3 +383,16 @@ class PharenHashMap implements Countable, ArrayAccess, Iterator{
         return isset($this->hashmap[key($this->hashmap)]);
     }
 }
+
+class PharenVector extends PharenCachedList{
+    public $delimiter_tokens = array("OpenBracketToken", "CloseBracketToken");
+
+    public static function create_from_array($array){
+        return PharenList::create_from_array($array, __CLASS__);
+    }
+
+    public function __invoke($n){
+        return $this->offsetGet($n);
+    }
+}
+
