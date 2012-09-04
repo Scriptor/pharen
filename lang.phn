@@ -119,8 +119,9 @@
 (fn dec (x)
   (- 1 x))
 
-(fn flip (f arg1 arg2)
-  ($f arg2 arg1))
+(fn flip (f)
+  (lambda (arg1 arg2)
+          ($f arg2 arg1)))
 
 (fn comp (&fs)
   (let [rfs (reverse fs)]
