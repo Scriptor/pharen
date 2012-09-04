@@ -1896,14 +1896,21 @@ class LambdaNode extends FuncDefNode{
 
 class DoNode extends SpecialForm{
     public $body_index = 1;
+    public static $tmp_num;
 
+    static function get_tmp_name(){
+        return "\$__dotmpvar".self::$tmp_num++;
+    }
+    
     public function __construct($parent){
         parent::__construct($parent);
         $this->indent = $this->parent->indent;
     }
 
     public function compile(){
-        return $this->compile_body();
+        $tmp_var = self::get_tmp_name();
+        Node::$tmp .= $this->compile_body(False, $tmp_var." = ");
+        return $tmp_var;
     }
 
     public function compile_return($prefix=""){
