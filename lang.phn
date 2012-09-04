@@ -80,6 +80,13 @@
      (let ~binding
        ~then)))
 
+(defmacro dotimes (binding &exprs)
+  (def varname (:binding 0))
+  (def n (:binding 1))
+  '(do
+     (map (lambda (~varname) ~@exprs) [0 .. ~n])
+     NULL))
+
 (fn prn (s)
   (do
     (print* s "\n")
