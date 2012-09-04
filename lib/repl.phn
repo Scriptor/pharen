@@ -55,7 +55,7 @@
     FALSE))
 
 (fn intro ()
-  (prn (. "Initialized Pharen REPL. " (:greetings (array-rand greetings)) "\n")))
+  (prn (. "Initialized Pharen REPL. " (:greetings (array-rand (arr greetings))) "\n")))
 
 (fn work ([previous-code ""])
   (let [code (. previous-code " " (prompt (get-prompt previous-code)))]
