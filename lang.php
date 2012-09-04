@@ -180,7 +180,7 @@ function get($key, $hm){
 
 function take($n, $xs){
 	if(zero_or_empty__question($n, $xs)){
-		return array();
+		return \PharenVector::create_from_array(array());
 	}
 	else{
 		return cons(first($xs), take(($n - 1), rest($xs)));
@@ -213,7 +213,7 @@ function reverse($xs, $acc=array()){
 
 function interpose($sep, $xs, $acc=array()){
 	if((count($xs) == 1)){
-		return array(first($xs));
+		return \PharenVector::create_from_array(array(first($xs)));
 	}
 	else{
 		return cons(first($xs), cons($sep, interpose($sep, rest($xs))));
@@ -239,7 +239,7 @@ function interleave($xs, $ys){
 			$__condtmpvar0 = empty__question($ys);
 		}
 	if($__condtmpvar0){
-		return array();
+		return \PharenVector::create_from_array(array());
 	}
 	else{
 		return cons(first($xs), cons(first($ys), interleave(rest($xs), rest($ys))));
@@ -258,7 +258,7 @@ function zip_with($f, $xs, $ys){
 			$__condtmpvar1 = empty__question($ys);
 		}
 	if($__condtmpvar1){
-		return array();
+		return \PharenVector::create_from_array(array());
 	}
 	else{
 		return cons((is_string($f) || is_callable($f)?$f(first($xs), first($ys)):$f[0](first($xs), first($ys), $f[1])), zip_with($f, rest($xs), rest($ys)));
@@ -369,7 +369,7 @@ function vals($m){
 }
 
 function append($x, $xs){
-	return array_merge($xs, array($x));
+	return array_merge($xs, \PharenVector::create_from_array(array($x)));
 }
 
 function apply($f, $val){
@@ -460,7 +460,7 @@ function map($f, $xs){
 
 function filter($f, $coll){
 	if(empty__question($coll)){
-		return array();
+		return \PharenVector::create_from_array(array());
 	}
 	else{
 		$x = first($coll);
@@ -503,7 +503,7 @@ function map_pairs($f, $pairs){
 	Lexical::bind_lexing("lang", 127, '$f', $f);
 
 
-	return reduce_pairs(array("\\lang__lambdafunc18", Lexical::get_closure_id("lang", $__scope_id)), array(), $pairs);
+	return reduce_pairs(array("\\lang__lambdafunc18", Lexical::get_closure_id("lang", $__scope_id)), \PharenVector::create_from_array(array()), $pairs);
 }
 
 function repling(){
