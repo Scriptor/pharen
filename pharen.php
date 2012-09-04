@@ -1555,7 +1555,9 @@ class MacroNode extends FuncDefNode{
     static function get_values_from_list($list){
         $values = array();
         foreach($list->cached_array as $el){
-            if(!($el instanceof PharenCachedList)){
+            if($el instanceof PharenEmptyList){
+                continue;
+            }elseif(!($el instanceof PharenList)){
                 $values[] = $el->value;
             }else{
                 $values[] = self::get_values_from_list($el);
