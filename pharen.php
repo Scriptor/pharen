@@ -299,6 +299,9 @@ class FuncInfo{
                 break;
             }
         }
+        if($this->func instanceof LambdaNode){
+            $num--;
+        }
         return $num;
     }
 
@@ -747,7 +750,13 @@ class Node implements Iterator, ArrayAccess, Countable{
         if(!($func_name_node instanceof LeafNode) && !($func_name_node instanceof UnquoteWrapper)){
             $this->has_variable_func = True;
             $func_name = self::get_tmp_funcname_var();
-            Node::$tmp .= $this->format_line($func_name." = ".$func_name_node->compile().";");
+            $func_val = $func_name_node->compile();
+            if($func_name_node instanceof FuncDefNode){
+                $scope = $this->get_scope();
+                $name_node = new LeafNode($this, array(), $func_name_node->get_name());
+                $scope->bind($func_name, $name_node);
+            }
+            Node::$tmp .= $this->format_line($func_name." = ".$func_val.";");
         }else{
             if($func_name_node instanceof VariableNode){
                 $this->has_variable_func = True;
@@ -1259,6 +1268,7 @@ class FuncDefNode extends SpecialForm{
 
     public $params = array();
     public $is_partial;
+    public $name;
 
     static function is_pharen_func($func_name){
         if(strpos($func_name, "\\")){
@@ -1295,10 +1305,16 @@ class FuncDefNode extends SpecialForm{
         self::$functions[$this->name] = $this;
     }
 
+    public function get_name(){
+        return $this->children[1]->compile();
+    }
+
     public function compile_statement($prefix=""){
         $this->scope = $this->scope == Null ? new Scope($this) : $this->scope;
 
-        $this->name = $this->children[1]->compile();
+        if(!$this->name){
+            $this->name = $this->get_name();
+        }
         $this->add_to_functions_list($this->name);
         $this->params = $this->children[2]->children;
 
@@ -1843,14 +1859,23 @@ class LambdaNode extends FuncDefNode{
     static $counter=0;
 
     public $scope;
+    public $name = Null;
 
     static function get_next_name(){
         return Node::$ns."__lambdafunc".self::$counter++;
     }
 
+    public function get_name(){
+        if(!$this->name){
+            return $this->name = self::get_next_name();
+        }else{
+            return $this->name;
+        }
+    }
+
     public function compile(){
         self::$in_lambda_compile = True;
-        $name = self::get_next_name();
+        $name = $this->get_name();
         $name_node = new LeafNode($this, array(), $name);
 
         array_splice($this->children, 1, 0, array($name_node));
