@@ -1640,8 +1640,8 @@ class QuoteWrapper{
                         $val = $this->lex_val($val_node);
                     }
                 }
-                if($val instanceof PharenCachedList){
-                    $flattened = $val->flatten($val->delimiter_tokens);
+                if($val instanceof PharenList){
+                    $flattened = $this->flatten($val);
                     $new_tokens = array_merge($new_tokens, $flattened);
                 }else{
                     if($tok->value[0]=='-'){
