@@ -1445,7 +1445,12 @@ class FuncDefNode extends SpecialForm{
 
     public function add_param($params, $param){
         if(is_array($param)){
-            $params .= ", ".$param[0].'='.$param[1]->compile();
+            if($param[1] instanceof ListNode){
+                $default = $param[1]->compile(True);
+            }else{
+                $default = $param[1]->compile();
+            }
+            $params .= ", ".$param[0].'='.$default;
         }else{
             $params .= ", $param";
         }
@@ -2234,19 +2239,30 @@ class ListNode extends LiteralNode{
 
     static $delimiter_tokens = array("OpenBracketToken", "CloseBracketToken");
 
-    public function compile(){
+    public function compile($no_vector=False){
         if(($x = $this->is_range()) !== False){
             $step = $x > 1 ? $this->get_range_step() : 1;
             $first = intval($this->children[0]->compile());
             $end = intval(last($this->children)->compile());
 
             if($step == 1){
-                return "range($first, $end)";
+                $code = "range($first, $end)";
             }else{
-                return "range($first, $end, $step)";
+                $code = "range($first, $end, $step)";
+            }
+            if($no_vector){
+                return $code;
+            }else{
+                return "\\PharenVector::create_from_array($code)";
+            }
+        }else{
+            $code = "array".parent::compile();
+            if($no_vector){
+                return $code;
+            }else{
+                return "\\PharenVector::create_from_array($code)";
             }
         }
-        return "array".parent::compile();
     }
 
     public function is_range(){
