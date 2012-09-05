@@ -3,8 +3,8 @@ error_reporting(E_ALL | E_NOTICE);
 define("COMPILER_SYSTEM", dirname(__FILE__));
 define("EXTENSION", ".phn");
 
-require_once(COMPILER_SYSTEM.DIRECTORY_SEPARATOR."lang.php");
-require_once(COMPILER_SYSTEM.DIRECTORY_SEPARATOR."lib/"."sequence.php");
+require_once(COMPILER_SYSTEM."/lang.php");
+require_once(COMPILER_SYSTEM."/lib/sequence.php");
 use Pharen\Lexical as Lexical;
 
 // Some utility functions for use in Pharen
@@ -298,6 +298,9 @@ class FuncInfo{
             }else{
                 break;
             }
+        }
+        if($this->func instanceof LambdaNode){
+            $num--;
         }
         return $num;
     }
@@ -747,7 +750,13 @@ class Node implements Iterator, ArrayAccess, Countable{
         if(!($func_name_node instanceof LeafNode) && !($func_name_node instanceof UnquoteWrapper)){
             $this->has_variable_func = True;
             $func_name = self::get_tmp_funcname_var();
-            Node::$tmp .= $this->format_line($func_name." = ".$func_name_node->compile().";");
+            $func_val = $func_name_node->compile();
+            if($func_name_node instanceof FuncDefNode){
+                $scope = $this->get_scope();
+                $name_node = new LeafNode($this, array(), $func_name_node->get_name());
+                $scope->bind($func_name, $name_node);
+            }
+            Node::$tmp .= $this->format_line($func_name." = ".$func_val.";");
         }else{
             if($func_name_node instanceof VariableNode){
                 $this->has_variable_func = True;
@@ -936,14 +945,14 @@ class RootNode extends Node{
 
         $php_tag = $this->format_line("<?php");
         if(!isset(Flags::$flags['no-import-lang']) or Flags::$flags['no-import-lang'] == False){
-            $code .= $this->format_line("require_once('".COMPILER_SYSTEM.DIRECTORY_SEPARATOR."lang.php"."');");
+            $code .= $this->format_line("require_once('".COMPILER_SYSTEM."/"."lang.php"."');");
         }else if(Flags::$flags['no-import-lang'] == True){
             if(!isset(Flags::$flags['import-lexi-relative']) or Flags::$flags['import-lexi-relative'] == False){
                 $prefix = "'".COMPILER_SYSTEM."'";
             } else {
                 $prefix = "dirname(__FILE__)";
             }
-            $code .= $this->format_line("require_once(".$prefix.".'".DIRECTORY_SEPARATOR."lexical.php"."');");
+            $code .= $this->format_line("require_once(".$prefix.".'"."/"."lexical.php"."');");
         }
         $code .= $this->format_line("use Pharen\Lexical as Lexical;");
 
@@ -1259,6 +1268,7 @@ class FuncDefNode extends SpecialForm{
 
     public $params = array();
     public $is_partial;
+    public $name;
 
     static function is_pharen_func($func_name){
         if(strpos($func_name, "\\")){
@@ -1295,10 +1305,16 @@ class FuncDefNode extends SpecialForm{
         self::$functions[$this->name] = $this;
     }
 
+    public function get_name(){
+        return $this->children[1]->compile();
+    }
+
     public function compile_statement($prefix=""){
         $this->scope = $this->scope == Null ? new Scope($this) : $this->scope;
 
-        $this->name = $this->children[1]->compile();
+        if(!$this->name){
+            $this->name = $this->get_name();
+        }
         $this->add_to_functions_list($this->name);
         $this->params = $this->children[2]->children;
 
@@ -1539,7 +1555,9 @@ class MacroNode extends FuncDefNode{
     static function get_values_from_list($list){
         $values = array();
         foreach($list->cached_array as $el){
-            if(!($el instanceof PharenCachedList)){
+            if($el instanceof PharenEmptyList){
+                continue;
+            }elseif(!($el instanceof PharenList)){
                 $values[] = $el->value;
             }else{
                 $values[] = self::get_values_from_list($el);
@@ -1622,8 +1640,8 @@ class QuoteWrapper{
                         $val = $this->lex_val($val_node);
                     }
                 }
-                if($val instanceof PharenCachedList){
-                    $flattened = $val->flatten($val->delimiter_tokens);
+                if($val instanceof PharenList){
+                    $flattened = $this->flatten($val);
                     $new_tokens = array_merge($new_tokens, $flattened);
                 }else{
                     if($tok->value[0]=='-'){
@@ -1843,14 +1861,23 @@ class LambdaNode extends FuncDefNode{
     static $counter=0;
 
     public $scope;
+    public $name = Null;
 
     static function get_next_name(){
         return Node::$ns."__lambdafunc".self::$counter++;
     }
 
+    public function get_name(){
+        if(!$this->name){
+            return $this->name = self::get_next_name();
+        }else{
+            return $this->name;
+        }
+    }
+
     public function compile(){
         self::$in_lambda_compile = True;
-        $name = self::get_next_name();
+        $name = $this->get_name();
         $name_node = new LeafNode($this, array(), $name);
 
         array_splice($this->children, 1, 0, array($name_node));

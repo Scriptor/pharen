@@ -38,6 +38,21 @@
         (cons row (drop-coin coin col rst))
         (cons (place-in-row row col coin) rst)))))
 
+(fn apply-delta (pos board delta)
+  (let [height (count board)
+        width (count (:board 0))
+        new-pos [(+ (:pos 0) (:delta 0)) (+ (:pos 1) (:delta 1))]
+        x (:new-pos 0)
+        y (:new-pos 1)]
+    (if (or (neg? x) (neg? y) (>= height y) (>= width x))
+      FALSE
+      new-pos)))
+
+
+(fn neighbors (pos board)
+  (let [deltas [[-1 0] [-1 -1] [0 -1] [1 -1] [1 0]]]
+    (filter #identity (map (apply-delta pos board) deltas))))
+
 (fn prompt-move (player)
   (intval (repl.prompt (. "Player " player "> "))))
 
