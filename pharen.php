@@ -338,6 +338,9 @@ class FuncInfo{
             $var = new VariableNode($body, array(), "arg$x");
             $body->add_child($var);
         }
+        $scopeid_node = new VariableNode($params, array(), "__closure_id");
+        $params->add_child($scopeid_node);
+
         return array($function->compile_statement().$parent->format_line(""), $name);
     }
 
@@ -769,7 +772,7 @@ class Node implements Iterator, ArrayAccess, Countable{
     public function create_partial($func){
         list($tmp_func, $tmp_name) = $func->get_tmp_func($this->parent);
         Node::$tmp .= $tmp_func;
-        return '"'.RootNode::$ns.'\\\\'.$tmp_name.'"';
+        return 'array("'.RootNode::$ns.'\\\\'.$tmp_name.'", Lexical::get_closure_id("'.Node::$ns.'", $__scope_id))';
     }
 
     public function compile($is_statement=False, $is_return=False){
