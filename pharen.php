@@ -2792,6 +2792,9 @@ function unset_flag($flag){
 }
 
 function compile_file($fname, $output_dir=Null){
+    RootNode::$ns = "";
+    RootNode::$raw_ns = "";
+    RootNode::$ns_string = "";
     $file = basename($fname, EXTENSION);
     $ns = str_replace('-', '_', $file);
     Node::$ns = $ns;
