@@ -1121,7 +1121,13 @@ class UseNode extends KeywordCallNode{
 class FuncValNode extends LeafNode{
 
     public function compile(){
-        return '"'.parent::compile().'"';
+        if(RootNode::$ns){
+            var_dump(RootNode::$ns);
+            $ns = RootNode::$ns;
+        }else{
+            $ns = "";
+        }
+        return '"'."$ns\\\\".parent::compile().'"';
     }
 }
 
