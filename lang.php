@@ -71,7 +71,7 @@ function lang__lambdafunc4($args, $__closure_id){
 		$args = array_slice(func_get_args(), 0);
 		$rfs = Lexical::get_lexical_binding('lang', 78, '$rfs', isset($__closure_id)?$__closure_id:0);;
 	$init = call_user_func_array(first($rfs), $args);
-	return reduce("apply", $init, rest($rfs));
+	return reduce("\\apply", $init, rest($rfs));
 }
 
 function comp($fs){
@@ -395,7 +395,7 @@ function concat($xs1, $xs2){
 }
 
 function into($to, $from){
-	return reduce("cons", $to, $from);
+	return reduce("\\cons", $to, $from);
 }
 
 function reduce($f, $acc, $xs){
