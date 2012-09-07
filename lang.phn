@@ -85,6 +85,10 @@
      ~then
      ~else))
 
+(defmacro when-not (cond then)
+  '(when (not ~cond)
+     ~then))
+
 (defmacro dotimes (binding &exprs)
   (def varname (:binding 0))
   (def n (:binding 1))
