@@ -80,6 +80,11 @@
      (let ~binding
        ~then)))
 
+(defmacro if-not (cond then else)
+  '(if (not ~cond)
+     ~then
+     ~else))
+
 (defmacro dotimes (binding &exprs)
   (def varname (:binding 0))
   (def n (:binding 1))
