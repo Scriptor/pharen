@@ -592,11 +592,11 @@ function lang__lambdafunc15($val, $__closure_id){
 function multi_serialize_args($vals){
 
 
-	return reduce_concat(array("\\lang__lambdafunc15", Lexical::get_closure_id("lang", Null)), $vals);
+	return reduce_to_str(array("\\lang__lambdafunc15", Lexical::get_closure_id("lang", Null)), $vals);
 }
 
 function multi_serialize_pattern($pattern){
-	return implode($pattern);
+	return implode(arr($pattern));
 }
 
 function get_multi($name, $args){
