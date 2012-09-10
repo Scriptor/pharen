@@ -159,6 +159,9 @@
 (fn seq? (x)
   (inst? x IPharenSeq))
 
+(fn sequential? (x)
+  (or (inst? x IPharenSeq) (is-array x)))
+
 (fn seq (x)
   (if (inst? x IPharenSeq)
     (-> x (seq))
