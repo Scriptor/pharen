@@ -1562,18 +1562,19 @@ class MacroNode extends FuncDefNode{
         $old_ns = RootNode::$ns;
         RootNode::$ns = $macronode->macro_ns;
         $old_tmpfunc = Node::$tmpfunc;
+        $old_tmp = Node::$tmp;
         $code = $macronode->parent_compile();
         RootNode::$ns = $old_ns;
         if($macronode->evaluated || function_exists($name)){
             Node::add_tmpfunc('');
             Node::$tmpfunc = $old_tmpfunc;
-            return;
         }else{
             $code = "use Pharen\Lexical as Lexical;\n"
                 .Node::add_tmpfunc($code);
             eval($code);
             $macronode->evaluated = True;
         }
+        Node::$tmp = $old_tmp;
     }
 
     static function get_values_from_list($list){
