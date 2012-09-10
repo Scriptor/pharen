@@ -1,4 +1,5 @@
 <?php
+error_reporting(E_ALL ^ E_STRICT);
 interface IPharenSeq{
     public function first();
     public function rest();
