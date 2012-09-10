@@ -1,7 +1,7 @@
-(defmulti #fac [n])
-(defmethod #fac ["int"] [n]
+(defmulti fac (n))
+(defmethod fac ["int"] (n)
   "int")
-(defmethod #fac ["str"] [n]
+(defmethod fac ["str"] (n)
   "string")
 
 (check (fac 2) "int")
