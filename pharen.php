@@ -9,10 +9,6 @@ use Pharen\Lexical as Lexical;
 
 // Some utility functions for use in Pharen
 
-function last($xs){
-    return end($xs);
-}
-
 function is_assoc($xs){
     return array_keys($xs) !== range(0, count($xs)-1);
 }
