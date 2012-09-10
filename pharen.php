@@ -1,5 +1,5 @@
 <?php
-error_reporting(E_ALL ^ E_STRICT);
+error_reporting(E_ALL);
 define("COMPILER_SYSTEM", dirname(__FILE__));
 define("EXTENSION", ".phn");
 
