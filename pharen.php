@@ -1,5 +1,5 @@
 <?php
-error_reporting(E_ALL | E_NOTICE);
+error_reporting(E_ALL ^ E_STRICT);
 define("COMPILER_SYSTEM", dirname(__FILE__));
 define("EXTENSION", ".phn");
 
@@ -1467,7 +1467,7 @@ class FuncDefNode extends SpecialForm{
         if(is_array($param)){
             $this->scope->bind($param[0], $param[1]);
         }else{
-            $this->scope->bind($param, new EmptyNode($this));
+            $this->scope->bind($param, new LeafNode($this, Null, $param));
         }
     }
 
