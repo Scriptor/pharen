@@ -387,7 +387,7 @@
                  vals))
 
 (fn multi-serialize-pattern (pattern)
-  (implode pattern))
+  (implode (arr pattern)))
 
 (fn get-multi (name args)
   (let [serialized-args (multi-serialize-args args)]
