@@ -322,7 +322,14 @@ class FuncInfo{
         }
         $function->add_child($body);
 
+        if(last($this->func->params instanceof SplatNode)){
+            $body->add_child(new LeafNode($body, array(), "call_user_func_array"));
+            $splatting = True;
+        }else{
+            $splatting = False;
+        }
         $body->add_child(new LeafNode($body, array(), $this->name));
+        
         foreach($this->args_given as $arg){
             $arg->parent = $body;
             $body->add_child($arg);
@@ -1125,13 +1132,13 @@ class UseNode extends KeywordCallNode{
 class FuncValNode extends LeafNode{
 
     public function compile(){
-        if(RootNode::$ns){
-            var_dump(RootNode::$ns);
+        $name = parent::compile();
+        if(RootNode::$ns && !function_exists($name)){
             $ns = RootNode::$ns;
         }else{
             $ns = "";
         }
-        return '"'."$ns\\\\".parent::compile().'"';
+        return '"'."$ns\\\\".$name.'"';
     }
 }
 
