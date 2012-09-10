@@ -67,6 +67,9 @@
 (fn rest (xs)
   (-> (seq xs) (rest)))
 
+(fn butlast (xs)
+  (take (dec (count xs)) xs))
+
 (fn eq (val1 val2)
   (cond 
     ((inst? val1 IPharenComparable) (-> val1 (eq val2)))
