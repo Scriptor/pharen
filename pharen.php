@@ -1695,6 +1695,9 @@ class QuoteWrapper{
             return $val;
         }else{
             $this->lexer->reset();
+            if(is_string($val)){
+                $val = '"'.$val.'"';
+            }
             $this->lexer->code = (string)$val;
             $toks = $this->lexer->lex();
             return $toks[0];
