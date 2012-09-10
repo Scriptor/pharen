@@ -341,6 +341,11 @@
     ((local result ($f (first xs))) result)
     (TRUE (until f (rest xs)))))
 
+(fn map-indexed (f xs [idx 0])
+  (if (empty? xs)
+    xs
+    (cons ($f (first xs) idx) (map-indexed f (rest xs) (inc idx)))))
+
 (fn map-pairs (f pairs)
   (reduce-pairs (lambda (pair acc) (append ($f (:pair 0) (:pair 1)) acc))
                 []
