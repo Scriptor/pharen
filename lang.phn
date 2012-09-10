@@ -284,8 +284,15 @@
 (fn append (x xs)
   (array-merge xs [x]))
 
-(fn apply (f val)
-  ($f val))
+(fn apply (f &args)
+  (let [name (if (is-array f) (:f 0) f)
+        args-array (arr (if (sequential? (last args))
+                          (concat (butlast args) (last args))
+                          args))]
+    (when (is-array f)
+      (array-push args-array (:f 1)))
+    (call-user-func-array name args-array)))
+
 
 (fn concat (xs1 xs2)
   (if (empty? xs1)
