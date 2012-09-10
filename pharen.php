@@ -691,10 +691,18 @@ class Node implements Iterator, ArrayAccess, Countable{
         $list = array();
         foreach($this->tokens as $key=>$tok){
             if($tok instanceof Node){
-                $list[] = $tok->convert_to_list($return_as_array, $get_values);
+                $list[] = $val = $tok->convert_to_list($return_as_array, $get_values);
             }else{
                 if($get_values && ($tok instanceof StringToken || $tok instanceof NumberToken)){
-                    $list[] = $tok->value;
+                    $tok_value = $tok->value;
+                    if($tok instanceof NumberToken){
+                        if(ctype_digit($tok_value)){
+                            $tok_value = intval($tok_value);
+                        }else{
+                            $tok_value = floatval($tok_value);
+                        }
+                    }
+                    $list[] = $tok_value;
                 }else{
                     $list[] = $tok;
                 }
