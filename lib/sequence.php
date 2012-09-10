@@ -11,7 +11,11 @@ interface IPharenLazy{
     public function realized();
 }
 
-class PharenList implements IPharenSeq, Countable, ArrayAccess, Iterator{
+interface IPharenComparable{
+    public function eq($other);
+}
+
+class PharenList implements IPharenSeq, IPharenComparable, Countable, ArrayAccess, Iterator{
     public $first;
     public $rest;
     public $length = Null;
