@@ -79,6 +79,22 @@ class PharenList implements IPharenSeq, IPharenComparable, Countable, ArrayAcces
         return $this;
     }
 
+    public function eq($other){
+        if($other instanceof IPharenSeq || is_array($other)){
+            foreach($this as $index=>$thisval){
+                if(!isset($other[$index]) || !eq($thisval, $other[$index])){
+                    return False;
+                }
+            }
+            if(isset($index) && isset($other[$index+1])){
+                return False;
+            }
+            return True;
+        }else{
+            return $this === $other;
+        }
+    }
+
     public function arr(){
         if($this->arr)
             return $this->arr;
