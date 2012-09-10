@@ -2308,7 +2308,7 @@ class ListNode extends LiteralNode{
         if(($x = $this->is_range()) !== False){
             $step = $x > 1 ? $this->get_range_step() : 1;
             $first = intval($this->children[0]->compile());
-            $end = intval(last($this->children)->compile());
+            $end = intval(end($this->children)->compile());
 
             if($step == 1){
                 $code = "range($first, $end)";
@@ -2776,7 +2776,7 @@ class Parser{
     }
 
     public function get_expected($state){
-        $cur = last($state);
+        $cur = end($state);
         $expected = count($cur) > 0 ? $cur[0] : null;
         if(is_array($expected) && !is_assoc($expected)){
             $expected = $expected[0];
