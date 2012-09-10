@@ -376,7 +376,7 @@
 
 
 (fn multi-serialize-args (vals)
-  (reduce-concat (lambda (val)
+  (reduce-to-str (lambda (val)
                          (cond
                            ((is-string val) "str")
                            ((is-int val) "int")
