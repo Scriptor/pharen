@@ -396,8 +396,10 @@
       "No matching pattern")))
 
 (defmacro defmulti (nm args)
-  '(fn ~-nm (~@args)
-     ((get-multi ~nm (func-get-args)) ~@args)))
+  (def name nm)
+  '(fn ~nm ~args
+     ((get-multi ~name (func-get-args)) ~@args)))
 
-(defmacro defmethod (name pattern args &body)
+(defmacro defmethod (nm pattern args &body)
+  (def name nm)
   '(:: MultiManager (set-multi ~name (multi-serialize-pattern ~pattern) (lambda (a) ~@body))))
