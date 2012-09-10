@@ -67,6 +67,12 @@
 (fn rest (xs)
   (-> (seq xs) (rest)))
 
+(fn eq (val1 val2)
+  (cond 
+    ((inst? val1 IPharenComparable) (-> val1 (eq val2)))
+    ((inst? val2 IPharenComparable) (-> val2 (eq val1)))
+    (TRUE (=== val1 val2))))
+
 (defmacro if-let (binding then else)
   (def cond (:binding 1))
   '(if ~cond
