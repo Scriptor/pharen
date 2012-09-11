@@ -296,6 +296,10 @@
   (lambda (x y)
           ($f y x)))
 
+(fn juxt (&fs)
+    (lambda (&args)
+            (map (lambda (f) (apply f args))
+                 fs)))
 
 (fn concat (xs1 xs2)
   (if (empty? xs1)
