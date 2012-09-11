@@ -1361,7 +1361,8 @@ class FuncDefNode extends SpecialForm{
         $this->bind_params($params);
         list($body_nodes, $last_node) = $this->split_body_last();
 
-        $body = $this->compile_splat_code($params);
+        $body = "";
+        $splats = $this->compile_splat_code($params);
         $params_string = $this->build_params_string($params);
 
         Node::$in_func++;
@@ -1422,6 +1423,7 @@ class FuncDefNode extends SpecialForm{
         $lexings = $this->get_param_lexings($params);
 
         $code = $this->format_line("function ".$this->name.$params_string."{", $prefix).
+            $splats.
             $lexings.
             $body.
             $this->format_line("}").$this->format_line("");
@@ -1958,7 +1960,9 @@ class LambdaNode extends FuncDefNode{
         if($params_count > 1 && $this->params[$params_count-2] instanceof SplatNode){
             $param = $params[count($params)-2];
             array_splice($params, count($params)-2, 1);
-            $code = $this->format_line("").$this->format_line_indent($param." = array_slice(func_get_args(), ".($params_count-2).");");
+            $code = $this->format_line('$__splatargs = func_get_args();');
+            $code .= $this->format_line($param." = array_slice(\$__splatargs, ".($params_count-2).", count(\$__splatargs) - 1);");
+            $code .= $this->format_line('$__closure_id = last($__splatargs);');
         }
         return $code;
     }
