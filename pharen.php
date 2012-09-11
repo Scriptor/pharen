@@ -306,6 +306,8 @@ class FuncInfo{
     }
 
     public function get_tmp_func($parent){
+        $old_tmp = Node::$tmp;
+        Node::$tmp = '';
         $name = self::get_next_name();
         $params_diff = count($this->func->params) - count($this->args_given);
 
@@ -349,7 +351,9 @@ class FuncInfo{
         $scopeid_node = new VariableNode($params, array(), "__closure_id");
         $params->add_child($scopeid_node);
 
-        return array($function->compile_statement().$parent->format_line(""), $name);
+        $ret = array($function->compile_statement().$parent->format_line(""), $name);
+        Node::$tmp = $old_tmp;
+        return $ret;
     }
 
 }
