@@ -417,3 +417,22 @@ class PharenVector extends PharenCachedList{
     }
 }
 
+class PharenLambda{
+    public $closure_id;
+    public $func;
+
+    public function __construct($func, $closure_id){
+        $this->func = $func;
+        $this->closure_id = $closure_id;
+    }
+
+    public function __invoke(){
+        $args = func_get_args();
+        array_push($args, $this->closure_id);
+        return call_user_func_array($this->func, $args);
+    }
+
+    public function __toString(){
+        return "<Lambda: {$this->func}>";
+    }
+}
