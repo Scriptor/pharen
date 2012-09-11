@@ -143,10 +143,6 @@
 (fn dec (x)
   (- x 1))
 
-(fn flip (f)
-  (lambda (arg1 arg2)
-          ($f arg2 arg1)))
-
 (fn comp (&fs)
   (let [rfs (reverse fs)]
     (lambda (&args)
@@ -295,6 +291,10 @@
     (when (is-array f)
       (array-push args-array (:f 1)))
     (call-user-func-array name args-array)))
+
+(fn flip (f)
+  (lambda (x y)
+          ($f y x)))
 
 
 (fn concat (xs1 xs2)
