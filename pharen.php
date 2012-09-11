@@ -1099,7 +1099,6 @@ class NamespaceNode extends KeywordCallNode{
         $this->children[1]->value = "namespace";
         RootNode::$raw_ns = $this->children[2]->value;
         RootNode::$ns = $this->children[2]->compile();
-        Node::$ns = RootNode::$ns;
         RootNode::$ns_string = parent::compile_statement();
         return "";
     }
