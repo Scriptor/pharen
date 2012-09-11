@@ -2244,7 +2244,7 @@ class DictNode extends Node{
             $value = $pair[1]->compile();
             $mappings[] = "$key => $value";
         }
-        return "array(".implode(", ", $mappings).")";
+        return "hashify(array(".implode(", ", $mappings)."))";
     }
 
     public function compile_statement(){

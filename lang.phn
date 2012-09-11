@@ -390,7 +390,7 @@
   '(-> this ~@exprs))
 
 (class MultiManager
-       (access static (local multis {}))
+       (access static (local multis NULL))
 
        (access static (fn matching-multi-exists (multi-name serialized-args)
                         (isset (:: self (:multis multi-name serialized-args)))))
@@ -400,6 +400,8 @@
 
        (access static (fn set-multi (multi-name pattern f)
                         (= (:: self (:multis multi-name pattern)) f))))
+
+(= (:: MultiManager multis) {})
 
 
 
@@ -425,8 +427,10 @@
 
 (defmacro defmulti (nm args)
   (def name nm)
-  '(fn ~nm ~args
-     ((get-multi ~name (func-get-args)) ~@args)))
+  '(do
+     (= (:: MultiManager (:multis ~name)) {})
+     (fn ~nm ~args
+       ((get-multi ~name (func-get-args)) ~@args))))
 
 (defmacro defmethod (nm pattern args &body)
   (def name nm)
