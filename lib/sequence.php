@@ -433,6 +433,6 @@ class PharenLambda{
     }
 
     public function __toString(){
-        return "<Lambda: {$this->func}>";
+        return "<Lambda: {$this->func}:{$this->closure_id}>";
     }
 }
