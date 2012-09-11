@@ -1142,7 +1142,7 @@ class FuncValNode extends LeafNode{
 
     public function compile(){
         $name = parent::compile();
-        if(RootNode::$ns && !function_exists($name)){
+        if(RootNode::$ns && !function_exists($name) && !strpos($name, "\\")){
             $ns = RootNode::$ns;
         }else{
             $ns = "";
