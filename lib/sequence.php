@@ -360,6 +360,14 @@ class PharenHashMap implements Countable, ArrayAccess, Iterator{
         return "{".implode(", ", $pairs)."}";
     }
 
+    public function __invoke($key, $default=Null){
+        if(isset($this->hashmap[$key])){
+            return $this->hashmap[$key];
+        }else{
+            return $default;
+        }
+    }
+
     public function assoc($key, $val){
         $new_hashmap = $this->hashmap;
         $new_hashmap[$key] = $val;
@@ -371,6 +379,7 @@ class PharenHashMap implements Countable, ArrayAccess, Iterator{
     }
 
     public function offsetSet($key, $val){
+        $this->hashmap[$key] = $val;
     }
 
     public function offsetUnset($key){
