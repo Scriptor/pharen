@@ -1103,6 +1103,11 @@ class NamespaceNode extends KeywordCallNode{
         RootNode::$ns_string = parent::compile_statement();
         return "";
     }
+
+    public function compile(){
+        $this->compile_statement();
+        return "NULL";
+    }
 }
 
 class UseNode extends KeywordCallNode{
