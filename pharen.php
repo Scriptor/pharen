@@ -798,7 +798,7 @@ class Node implements Iterator, ArrayAccess, Countable{
         }else{
             $scope_id_str = '$__scope_id';
         }
-        return 'array("'.RootNode::$ns.'\\\\'.$tmp_name.'", Lexical::get_closure_id("'.Node::$ns."\", $scope_id_str))";
+        return 'new \PharenLambda("'.RootNode::$ns.'\\\\'.$tmp_name.'", Lexical::get_closure_id("'.Node::$ns.'", '.$scope_id_str.'))';
     }
 
     public function compile($is_statement=False, $is_return=False){
@@ -1943,7 +1943,6 @@ class LambdaNode extends FuncDefNode{
         array_pop($this->children[1]->children);
         self::$in_lambda_compile = False;
         return 'new \PharenLambda("'.RootNode::$ns.'\\\\'.$name.'", Lexical::get_closure_id("'.Node::$ns.'", '.$scope_id_str.'))';
-        //return 'array("'.RootNode::$ns.'\\\\'.$name.'", Lexical::get_closure_id("'.Node::$ns.'", '.$scope_id_str.'))';
     }
 
     public function compile_statement(){
