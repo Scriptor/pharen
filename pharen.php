@@ -2185,7 +2185,7 @@ class ListAccessNode extends Node{
         $this->tokens = array(new ListAccessToken);
     }
 
-    public function compile(){
+    public function compile($prefix=""){
         $list_name_node = $this->children[0];
         if($list_name_node instanceof LeafNode){
             $varname = $list_name_node->compile();
@@ -2200,8 +2200,8 @@ class ListAccessNode extends Node{
         return $varname.$indexes;
     }
 
-    public function compile_statement(){
-        return Node::add_tmp($this->compile().";\n");
+    public function compile_statement($prefix=""){
+        return $this->format_statement($this->compile().";", $prefix);
     }
 }
 
