@@ -88,7 +88,8 @@ class FuncValToken extends Token{
 class Lexer{
     static $keyword_rewrites = array(
         'or' => 'pharen-or',
-        'and' => 'pharen-and'
+        'and' => 'pharen-and',
+        'list' => 'pharen-list'
     );
 
     public $code;
@@ -188,9 +189,6 @@ class Lexer{
             }
         }else if($this->state == "append"){
             if(trim($this->char) === "" or $this->char === ","){
-                if(isset(self::$keyword_rewrites[$this->tok->value])){
-                    $this->tok->value = self::$keyword_rewrites[$this->tok->value];
-                }
                 $this->state = "new-expression";
             }else if($this->char == ")"){
                 $this->tok = new CloseParenToken;
@@ -203,6 +201,12 @@ class Lexer{
                 $this->state = "new-expression";
             }else{
                 $this->tok->append($this->char);
+            }
+            if($this->state == "new-expression"){
+                $last_tok = $this->toks[count($this->toks)-1];
+                if(isset(self::$keyword_rewrites[$last_tok->value])){
+                    $last_tok->value = self::$keyword_rewrites[$last_tok->value];
+                }
             }
         }else if($this->state == "new-expression"){
             // For function calls, a function name can itself be a sexpr that returns a function name
@@ -1045,8 +1049,8 @@ class LeafNode extends Node{
             return strpos($val, '.') === False ? intval($val) : floatval($val);
         }else if(strstr($val, '"')){
             return str_replace('"', '', $val);
-        }else if(isset($keyword_rewrites[$val])){
-            $val = $keyword_rewrites[$val];
+        }else if(isset(Lexer::$keyword_rewrites[$val])){
+            $val = Lexer::$keyword_rewrites[$val];
         }else{
             return $val;
         }

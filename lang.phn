@@ -67,6 +67,9 @@
 (fn rest (xs)
   (-> (seq xs) (rest)))
 
+(fn pharen-list (a &xs)
+  (cons a xs))
+
 (fn butlast (xs)
   (take (dec (count xs)) xs))
 
