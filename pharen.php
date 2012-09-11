@@ -860,13 +860,7 @@ class Node implements Iterator, ArrayAccess, Countable{
 
         $args = $this->compile_args(array_slice($this->children, 1));
         $args_string = implode(", ", $args);
-        if($this->has_variable_func){
-            $args[] = $func_name."[1]";
-            $closure_args_string = implode(", ", $args);
-            return "(is_string($func_name) || is_callable($func_name)?$func_name($args_string):{$func_name}[0]($closure_args_string))";
-        }else{
-            return "$func_name($args_string)";
-        }
+        return "$func_name($args_string)";
     }
 
     public function add_semicolon ($code){
