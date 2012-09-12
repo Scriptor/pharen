@@ -1,5 +1,5 @@
 (fn check (expr expected)
-  (if (== expr expected)
+  (if (eq expr expected)
     TRUE
     (do
       (def bt (debug_backtrace))

@@ -21,7 +21,7 @@
   (unset-flag flag))
 
 (fn compile-except (excepts file [output-dir NULL])
-  (when (not (in-array file excepts))
+  (when (not (in-array file (arr excepts)))
     (compile-file file)))
 
 (fn is-phn (f)

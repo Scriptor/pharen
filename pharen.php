@@ -1,5 +1,5 @@
 <?php
-error_reporting(E_ALL | E_NOTICE);
+error_reporting(E_ALL);
 define("COMPILER_SYSTEM", dirname(__FILE__));
 define("EXTENSION", ".phn");
 
@@ -8,10 +8,6 @@ require_once(COMPILER_SYSTEM."/lib/sequence.php");
 use Pharen\Lexical as Lexical;
 
 // Some utility functions for use in Pharen
-
-function last($xs){
-    return end($xs);
-}
 
 function is_assoc($xs){
     return array_keys($xs) !== range(0, count($xs)-1);
@@ -92,7 +88,8 @@ class FuncValToken extends Token{
 class Lexer{
     static $keyword_rewrites = array(
         'or' => 'pharen-or',
-        'and' => 'pharen-and'
+        'and' => 'pharen-and',
+        'list' => 'pharen-list'
     );
 
     public $code;
@@ -192,9 +189,6 @@ class Lexer{
             }
         }else if($this->state == "append"){
             if(trim($this->char) === "" or $this->char === ","){
-                if(isset(self::$keyword_rewrites[$this->tok->value])){
-                    $this->tok->value = self::$keyword_rewrites[$this->tok->value];
-                }
                 $this->state = "new-expression";
             }else if($this->char == ")"){
                 $this->tok = new CloseParenToken;
@@ -207,6 +201,12 @@ class Lexer{
                 $this->state = "new-expression";
             }else{
                 $this->tok->append($this->char);
+            }
+            if($this->state == "new-expression"){
+                $last_tok = $this->toks[count($this->toks)-1];
+                if(isset(self::$keyword_rewrites[$last_tok->value])){
+                    $last_tok->value = self::$keyword_rewrites[$last_tok->value];
+                }
             }
         }else if($this->state == "new-expression"){
             // For function calls, a function name can itself be a sexpr that returns a function name
@@ -306,6 +306,8 @@ class FuncInfo{
     }
 
     public function get_tmp_func($parent){
+        $old_tmp = Node::$tmp;
+        Node::$tmp = '';
         $name = self::get_next_name();
         $params_diff = count($this->func->params) - count($this->args_given);
 
@@ -326,7 +328,14 @@ class FuncInfo{
         }
         $function->add_child($body);
 
+        if(last($this->func->params instanceof SplatNode)){
+            $body->add_child(new LeafNode($body, array(), "call_user_func_array"));
+            $splatting = True;
+        }else{
+            $splatting = False;
+        }
         $body->add_child(new LeafNode($body, array(), $this->name));
+        
         foreach($this->args_given as $arg){
             $arg->parent = $body;
             $body->add_child($arg);
@@ -338,7 +347,13 @@ class FuncInfo{
             $var = new VariableNode($body, array(), "arg$x");
             $body->add_child($var);
         }
-        return array($function->compile_statement().$parent->format_line(""), $name);
+
+        $scopeid_node = new VariableNode($params, array(), "__closure_id");
+        $params->add_child($scopeid_node);
+
+        $ret = array($function->compile_statement().$parent->format_line(""), $name);
+        Node::$tmp = $old_tmp;
+        return $ret;
     }
 
 }
@@ -687,10 +702,18 @@ class Node implements Iterator, ArrayAccess, Countable{
         $list = array();
         foreach($this->tokens as $key=>$tok){
             if($tok instanceof Node){
-                $list[] = $tok->convert_to_list($return_as_array, $get_values);
+                $list[] = $val = $tok->convert_to_list($return_as_array, $get_values);
             }else{
                 if($get_values && ($tok instanceof StringToken || $tok instanceof NumberToken)){
-                    $list[] = $tok->value;
+                    $tok_value = $tok->value;
+                    if($tok instanceof NumberToken){
+                        if(ctype_digit($tok_value)){
+                            $tok_value = intval($tok_value);
+                        }else{
+                            $tok_value = floatval($tok_value);
+                        }
+                    }
+                    $list[] = $tok_value;
                 }else{
                     $list[] = $tok;
                 }
@@ -769,7 +792,13 @@ class Node implements Iterator, ArrayAccess, Countable{
     public function create_partial($func){
         list($tmp_func, $tmp_name) = $func->get_tmp_func($this->parent);
         Node::$tmp .= $tmp_func;
-        return '"'.RootNode::$ns.'\\\\'.$tmp_name.'"';
+        $scope = $this->get_scope();
+        if(count($scope->lexically_needed) === 0 || $scope->owner instanceof MacroNode){
+            $scope_id_str = 'Null';
+        }else{
+            $scope_id_str = '$__scope_id';
+        }
+        return 'new \PharenLambda("'.RootNode::$ns.'\\\\'.$tmp_name.'", Lexical::get_closure_id("'.Node::$ns.'", '.$scope_id_str.'))';
     }
 
     public function compile($is_statement=False, $is_return=False){
@@ -831,13 +860,7 @@ class Node implements Iterator, ArrayAccess, Countable{
 
         $args = $this->compile_args(array_slice($this->children, 1));
         $args_string = implode(", ", $args);
-        if($this->has_variable_func){
-            $args[] = $func_name."[1]";
-            $closure_args_string = implode(", ", $args);
-            return "(is_string($func_name) || is_callable($func_name)?$func_name($args_string):{$func_name}[0]($closure_args_string))";
-        }else{
-            return "$func_name($args_string)";
-        }
+        return "$func_name($args_string)";
     }
 
     public function add_semicolon ($code){
@@ -1024,8 +1047,8 @@ class LeafNode extends Node{
             return strpos($val, '.') === False ? intval($val) : floatval($val);
         }else if(strstr($val, '"')){
             return str_replace('"', '', $val);
-        }else if(isset($keyword_rewrites[$val])){
-            $val = $keyword_rewrites[$val];
+        }else if(isset(Lexer::$keyword_rewrites[$val])){
+            $val = Lexer::$keyword_rewrites[$val];
         }else{
             return $val;
         }
@@ -1074,9 +1097,13 @@ class NamespaceNode extends KeywordCallNode{
         $this->children[1]->value = "namespace";
         RootNode::$raw_ns = $this->children[2]->value;
         RootNode::$ns = $this->children[2]->compile();
-        Node::$ns = RootNode::$ns;
         RootNode::$ns_string = parent::compile_statement();
         return "";
+    }
+
+    public function compile(){
+        $this->compile_statement();
+        return "NULL";
     }
 }
 
@@ -1111,7 +1138,13 @@ class UseNode extends KeywordCallNode{
 class FuncValNode extends LeafNode{
 
     public function compile(){
-        return '"'.parent::compile().'"';
+        $name = parent::compile();
+        if(RootNode::$ns && !function_exists($name) && !strpos($name, "\\")){
+            $ns = RootNode::$ns;
+        }else{
+            $ns = "";
+        }
+        return '"'."$ns\\\\".$name.'"';
     }
 }
 
@@ -1322,7 +1355,8 @@ class FuncDefNode extends SpecialForm{
         $this->bind_params($params);
         list($body_nodes, $last_node) = $this->split_body_last();
 
-        $body = $this->compile_splat_code($params);
+        $body = "";
+        $splats = $this->compile_splat_code($params);
         $params_string = $this->build_params_string($params);
 
         Node::$in_func++;
@@ -1383,6 +1417,7 @@ class FuncDefNode extends SpecialForm{
         $lexings = $this->get_param_lexings($params);
 
         $code = $this->format_line("function ".$this->name.$params_string."{", $prefix).
+            $splats.
             $lexings.
             $body.
             $this->format_line("}").$this->format_line("");
@@ -1451,7 +1486,7 @@ class FuncDefNode extends SpecialForm{
         if(is_array($param)){
             $this->scope->bind($param[0], $param[1]);
         }else{
-            $this->scope->bind($param, new EmptyNode($this));
+            $this->scope->bind($param, new LeafNode($this, Null, $param));
         }
     }
 
@@ -1538,18 +1573,19 @@ class MacroNode extends FuncDefNode{
         $old_ns = RootNode::$ns;
         RootNode::$ns = $macronode->macro_ns;
         $old_tmpfunc = Node::$tmpfunc;
+        $old_tmp = Node::$tmp;
         $code = $macronode->parent_compile();
         RootNode::$ns = $old_ns;
         if($macronode->evaluated || function_exists($name)){
             Node::add_tmpfunc('');
             Node::$tmpfunc = $old_tmpfunc;
-            return;
         }else{
             $code = "use Pharen\Lexical as Lexical;\n"
                 .Node::add_tmpfunc($code);
             eval($code);
             $macronode->evaluated = True;
         }
+        Node::$tmp = $old_tmp;
     }
 
     static function get_values_from_list($list){
@@ -1679,6 +1715,9 @@ class QuoteWrapper{
             return $val;
         }else{
             $this->lexer->reset();
+            if(is_string($val)){
+                $val = '"'.$val.'"';
+            }
             $this->lexer->code = (string)$val;
             $toks = $this->lexer->lex();
             return $toks[0];
@@ -1897,7 +1936,7 @@ class LambdaNode extends FuncDefNode{
         array_splice($this->children, 1, 1);
         array_pop($this->children[1]->children);
         self::$in_lambda_compile = False;
-        return 'array("'.RootNode::$ns.'\\\\'.$name.'", Lexical::get_closure_id("'.Node::$ns.'", '.$scope_id_str.'))';
+        return 'new \PharenLambda("'.RootNode::$ns.'\\\\'.$name.'", Lexical::get_closure_id("'.Node::$ns.'", '.$scope_id_str.'))';
     }
 
     public function compile_statement(){
@@ -1915,7 +1954,9 @@ class LambdaNode extends FuncDefNode{
         if($params_count > 1 && $this->params[$params_count-2] instanceof SplatNode){
             $param = $params[count($params)-2];
             array_splice($params, count($params)-2, 1);
-            $code = $this->format_line("").$this->format_line_indent($param." = array_slice(func_get_args(), ".($params_count-2).");");
+            $code = $this->format_line('$__splatargs = func_get_args();');
+            $code .= $this->format_line($param." = array_slice(\$__splatargs, ".($params_count-2).", count(\$__splatargs) - 1);");
+            $code .= $this->format_line('$__closure_id = last($__splatargs);');
         }
         return $code;
     }
@@ -2154,7 +2195,7 @@ class ListAccessNode extends Node{
         $this->tokens = array(new ListAccessToken);
     }
 
-    public function compile(){
+    public function compile($prefix=""){
         $list_name_node = $this->children[0];
         if($list_name_node instanceof LeafNode){
             $varname = $list_name_node->compile();
@@ -2169,8 +2210,8 @@ class ListAccessNode extends Node{
         return $varname.$indexes;
     }
 
-    public function compile_statement(){
-        return Node::add_tmp($this->compile().";\n");
+    public function compile_statement($prefix=""){
+        return $this->format_statement($this->compile().";", $prefix);
     }
 }
 
@@ -2203,7 +2244,7 @@ class DictNode extends Node{
             $value = $pair[1]->compile();
             $mappings[] = "$key => $value";
         }
-        return "array(".implode(", ", $mappings).")";
+        return "hashify(array(".implode(", ", $mappings)."))";
     }
 
     public function compile_statement(){
@@ -2277,7 +2318,7 @@ class ListNode extends LiteralNode{
         if(($x = $this->is_range()) !== False){
             $step = $x > 1 ? $this->get_range_step() : 1;
             $first = intval($this->children[0]->compile());
-            $end = intval(last($this->children)->compile());
+            $end = intval(end($this->children)->compile());
 
             if($step == 1){
                 $code = "range($first, $end)";
@@ -2745,7 +2786,7 @@ class Parser{
     }
 
     public function get_expected($state){
-        $cur = last($state);
+        $cur = end($state);
         $expected = count($cur) > 0 ? $cur[0] : null;
         if(is_array($expected) && !is_assoc($expected)){
             $expected = $expected[0];
@@ -2776,6 +2817,9 @@ function unset_flag($flag){
 }
 
 function compile_file($fname, $output_dir=Null){
+    RootNode::$ns = "";
+    RootNode::$raw_ns = "";
+    RootNode::$ns_string = "";
     $file = basename($fname, EXTENSION);
     $ns = str_replace('-', '_', $file);
     Node::$ns = $ns;

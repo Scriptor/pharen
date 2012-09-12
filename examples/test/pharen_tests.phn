@@ -11,8 +11,8 @@
   (require (. TESTS-DIR "/tmp/" fname ".php")))
     
 
-(let [tests [
-        "literals",
+(let [tests 
+      ["literals",
         "func_calls",
         "comments",
         "bindings",
@@ -24,8 +24,7 @@
         "plambda",
         "macros",
         "multi",
-        "oop"
-    ]]
+        "oop"]]
 
   (describe "Pharen"
       (lambda ()

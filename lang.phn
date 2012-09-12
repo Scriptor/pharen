@@ -67,6 +67,21 @@
 (fn rest (xs)
   (-> (seq xs) (rest)))
 
+(fn pharen-list (a &xs)
+  (cons a xs))
+
+(fn butlast (xs)
+  (take (dec (count xs)) xs))
+
+(fn last (xs)
+  (:xs (dec (count xs))))
+
+(fn eq (val1 val2)
+  (cond 
+    ((inst? val1 IPharenComparable) (-> val1 (eq val2)))
+    ((inst? val2 IPharenComparable) (-> val2 (eq val1)))
+    (TRUE (=== val1 val2))))
+
 (defmacro if-let (binding then else)
   (def cond (:binding 1))
   '(if ~cond
@@ -79,6 +94,15 @@
   '(when ~cond
      (let ~binding
        ~then)))
+
+(defmacro if-not (cond then else)
+  '(if (not ~cond)
+     ~then
+     ~else))
+
+(defmacro when-not (cond then)
+  '(when (not ~cond)
+     ~then))
 
 (defmacro dotimes (binding &exprs)
   (def varname (:binding 0))
@@ -117,11 +141,7 @@
   (+ 1 x))
 
 (fn dec (x)
-  (- 1 x))
-
-(fn flip (f)
-  (lambda (arg1 arg2)
-          ($f arg2 arg1)))
+  (- x 1))
 
 (fn comp (&fs)
   (let [rfs (reverse fs)]
@@ -137,6 +157,9 @@
 
 (fn seq? (x)
   (inst? x IPharenSeq))
+
+(fn sequential? (x)
+  (or (inst? x IPharenSeq) (is-array x)))
 
 (fn seq (x)
   (if (inst? x IPharenSeq)
@@ -260,8 +283,23 @@
 (fn append (x xs)
   (array-merge xs [x]))
 
-(fn apply (f val)
-  ($f val))
+(fn apply (f &args)
+  (let [name (if (is-array f) (:f 0) f)
+        args-array (arr (if (sequential? (last args))
+                          (concat (butlast args) (last args))
+                          args))]
+    (when (is-array f)
+      (array-push args-array (:f 1)))
+    (call-user-func-array name args-array)))
+
+(fn flip (f)
+  (lambda (x y)
+          ($f y x)))
+
+(fn juxt (&fs)
+    (lambda (&args)
+            (map (lambda (f) (apply f args))
+                 fs)))
 
 (fn concat (xs1 xs2)
   (if (empty? xs1)
@@ -310,6 +348,11 @@
     ((local result ($f (first xs))) result)
     (TRUE (until f (rest xs)))))
 
+(fn map-indexed (f xs [idx 0])
+  (if (empty? xs)
+    xs
+    (cons ($f (first xs) idx) (map-indexed f (rest xs) (inc idx)))))
+
 (fn map-pairs (f pairs)
   (reduce-pairs (lambda (pair acc) (append ($f (:pair 0) (:pair 1)) acc))
                 []
@@ -347,7 +390,7 @@
   '(-> this ~@exprs))
 
 (class MultiManager
-       (access static (local multis {}))
+       (access static (local multis NULL))
 
        (access static (fn matching-multi-exists (multi-name serialized-args)
                         (isset (:: self (:multis multi-name serialized-args)))))
@@ -358,10 +401,12 @@
        (access static (fn set-multi (multi-name pattern f)
                         (= (:: self (:multis multi-name pattern)) f))))
 
+(= (:: MultiManager multis) {})
+
 
 
 (fn multi-serialize-args (vals)
-  (reduce-concat (lambda (val)
+  (reduce-to-str (lambda (val)
                          (cond
                            ((is-string val) "str")
                            ((is-int val) "int")
@@ -372,7 +417,7 @@
                  vals))
 
 (fn multi-serialize-pattern (pattern)
-  (implode pattern))
+  (implode (arr pattern)))
 
 (fn get-multi (name args)
   (let [serialized-args (multi-serialize-args args)]
@@ -381,8 +426,12 @@
       "No matching pattern")))
 
 (defmacro defmulti (nm args)
-  '(fn ~-nm (~@args)
-     ((get-multi ~nm (func-get-args)) ~@args)))
+  (def name nm)
+  '(do
+     (= (:: MultiManager (:multis ~name)) {})
+     (fn ~nm ~args
+       ((get-multi ~name (func-get-args)) ~@args))))
 
-(defmacro defmethod (name pattern args &body)
+(defmacro defmethod (nm pattern args &body)
+  (def name nm)
   '(:: MultiManager (set-multi ~name (multi-serialize-pattern ~pattern) (lambda (a) ~@body))))

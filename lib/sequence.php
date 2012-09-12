@@ -1,4 +1,5 @@
 <?php
+error_reporting(E_ALL);
 interface IPharenSeq{
     public function first();
     public function rest();
@@ -10,7 +11,11 @@ interface IPharenLazy{
     public function realized();
 }
 
-class PharenList implements IPharenSeq, Countable, ArrayAccess, Iterator{
+interface IPharenComparable{
+    public function eq($other);
+}
+
+class PharenList implements IPharenSeq, IPharenComparable, Countable, ArrayAccess, Iterator{
     public $first;
     public $rest;
     public $length = Null;
@@ -72,6 +77,22 @@ class PharenList implements IPharenSeq, Countable, ArrayAccess, Iterator{
 
     public function seq(){
         return $this;
+    }
+
+    public function eq($other){
+        if($other instanceof IPharenSeq || is_array($other)){
+            foreach($this as $index=>$thisval){
+                if(!isset($other[$index]) || !eq($thisval, $other[$index])){
+                    return False;
+                }
+            }
+            if(isset($index) && isset($other[$index+1])){
+                return False;
+            }
+            return True;
+        }else{
+            return $this === $other;
+        }
     }
 
     public function arr(){
@@ -339,6 +360,14 @@ class PharenHashMap implements Countable, ArrayAccess, Iterator{
         return "{".implode(", ", $pairs)."}";
     }
 
+    public function __invoke($key, $default=Null){
+        if(isset($this->hashmap[$key])){
+            return $this->hashmap[$key];
+        }else{
+            return $default;
+        }
+    }
+
     public function assoc($key, $val){
         $new_hashmap = $this->hashmap;
         $new_hashmap[$key] = $val;
@@ -350,6 +379,7 @@ class PharenHashMap implements Countable, ArrayAccess, Iterator{
     }
 
     public function offsetSet($key, $val){
+        $this->hashmap[$key] = $val;
     }
 
     public function offsetUnset($key){
@@ -396,3 +426,22 @@ class PharenVector extends PharenCachedList{
     }
 }
 
+class PharenLambda{
+    public $closure_id;
+    public $func;
+
+    public function __construct($func, $closure_id){
+        $this->func = $func;
+        $this->closure_id = $closure_id;
+    }
+
+    public function __invoke(){
+        $args = func_get_args();
+        array_push($args, $this->closure_id);
+        return call_user_func_array($this->func, $args);
+    }
+
+    public function __toString(){
+        return "<Lambda: {$this->func}:{$this->closure_id}>";
+    }
+}
