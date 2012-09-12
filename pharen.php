@@ -2741,7 +2741,7 @@ class Parser{
             $expected = $this->reduce_state($expected);
         }
 
-        if($tok instanceof NameToken and (strstr($tok->value, ".") || strToUpper($tok->value) == $tok->value)){
+        if(($tok instanceof NameToken && ctype_alnum(str_replace('-', '', str_replace('_', '', $tok->value)))) and (strstr($tok->value, ".") || strToUpper($tok->value) == $tok->value)){
             // Check if the token is all upper case, which means it's a constant
             $class = "LeafNode";
             array_shift($cur_state);
