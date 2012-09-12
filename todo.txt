@@ -1,0 +1,22 @@
+Below are a list of tasks that need to be done before Pharen is ready to be released (again).
+
+1. PHP 5.4 support
+    - Namely this involves getting rid of strict errors
+    - Possible support for traits
+2. More test coverage
+    - Cover all lang.phn functions and macros
+    - Cover new features (namespaces, new lambdas, etc.)
+    - Cover more edge cases
+3. Clean up namespaces
+    - Namespace all lib files
+    - Formalize all namespace names and place under Pharen
+    - Fix how funcvals are namespaced
+    - Fix that you have to prepend global class names with a dot
+4. Update documentation
+    - Rewrite existing text to reflect changes
+    - Document new features
+    - Change the tutorial to use a better example
+        - Talk about REPL-driven development
+    - Document all the new lang functions
+5. Fix mutability calls in multimethods
+6. Flesh out PharenVector and PharenHashmap
