@@ -2616,7 +2616,7 @@ class Parser{
         self::$literal_form = array("LiteralNode", self::$values);
         self::$cond_pair = array("LiteralNode", self::$value, self::$value);
         self::$list_form = array("ListNode", self::$values);
-        self::$list_access_form = array("ListAccessNode", self::$value, self::$value, self::$value);
+        self::$list_access_form = array("ListAccessNode", self::$value, self::$values);
 
         self::$special_forms = array(
             "fn" => array("FuncDefNode", "LeafNode", "LeafNode", "LiteralNode", self::$values),
