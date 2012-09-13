@@ -43,7 +43,7 @@
          (TRUE x))))
 
 (fn wrap-compile (code)
-  (let [embedded-code (. "(local c " code ") (lambda () "") (return c)")]
+  (let [embedded-code (. "(local *1 " code ") (lambda () "") (return *1)")]
     (compile embedded-code NULL (:: .RootNode ns) (:: .RootNode last-scope))))
 
 (fn compile-code (code)
