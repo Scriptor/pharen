@@ -1,5 +1,9 @@
 <?php
-error_reporting(E_ALL);
+if(version_compare(phpversion(), "5.4") < 0){
+    error_reporting(E_ALL);
+}else{
+    error_reporting(E_ALL ^ E_STRICT);
+}
 define("COMPILER_SYSTEM", dirname(__FILE__));
 define("EXTENSION", ".phn");
 
