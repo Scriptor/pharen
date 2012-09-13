@@ -69,6 +69,9 @@ class PharenList implements IPharenSeq, IPharenComparable, Countable, ArrayAcces
             }else if(is_array($val)){
                 $vals []= "[".implode(", ", $val)."]";
             }else{
+                if(is_string($val)){
+                    $val = '"'.$val.'"';
+                }
                 $vals []= $val;
             }
         }
@@ -355,6 +358,12 @@ class PharenHashMap implements Countable, ArrayAccess, Iterator{
     public function __toString(){
         $pairs = array();
         foreach($this as $k=>$v){
+            if(is_string($k)){
+                $k = '"'.$k.'"';
+            }
+            if(is_string ($v)){
+                $v = '"'.$v.'"';
+            }
             $pairs []= "$k $v";
         }
         return "{".implode(", ", $pairs)."}";
