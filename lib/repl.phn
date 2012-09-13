@@ -39,6 +39,7 @@
          ((=== NULL x) "Null")
          ((=== TRUE x) "True")
          ((=== FALSE x) "False")
+         ((is-object x) (if (method-exists x "__toString") x (. "<" (get-class x) ">")))
          ((is-string x) (. "\"" x "\""))
          (TRUE x))))
 
