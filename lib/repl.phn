@@ -60,14 +60,15 @@
 (fn intro ()
   (prn (. "Initialized Pharen REPL. " (:greetings (array-rand (arr greetings))) "\n")))
 
-(fn work ([previous-code ""])
+(fn work ([previous-code ""] [repl-vars []])
   (let [code (. previous-code " " (prompt (get-prompt previous-code)))]
     (if (== code "quit")
       (exit 0)
       (let [compiled-code (compile-code code)]
         (if compiled-code
           (do 
+            (extract repl-vars)
             (prn-result (eval (. "?>" compiled-code)))
             (local previous-code ""))
           (local previous-code code))
-        (work previous-code)))))
+        (work previous-code repl-vars)))))
