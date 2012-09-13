@@ -20,3 +20,12 @@ Below are a list of tasks that need to be done before Pharen is ready to be rele
     - Document all the new lang functions
 5. Fix mutability calls in multimethods
 6. Flesh out PharenVector and PharenHashmap
+    - Implement vectors as trees internally?
+    - Add any necessary functions for working with hashmaps
+        - update-in might be useful
+7. Complete OOP support
+    - Abstract classes and interfaces
+        - Will allow for more compatibility with other PHP code
+    - Class hints?
+    - In general, still have to emphasize the functional nature of Pharen
+
