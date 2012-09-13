@@ -1454,7 +1454,7 @@ class FuncDefNode extends SpecialForm{
         if($params_count > 0 && $this->params[$params_count-1] instanceof SplatNode){
             $param = $params[count($params)-1];
             array_pop($params);
-            $code = $this->format_line("").$this->format_line_indent($param." = array_slice(func_get_args(), ".($params_count-1).");");
+            $code = $this->format_line("").$this->format_line_indent($param." = seq(array_slice(func_get_args(), ".($params_count-1)."));");
         }
         return $code;
     }
@@ -1959,7 +1959,7 @@ class LambdaNode extends FuncDefNode{
             $param = $params[count($params)-2];
             array_splice($params, count($params)-2, 1);
             $code = $this->format_line('$__splatargs = func_get_args();');
-            $code .= $this->format_line($param." = array_slice(\$__splatargs, ".($params_count-2).", count(\$__splatargs) - 1);");
+            $code .= $this->format_line($param." = seq(array_slice(\$__splatargs, ".($params_count-2).", count(\$__splatargs) - 1));");
             $code .= $this->format_line('$__closure_id = last($__splatargs);');
         }
         return $code;
