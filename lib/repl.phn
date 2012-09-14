@@ -8,11 +8,39 @@
 (def greetings ["Maybe solve P v NP!" "Happy Pharening!" "(map) new worlds!"
                 "Maybe solve Hello World!" "Curly fries are delicious and cheap!"])
 
+(fn starts-with (needle haystack)
+  (== (substr haystack 0 (strlen needle)) needle))
+
+(fn get-needle (input)
+  (let [point (:(readline-info) "point")
+        up-to-point (substr input 0 point)
+        last-pound (strrpos up-to-point "#")]
+    (if (not (false? last-pound))
+      (substr up-to-point (inc last-pound))
+      input)))
+
+(fn prepend-chars (needle funcs)
+  (if-not (false? (strpos needle "#"))
+    (map (lambda (func)
+                 (. "#" func))
+         funcs)
+    funcs))
+
+(fn pharen-complete-func (input)
+  (let [all-funcs (get-defined-functions)
+        needle (get-needle input)
+        starts-with-input (starts-with needle)
+        internal-matches (prepend-chars input (filter starts-with-input (:all-funcs "internal")))
+        user-matches (prepend-chars input (filter starts-with-input (:all-funcs "user")))]
+    (arr (concat user-matches internal-matches))))
+
 (if (function-exists "readline")
-  (fn prompt (prompt)
-    (let [line (trim (readline prompt))]
-      (readline-add-history line)
-      line))
+  (do
+    (fn prompt (prompt)
+      (let [line (trim (readline prompt))]
+        (readline-add-history line)
+        line))
+    (readline-completion-function #pharen-complete-func))
   (fn prompt (prompt)
     (fwrite STDOUT prompt)
     (trim (fgets STDIN))))
