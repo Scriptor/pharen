@@ -116,6 +116,12 @@
     (print* s "\n")
     NULL))
 
+(fn false? (x)
+  (=== FALSE x))
+
+(fn true? (x)
+  (=== TRUE x))
+
 (fn zero? (n)
   (== n 0))
 
