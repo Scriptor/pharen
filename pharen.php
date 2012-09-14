@@ -2436,12 +2436,13 @@ class BindingNode extends Node{
         }
         $varnames = array();
         $code = "";
+        $bindings = array();
         foreach($pairs as $pair_node){
             $varname = $pair_node[0]->compile();
             $varnames[] = $varname;
 
             $scope->bind($varname, $pair_node[1]);
-            $code .= $this->format_statement($scope->get_binding($varname));
+            $bindings[$varname] = $this->format_statement($scope->get_binding($varname));
         }
 
         $body = "";
@@ -2473,11 +2474,12 @@ class BindingNode extends Node{
             $body .= $line->compile_statement();
         }
 
-        $lexings = $this->scope->init_lexical_scope();
+        $code .= $this->scope->init_lexical_scope();
         foreach($varnames as $varname){
-            $lexings .= $scope->get_lexing($varname);
+            $code .= $bindings[$varname];
+            $code .= $scope->get_lexing($varname);
         }
-        $code = $this->scope->get_lexical_bindings().$code.$lexings.$body.$last_line;
+        $code = $this->scope->get_lexical_bindings().$code.$body.$last_line;
 
         if($return === True || $prefix !== ""){
             $this->children = $ret_stashed_children;
