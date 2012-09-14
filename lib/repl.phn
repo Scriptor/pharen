@@ -26,12 +26,17 @@
          funcs)
     funcs))
 
+(fn strip-ns (funcs)
+  (map (lambda (func)
+               (str-replace (. (:: .RootNode ns) "\\") "" func))
+       funcs))
+
 (fn pharen-complete-func (input)
   (let [all-funcs (get-defined-functions)
         needle (get-needle input)
         starts-with-input (starts-with needle)
-        internal-matches (prepend-chars input (filter starts-with-input (:all-funcs "internal")))
-        user-matches (prepend-chars input (filter starts-with-input (:all-funcs "user")))]
+        internal-matches (prepend-chars input (filter starts-with-input (strip-ns (:all-funcs "internal"))))
+        user-matches (prepend-chars input (filter starts-with-input (strip-ns (:all-funcs "user"))))]
     (arr (concat user-matches internal-matches))))
 
 (if (function-exists "readline")
