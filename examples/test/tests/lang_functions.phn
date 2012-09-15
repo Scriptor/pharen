@@ -2,5 +2,3 @@
 
 
 (check (when (== 1 1) (= x 2)) 2)
-
-(check (not (== 2 2)) FALSE)
