@@ -10,3 +10,5 @@
 
 (check (pharen-and (== 1 1) (== 1 2)) FALSE)
 (check (pharen-and (== 1 1) (== 2 2)) TRUE)
+
+(check ((thunk (+ 1 2))) 3)
