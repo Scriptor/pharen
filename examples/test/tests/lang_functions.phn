@@ -68,18 +68,3 @@
 
 ;dont pass dont return 1
 ;(check (: (hash-from-pairs "a" 1 ) a) 1)
-
-
-(check (arr [1 2 3]) (array 1 2 3))
-(check (second [1 2]) 2)
-
-;dont pass
-;array_slice() expects parameter 1 to be array, object given in /Users/francesco/Documents/github/pharen2/lang.php on line 190
-;(check (: (first-pair {#a 1 #b 2}) a) 1)
-
-(check (cons 0 [1 2 3]) [0 1 2 3])
-
-; how function this?
-(check (:(assoc #a 1 {}) #a) 1)
-(check (get #a {#a 1}) 1)
-
