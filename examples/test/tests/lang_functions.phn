@@ -24,13 +24,3 @@
 (check (pharen-list 1 2 3) [1 2 3])
 (check (last [1 2 3]) 3)
 (check (butlast [1 2 3]) [1 2])
-(check (eq 1 1) TRUE)
-(check (eq 1 2) FALSE)
-(local a1 (new A))
-(check (eq a1 a1) TRUE)
-
-
-(check (if-let [x 2] x FALSE) 2)
-(check (when-let [x 2] x) 2)
-(check (if-not (== 1 2) #a #b) #a)
-(check (when-not (== 1 2) #a) #a)
