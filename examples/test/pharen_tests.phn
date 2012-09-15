@@ -26,7 +26,9 @@
        "multi",
        "oop"
        "lazy"
-       "ns"]]
+       "ns",
+       "lang_functions"]]
+
 
   (describe "Pharen"
       (lambda ()

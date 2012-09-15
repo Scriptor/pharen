@@ -1,0 +1,123 @@
+;here test coverage of lang.phn
+
+
+(check (when (== 1 1) (= x 2)) 2)
+
+(check (not (== 2 2)) FALSE)
+
+(check (pharen-or (== 3 1) (== 1 2)) FALSE)
+(check (pharen-or (== 1 1) (== 1 2)) TRUE)
+
+(check (pharen-and (== 1 1) (== 1 2)) FALSE)
+(check (pharen-and (== 1 1) (== 2 2)) TRUE)
+
+(check ((thunk (+ 1 2))) 3)
+
+
+(class A  (access public (local name "")))
+(local a (new A))
+(check (inst? a #A) TRUE)
+
+
+(check (first [0 1 2]) 0)
+(check (rest [0 1 2]) [1 2])
+(check (pharen-list 1 2 3) [1 2 3])
+(check (last [1 2 3]) 3)
+(check (butlast [1 2 3]) [1 2])
+(check (eq 1 1) TRUE)
+(check (eq 1 2) FALSE)
+(local a1 (new A))
+(check (eq a1 a1) TRUE)
+
+
+(check (if-let [x 2] x FALSE) 2)
+(check (when-let [x 2] x) 2)
+(check (if-not (== 1 2) #a #b) #a)
+(check (when-not (== 1 2) #a) #a)
+
+(let [y 100]
+  (dotimes [x 100] (= y (+ x y)) (check y (+ x 100)))) 
+    
+(check (zero? 0) TRUE)
+(check (zero? 1) FALSE)
+
+(check (pos? 1) TRUE)
+(check (pos? -1) FALSE)
+
+(check (neg? -1) TRUE)
+(check (neg? 1) FALSE)
+
+(check (odd? (/ 100 2)) FALSE)
+(check (even? (/ 100 2)) TRUE)
+
+(check (str "a" "b") "ab")
+(check (identity 1) 1)
+(check (inc 1) 2)
+(check (dec 2) 1)
+
+(let [fnx (comp (lambda (x) (+ 1 x) (lambda (y) (+ 2 y))))] (check (($fnx 1) 1) 3))
+
+(check (zero-or-empty? 1 []) TRUE)
+(check (zero-or-empty? 0 [1 2]) TRUE)
+(check (empty? []) TRUE)
+(check (empty? [1]) FALSE)
+(check (seq? [1 2 3]) TRUE)
+(check (sequential? [1 2 3]) TRUE)
+(check (seq? (seq [1 2 3])) TRUE)
+(check (: (hashify {#a 1}) #a) 1)
+
+;dont pass dont return 1
+;(check (: (hash-from-pairs "a" 1 ) a) 1)
+
+
+(check (arr [1 2 3]) (array 1 2 3))
+(check (second [1 2]) 2)
+
+;dont pass
+;array_slice() expects parameter 1 to be array, object given in /Users/francesco/Documents/github/pharen2/lang.php on line 190
+;(check (: (first-pair {#a 1 #b 2}) a) 1)
+
+(check (cons 0 [1 2 3]) [0 1 2 3])
+
+
+(check (:(assoc #a 1 {}) #a) 1)
+(check (get #a {#a 1}) 1)
+
+(check (take 2 [0 1 2]) [0 1])
+(check (drop 2 [0 1 2]) [2])
+(check (reverse [1 2 3]) [3 2 1])
+(check (interpose "-" [1 2 3]) [1 "-" 2 "-" 3])
+(check (partition 3 [1 2 3 4 5 6 7 8 9]) [[1 2 3] [4 5 6] [7 8 9]])
+(check (interleave [1 2 3] [4 3 6]) [1 4 2 3 3 6])
+(check (zip-with (lambda (a b) (+ a b)) [1 2 3] [4 5 6]) [5 7 9])
+(check (seq-join [1 2 3 4 5] ",") "1,2,3,4,5")
+
+(check (inst? (infinity) #PharenLazyList) TRUE)
+(check (inst? (repeat [1 2 3]) #PharenLazyList) TRUE)
+(check (inst? (repeatedly (lambda (a) (+ a)))  #PharenLazyList) TRUE)
+(check (inst? (iterate (lambda (a) (+ a)) 100)  #PharenLazyList) TRUE)
+(check (inst? (cycle [1 2 3])  #PharenLazyList) TRUE)
+(check (inst? (cycle-with (+ 1) [1 2 3])  #PharenLazyList) TRUE)
+
+(check (vals [1 2 3]) [1 2 3])
+;fails
+;(check (append 4 [1 2 3]) [1 2 3 4])
+(check (apply (lambda (a b) (+ a b)) 1 2) 3)
+(check (apply (flip (lambda (a b) [a b])) 1 2) [2 1])
+(check (apply (juxt (+ 1) (+ 2)) 1) [2 3])
+(check (concat [1] [2]) [1 2])
+(check (into [3] [1 2 3 4 5]) [5, 4, 3, 2, 1, 3])
+(check (reduce (+ 1) 0 [1 2 3 4 5]) 6)
+;(check  (reduce (+ 1) 10 [1 2 3 4 5]) 16)  fails
+;(check  (reduce (lambda (x) (+ x 1)) 10 [1 2 3 4 5]) 16)  fails
+;(print (reduce-fns [(+ 1)] 0 [1 2 3])) is correct this?
+  
+(check (reduce-to-str (+ 1) [1 2 3]) "234")
+
+;(print-r (reduce-pairs (lambda (k v) k) 0 [1 2 3] )) this return an array. how function this?
+  
+(check (map (+ 1) [1 2 3]) [2 3 4])  
+;(check (filter (> 4) [1 2 3 4 5 6]) [4 5 6]) dont pass return [1 2 3] should return [4 5 6] acts like a reject
+  
+;(print (map-pairs (lambda (k v) v) [[#a 1] [#b 2]])) also this i dont know of call correctly
+; samo for map-indexed  

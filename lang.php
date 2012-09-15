@@ -707,4 +707,3 @@ function get_multi($name, $args){
 		return "No matching pattern";
 	}
 }
-
