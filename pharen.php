@@ -1304,6 +1304,38 @@ class SpecialForm extends Node{
     }
 }
 
+class InterfaceNode extends SpecialForm{
+    public $name;
+
+    public function compile(){
+        Node::$tmp .= $this->compile_statement();
+        return '"'.$this->name.'"';
+    }
+
+    public function compile_statement(){
+        $this->name = $name = $this->children[1]->compile();
+        $signature_nodes = array_slice($this->children, 2);
+        $signatures = "";
+        foreach($signature_nodes as $node){
+            $signatures .= $node->compile_statement();
+        }
+        return $this->format_line("interface $name{").$signatures.$this->format_line("}");
+    }
+}
+
+class SignatureNode extends Node{
+    public function compile(){
+        return $this->compile_statement();
+    }
+
+    public function compile_statement(){
+        $access = $this->children[1]->compile();
+        $name = $this->children[2]->compile();
+        $args = $this->children[3]->compile();
+        return $this->format_statement($access." function ".$name.$args.";");
+    }
+}
+
 class FuncDefNode extends SpecialForm{
     static $functions;
 
@@ -2654,6 +2686,8 @@ class Parser{
             "class" => array("ClassNode", "LeafNode", "LeafNode", self::$values),
             "class-extends" => array("ClassExtendsNode", "LeafNode", "LeafNode", self::$list_form, self::$values),
             "access" => array("AccessModifierNode", "LeafNode", "LeafNode", self::$values),
+            "interface" => array("InterfaceNode", "LeafNode", "LeafNode", self::$values),
+            "signature*" => array("SignatureNode", "LeafNode", "LeafNode", "LeafNode", "LiteralNode"),
             "keyword-call" => array("KeywordCallNode", "LeafNode", "LeafNode",  array("LeafNode")),
             "ns" => array("NamespaceNode", "LeafNode", array("LeafNode")),
             "use" => array("UseNode", "LeafNode", array("LeafNode")),
