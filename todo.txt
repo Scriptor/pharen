@@ -17,8 +17,9 @@ Below are a list of tasks that need to be done before Pharen is ready to be rele
     x Namespace all lib files
     ~ Formalize all namespace names and place under Pharen
         - Need to do one more check
-    - Fix how funcvals are namespaced
-    - Fix that you have to prepend global class names with a dot
+    x Fix how funcvals are namespaced
+    x Fix that you have to prepend global class names with a dot
+        - Issue with PHP itself, not a big deal
 4. Update documentation
     - Rewrite existing text to reflect changes
     - Document new features
@@ -31,8 +32,8 @@ Below are a list of tasks that need to be done before Pharen is ready to be rele
     - Add any necessary functions for working with hashmaps
         - update-in might be useful
 7. Complete OOP support
-    - Abstract classes and interfaces
-        - Will allow for more compatibility with other PHP code
+    x Abstract classes and interfaces
+        x Will allow for more compatibility with other PHP code
     - Class hints?
     - In general, still have to emphasize the functional nature of Pharen
 
