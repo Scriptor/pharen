@@ -743,7 +743,10 @@ class Node implements Iterator, ArrayAccess, Countable{
             }else if(is_string($arg)){
                 $output[] = $arg;
             }else{
-                $output[] = $arg->compile();
+                $output[] = $a = $arg->compile();
+                if($a == 'foo'){
+                    echo get_class($this->children[1]);
+                }
             }
         }
         return $output;
@@ -2698,7 +2701,7 @@ class Parser{
                     array_push($state, self::$empty_node);
                 }else{
                     array_push($state, self::$func_call);
-                    if($lookahead instanceof OpenParenToken){
+                    if($lookahead instanceof OpenParenToken or $lookahead instanceof OpenBraceToken or $lookahead instanceof OpenBracketToken){
                         # Remove the func name part of the func_call state
                         #   because the next expression is a func call that
                         #   acts as a func name
