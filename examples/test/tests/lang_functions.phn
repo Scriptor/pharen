@@ -37,5 +37,21 @@
 
 (let [y 100]
   (dotimes [x 100] (= y (+ x y)) (check y (+ x 100)))) 
+    
+(check (zero? 0) TRUE)
+(check (zero? 1) FALSE)
 
+(check (pos? 1) TRUE)
+(check (pos? -1) FALSE)
+
+(check (neg? -1) TRUE)
+(check (neg? 1) FALSE)
+
+(check (odd? (/ 100 2)) FALSE)
+(check (even? (/ 100 2)) TRUE)
+
+(check (str "a" "b") "ab")
+(check (identity 1) 1)
+(check (inc 1) 2)
+(check (dec 2) 1)
 
