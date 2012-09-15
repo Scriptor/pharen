@@ -1,3 +1,4 @@
+(ns pharen.sql)
 (fn sql-connect (user pass db)
   (mysql-connect "localhost" user pass)
   (mysql-select-db db))

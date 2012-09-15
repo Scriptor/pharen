@@ -1,3 +1,4 @@
+(ns pharen.path)
 ; Structure and protocol for the following was pretty much copied from NodeJS's path library,
 ; the meat is done functionally, however
 (fn path-normalize-array (chunks)
@@ -18,5 +19,5 @@
 (fn convert-slashes (path)
   (str-replace "\\" "/" path))
 
-(fn path-join (&paths)
+(fn join (&paths)
   (path-normalize (convert-slashes (seq-join paths "/"))))

@@ -1,6 +1,7 @@
 (define "SYSTEM" (dirname __FILE__))
 (define "LIB_PATH" (. SYSTEM "/lib/"))
-(set-include-path (. (get-include-path) PATH_SEPARATOR LIB_PATH))
+(define "LIB_PHAREN_PATH" (. SYSTEM "/lib/pharen/"))
+(set-include-path (. (get-include-path) PATH_SEPARATOR LIB_PATH PATH_SEPARATOR LIB_PHAREN_PATH))
 (require "sequence.php")
 
 (defmacro comment (&exprs)

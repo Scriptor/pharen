@@ -1,5 +1,5 @@
 (ns lazy-tests)
-(use lazy)
+(use pharen.lazy as lazy)
 
 (check (lazy.map (* 2) [1 2 3]) [2 4 6])
 

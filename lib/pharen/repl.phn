@@ -1,7 +1,7 @@
 (ns pharen-repl)
-(require_once "path.php")
+(use pharen.path as path)
 (define "REPL_SYSTEM" (realpath (dirname __FILE__)))
-(define "PHAREN_SYSTEM" (path-join REPL-SYSTEM "../"))
+(define "PHAREN_SYSTEM" (path.join REPL-SYSTEM "../../"))
 
 (require-once (. PHAREN_SYSTEM "/pharen.php"))
 

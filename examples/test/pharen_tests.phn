@@ -1,8 +1,8 @@
 (require "test.php")
-(require-once "path.php")
+(use pharen.path as path)
 
 (define "TESTS_DIR" (dirname __FILE__))
-(require-once (path-join TESTS-DIR "../.." "pharen.php"))
+(require-once (path.join TESTS-DIR "../.." "pharen.php"))
 (compile-lang)
 
 (fn run-test (fname)

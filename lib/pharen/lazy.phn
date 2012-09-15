@@ -1,4 +1,4 @@
-(ns lazy)
+(ns pharen.lazy)
 (fn map (f coll)
   (lazy-seq
     (if (empty? coll)

@@ -29,8 +29,8 @@ if(__FILE__ === realpath($_SERVER['SCRIPT_NAME'])){
     }
 
     if(count($input_files) === 0 || isset(Flags::$flags['repl'])){
-        compile_file($pharen_dir.DIRECTORY_SEPARATOR."lib".DIRECTORY_SEPARATOR."path.phn");
-        compile_file($pharen_dir.DIRECTORY_SEPARATOR."lib".DIRECTORY_SEPARATOR."repl.phn");
+        compile_file(stream_resolve_include_path("path.phn"));
+        compile_file(stream_resolve_include_path("repl.phn"));
     }
     foreach($input_files as $file){
         $php_code .= compile_file($file);
@@ -46,7 +46,7 @@ if(__FILE__ === realpath($_SERVER['SCRIPT_NAME'])){
             $new_vars = get_defined_vars();
             $repl_vars = array_diff_assoc($new_vars, $existing_vars);
         }
-        include_once($pharen_dir.DIRECTORY_SEPARATOR."lib".DIRECTORY_SEPARATOR."repl.php");
+        include_once("repl.php");
         pharen_repl\intro();
         compile_lang();
         pharen_repl\work("", $repl_vars);
