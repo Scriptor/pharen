@@ -1099,10 +1099,14 @@ class NamespaceNode extends KeywordCallNode{
     public function compile_statement(){
         array_unshift($this->children, Null);
         $this->children[1]->value = "namespace";
-        RootNode::$raw_ns = $this->children[2]->value;
-        RootNode::$ns = $this->children[2]->compile();
-        RootNode::$ns_string = parent::compile_statement();
-        return "";
+        if(empty(RootNode::$raw_ns)){
+            RootNode::$raw_ns = $this->children[2]->value;
+            RootNode::$ns = $this->children[2]->compile();
+            RootNode::$ns_string = parent::compile_statement();
+            return "";
+        }else{
+            return parent::compile_statement();
+        }
     }
 
     public function compile(){
