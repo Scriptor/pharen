@@ -12,8 +12,3 @@
 (check (pharen-and (== 1 1) (== 2 2)) TRUE)
 
 (check ((thunk (+ 1 2))) 3)
-
-
-(class A  (access public (local name "")))
-(local a (new A))
-(check (inst? a #A) TRUE)
