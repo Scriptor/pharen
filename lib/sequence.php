@@ -23,7 +23,7 @@ class PharenList implements IPharenSeq, IPharenComparable, Countable, ArrayAcces
     public $arr;
     public $delimiter_tokens = array("OpenParenToken", "CloseParenToken");
 
-    public static function create_from_array(&$xs, $cls="PharenCachedList"){
+    public static function create_from_array($xs, $cls="PharenCachedList"){
         if(empty($xs)){
             return new PharenEmptyList;
         }
@@ -425,7 +425,7 @@ class PharenHashMap implements Countable, ArrayAccess, Iterator{
 class PharenVector extends PharenCachedList{
     public $delimiter_tokens = array("OpenBracketToken", "CloseBracketToken");
 
-    public static function create_from_array($array){
+    public static function create_from_array($array, $cls="PharenVector"){
         return PharenList::create_from_array($array, __CLASS__);
     }
 
