@@ -1315,7 +1315,7 @@ class FuncDefNode extends SpecialForm{
     public $name;
 
     static function is_pharen_func($func_name){
-        if(strpos($func_name, "\\")){
+        if(!empty(RootNode::$ns) && strpos($func_name, "\\")){
             $last_slash = strrpos($func_name, "\\");
             $ns = substr($func_name, 0, $last_slash);
             $name = substr($func_name, $last_slash+1);
