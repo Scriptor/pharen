@@ -3,21 +3,27 @@
 (check [1 3 .. 6] [1 3 5])
 
 (check (:["pharen" "php"] 0) "pharen")
+(check (["pharen" "php"] 0) "pharen")
+
 (def lst ["scheme" "CL" "clojure"])
 (check (:lst 2) "clojure")
+(check ($lst 2) "clojure")
 
 (check (count {"functional" "Haskell",
                "imperative" "C",
                "wtf" "Pharen"}) 3)
 
 (check (:{"functional" "Haskell",
-        "imperative" "C",
-        "wtf" "Pharen"} "wtf") "Pharen")
+          "imperative" "C",
+          "wtf" "Pharen"} "wtf") "Pharen")
 
 (def dct {"functional" "Haskell",
-               "imperative" "C",
-               "wtf" "Pharen"})
+          "imperative" "C",
+          "wtf" "Pharen"})
 (check (:dct "functional") "Haskell")
 
 (def new-dct (assoc "logic" "Prolog" dct))
 (check (:new-dct "logic") "Prolog")
+
+(check ({"foo" "bar"} "foo") "bar")
+(check ($dct "imperative") "C")
