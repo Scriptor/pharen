@@ -390,6 +390,12 @@
 (defmacro this (&exprs)
   '(-> this ~@exprs))
 
+(defmacro signature (name args)
+  '(signature* public ~name ~args))
+
+(defmacro private-signature (name args)
+  '(signature* private ~name ~args))
+
 (class MultiManager
        (access static (local multis NULL))
 
