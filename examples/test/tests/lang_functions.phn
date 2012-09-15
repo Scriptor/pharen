@@ -34,8 +34,3 @@
 (check (when-let [x 2] x) 2)
 (check (if-not (== 1 2) #a #b) #a)
 (check (when-not (== 1 2) #a) #a)
-
-(let [y 100]
-  (dotimes [x 100] (= y (+ x y)) (check y (+ x 100)))) 
-
-
