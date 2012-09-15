@@ -97,7 +97,7 @@ function lang__lambdafunc2($args, $__closure_id){
 	$args = seq(array_slice($__splatargs, 0, count($__splatargs) - 1));
 	$__closure_id = last($__splatargs);
 		$rfs = Lexical::get_lexical_binding('lang', 83, '$rfs', isset($__closure_id)?$__closure_id:0);;
-	$init = call_user_func_array(first($rfs), $args);
+	$init = call_user_func_array(first($rfs), arr($args));
 	return reduce("\\apply", $init, rest($rfs));
 }
 
@@ -707,3 +707,4 @@ function get_multi($name, $args){
 		return "No matching pattern";
 	}
 }
+
