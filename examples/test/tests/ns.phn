@@ -1,0 +1,11 @@
+(ns foo)
+(fn test ()
+  42)
+
+(ns bar)
+(use foo)
+(check (foo.test) 42)
+
+(ns baz)
+(use foo as f)
+(check (f.test) 42)
