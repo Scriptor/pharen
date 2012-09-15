@@ -1,5 +1,6 @@
-(check (arr (map (lambda (n)
-                    (* n 2)) [1 2 3])) [2 4 6])
+(check (arr (map (lambda (n) (* n 2))
+                 [1 2 3]))
+       [2 4 6])
 
 (fn apply-test (f n)
   ($f n))
@@ -10,6 +11,11 @@
   "line1"
   (lambda () (. "Hello " s "!")))
 (check ((greet-generator-test "Hammurabi")) "Hello Hammurabi!")
+
+(fn multi-lambdas ()
+  (lambda unused () "")
+  (lambda used () "foo"))
+(check ((multi-lambdas)) "foo")
 
 (fn multiple-calls-test ()
   (lambda () "foobar"))

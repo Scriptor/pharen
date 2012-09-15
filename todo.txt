@@ -6,13 +6,13 @@ Below are a list of tasks that need to be done before Pharen is ready to be rele
     - Possible support for traits
 2. More test coverage
     - Cover all lang.phn functions and macros
-    - Cover new features
+    x Cover new features
         x Namespaces
         x New lambdas
         x Lazy lists
         x Pharen Hashmaps
         x Pharen Vectors
-    - Cover more edge cases
+    x Cover more edge cases
 3. Clean up namespaces
     - Namespace all lib files
     - Formalize all namespace names and place under Pharen

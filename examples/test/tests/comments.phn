@@ -1,5 +1,7 @@
 ;Before expression
 (check 1 1)
+
 (check 1 1) ; End of expression
+
 (check 1 ; Middle of expression
      1)

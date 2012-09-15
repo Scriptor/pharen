@@ -41,3 +41,9 @@
 (fn splat-usage (a &others)
   (array-sum (arr others)))
 (check (splat-usage 1 2 3) 5)
+
+(fn nested-func-test ()
+  (def foo "world")
+  (fn nested-func ()
+    (. "hello " foo)
+  (check (nested-func) "hello world"))
