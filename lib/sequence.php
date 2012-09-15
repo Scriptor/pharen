@@ -291,12 +291,12 @@ class PharenLazyList implements IPharenSeq, IPharenLazy, ArrayAccess, Iterator{
     }
 
     public function first(){
-        $this->iterator_el->force();
+        $this->force();
         return $this->first;
     }
 
     public function rest(){
-        $this->iterator_el->force();
+        $this->force();
         return $this->rest;
     }
 

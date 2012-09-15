@@ -25,6 +25,7 @@
        "macros",
        "multi",
        "oop"
+       "lazy"
        "ns"]]
 
   (describe "Pharen"
