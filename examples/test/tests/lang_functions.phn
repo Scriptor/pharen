@@ -4,3 +4,9 @@
 (check (when (== 1 1) (= x 2)) 2)
 
 (check (not (== 2 2)) FALSE)
+
+(check (pharen-or (== 3 1) (== 1 2)) FALSE)
+(check (pharen-or (== 1 1) (== 1 2)) TRUE)
+
+(check (pharen-and (== 1 1) (== 1 2)) FALSE)
+(check (pharen-and (== 1 1) (== 2 2)) TRUE)
