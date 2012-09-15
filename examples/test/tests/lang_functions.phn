@@ -99,3 +99,25 @@
 (check (inst? (cycle [1 2 3])  #PharenLazyList) TRUE)
 (check (inst? (cycle-with (+ 1) [1 2 3])  #PharenLazyList) TRUE)
 
+(check (vals [1 2 3]) [1 2 3])
+;fails
+;(check (append 4 [1 2 3]) [1 2 3 4])
+(check (apply (lambda (a b) (+ a b)) 1 2) 3)
+(check (apply (flip (lambda (a b) [a b])) 1 2) [2 1])
+(check (apply (juxt (+ 1) (+ 2)) 1) [2 3])
+(check (concat [1] [2]) [1 2])
+(check (into [3] [1 2 3 4 5]) [5, 4, 3, 2, 1, 3])
+(check (reduce (+ 1) 0 [1 2 3 4 5]) 6)
+;(check  (reduce (+ 1) 10 [1 2 3 4 5]) 16)  fails
+;(check  (reduce (lambda (x) (+ x 1)) 10 [1 2 3 4 5]) 16)  fails
+;(print (reduce-fns [(+ 1)] 0 [1 2 3])) is correct this?
+  
+(check (reduce-to-str (+ 1) [1 2 3]) "234")
+
+;(print-r (reduce-pairs (lambda (k v) k) 0 [1 2 3] )) this return an array. how function this?
+  
+(check (map (+ 1) [1 2 3]) [2 3 4])  
+;(check (filter (> 4) [1 2 3 4 5 6]) [4 5 6]) dont pass return [1 2 3] should return [4 5 6] acts like a reject
+  
+;(print (map-pairs (lambda (k v) v) [[#a 1] [#b 2]])) also this i dont know of call correctly
+; samo for map-indexed  
