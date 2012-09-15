@@ -39,5 +39,5 @@
 (check (iterative-fact 5 1) 120)
 
 (fn splat-usage (a &others)
-  (array-sum others))
+  (array-sum (arr others)))
 (check (splat-usage 1 2 3) 5)
