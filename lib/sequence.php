@@ -245,7 +245,7 @@ class PharenEmptyList extends PharenList{
     }
 }
 
-class PharenLazyList implements IPharenSeq, IPharenLazy{
+class PharenLazyList implements IPharenSeq, IPharenLazy, ArrayAccess, Iterator{
     public $first = Null;
     public $rest = Null;
     public $length = Null;
@@ -265,14 +265,64 @@ class PharenLazyList implements IPharenSeq, IPharenLazy{
         return $this->lambda_result;
     }
 
+    public function current(){
+        $this->iterator_el->force();
+        return $this->iterator_el->first;
+    }
+
+    public function key(){
+        return $this->iterator_key;
+    }
+
+    public function next(){
+        $this->iterator_key++;
+        $this->iterator_el->force();
+        $this->iterator_el = $this->iterator_el->rest;
+    }
+
+    public function rewind(){
+        $this->iterator_key = 0;
+        $this->iterator_el = $this;
+    }
+
+    public function valid(){
+        $this->iterator_el->force();
+        return !($this->iterator_el->lambda_result instanceof PharenEmptyList);
+    }
+
     public function first(){
-        $this->force();
+        $this->iterator_el->force();
         return $this->first;
     }
 
     public function rest(){
-        $this->force();
+        $this->iterator_el->force();
         return $this->rest;
+    }
+
+    public function offsetExists($offset){
+        $list = $this->seq();
+        for($x=$offset; $x > 0 && $list !== Null; $x--){
+            $list = $list->rest->seq();
+        }
+        return !($list instanceof PharenEmptyList);
+    }
+
+    public function offsetGet($offset){
+        $list = $this->seq();
+        for($x=$offset; $x > 0; $x--){
+            if($list instanceof PharenEmptyList){
+                throw new OutOfRangeException;
+            }
+            $list = $list->rest->seq();
+        }
+        return $list->first;
+    }
+
+    public function offsetSet($offset, $value){
+    }
+
+    public function offsetUnset($offset){
     }
 
     public function force(){
