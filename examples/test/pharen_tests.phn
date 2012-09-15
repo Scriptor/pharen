@@ -24,8 +24,7 @@
         "plambda",
         "macros",
         "multi",
-        "oop",
-        "lang_functions"]]
+        "oop"]]
 
   (describe "Pharen"
       (lambda ()
