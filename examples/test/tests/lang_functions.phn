@@ -57,3 +57,14 @@
 
 (let [fnx (comp (lambda (x) (+ 1 x) (lambda (y) (+ 2 y))))] (check (($fnx 1) 1) 3))
 
+(check (zero-or-empty? 1 []) TRUE)
+(check (zero-or-empty? 0 [1 2]) TRUE)
+(check (empty? []) TRUE)
+(check (empty? [1]) FALSE)
+(check (seq? [1 2 3]) TRUE)
+(check (sequential? [1 2 3]) TRUE)
+(check (seq? (seq [1 2 3])) TRUE)
+(check (: (hashify {#a 1}) #a) 1)
+
+;dont pass dont return 1
+;(check (: (hash-from-pairs "a" 1 ) a) 1)
