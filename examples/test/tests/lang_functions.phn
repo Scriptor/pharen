@@ -1,1 +1,4 @@
 ;here test coverage of lang.phn
+
+
+(check (when (== 1 1) (= x 2)) 2)
