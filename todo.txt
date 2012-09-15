@@ -1,11 +1,17 @@
 Below are a list of tasks that need to be done before Pharen is ready to be released (again).
 
 1. PHP 5.4 support
-    - Namely this involves getting rid of strict errors
+    x Namely this involves getting rid of strict errors
+        - Resolved for now by ignoring strict errors in php 5.4
     - Possible support for traits
 2. More test coverage
     - Cover all lang.phn functions and macros
-    - Cover new features (namespaces, new lambdas, etc.)
+    - Cover new features
+        x Namespaces
+        x New lambdas
+        x Lazy lists
+        x Pharen Hashmaps
+        x Pharen Vectors
     - Cover more edge cases
 3. Clean up namespaces
     - Namespace all lib files
