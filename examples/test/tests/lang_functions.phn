@@ -55,5 +55,3 @@
 (check (inc 1) 2)
 (check (dec 2) 1)
 
-(let [fnx (comp (lambda (x) (+ 1 x) (lambda (y) (+ 2 y))))] (check (($fnx 1) 1) 3))
-
