@@ -79,23 +79,7 @@
 
 (check (cons 0 [1 2 3]) [0 1 2 3])
 
-
+; how function this?
 (check (:(assoc #a 1 {}) #a) 1)
 (check (get #a {#a 1}) 1)
-
-(check (take 2 [0 1 2]) [0 1])
-(check (drop 2 [0 1 2]) [2])
-(check (reverse [1 2 3]) [3 2 1])
-(check (interpose "-" [1 2 3]) [1 "-" 2 "-" 3])
-(check (partition 3 [1 2 3 4 5 6 7 8 9]) [[1 2 3] [4 5 6] [7 8 9]])
-(check (interleave [1 2 3] [4 3 6]) [1 4 2 3 3 6])
-(check (zip-with (lambda (a b) (+ a b)) [1 2 3] [4 5 6]) [5 7 9])
-(check (seq-join [1 2 3 4 5] ",") "1,2,3,4,5")
-
-(check (inst? (infinity) #PharenLazyList) TRUE)
-(check (inst? (repeat [1 2 3]) #PharenLazyList) TRUE)
-(check (inst? (repeatedly (lambda (a) (+ a)))  #PharenLazyList) TRUE)
-(check (inst? (iterate (lambda (a) (+ a)) 100)  #PharenLazyList) TRUE)
-(check (inst? (cycle [1 2 3])  #PharenLazyList) TRUE)
-(check (inst? (cycle-with (+ 1) [1 2 3])  #PharenLazyList) TRUE)
 
