@@ -1,5 +1,9 @@
 <?php
-error_reporting(E_ALL);
+if(version_compare(phpversion(), "5.4") < 0){
+    error_reporting(E_ALL);
+}else{
+    error_reporting(E_ALL ^ E_STRICT);
+}
 define("COMPILER_SYSTEM", dirname(__FILE__));
 define("EXTENSION", ".phn");
 
@@ -739,7 +743,10 @@ class Node implements Iterator, ArrayAccess, Countable{
             }else if(is_string($arg)){
                 $output[] = $arg;
             }else{
-                $output[] = $arg->compile();
+                $output[] = $a = $arg->compile();
+                if($a == 'foo'){
+                    echo get_class($this->children[1]);
+                }
             }
         }
         return $output;
@@ -1095,10 +1102,14 @@ class NamespaceNode extends KeywordCallNode{
     public function compile_statement(){
         array_unshift($this->children, Null);
         $this->children[1]->value = "namespace";
-        RootNode::$raw_ns = $this->children[2]->value;
-        RootNode::$ns = $this->children[2]->compile();
-        RootNode::$ns_string = parent::compile_statement();
-        return "";
+        if(empty(RootNode::$raw_ns)){
+            RootNode::$raw_ns = $this->children[2]->value;
+            RootNode::$ns = $this->children[2]->compile();
+            RootNode::$ns_string = parent::compile_statement();
+            return "";
+        }else{
+            return parent::compile_statement();
+        }
     }
 
     public function compile(){
@@ -1293,6 +1304,38 @@ class SpecialForm extends Node{
     }
 }
 
+class InterfaceNode extends SpecialForm{
+    public $name;
+
+    public function compile(){
+        Node::$tmp .= $this->compile_statement();
+        return '"'.$this->name.'"';
+    }
+
+    public function compile_statement(){
+        $this->name = $name = $this->children[1]->compile();
+        $signature_nodes = array_slice($this->children, 2);
+        $signatures = "";
+        foreach($signature_nodes as $node){
+            $signatures .= $node->compile_statement();
+        }
+        return $this->format_line("interface $name{").$signatures.$this->format_line("}");
+    }
+}
+
+class SignatureNode extends Node{
+    public function compile(){
+        return $this->compile_statement();
+    }
+
+    public function compile_statement(){
+        $access = $this->children[1]->compile();
+        $name = $this->children[2]->compile();
+        $args = $this->children[3]->compile();
+        return $this->format_statement($access." function ".$name.$args.";");
+    }
+}
+
 class FuncDefNode extends SpecialForm{
     static $functions;
 
@@ -1304,7 +1347,7 @@ class FuncDefNode extends SpecialForm{
     public $name;
 
     static function is_pharen_func($func_name){
-        if(strpos($func_name, "\\")){
+        if(!empty(RootNode::$ns) && strpos($func_name, "\\")){
             $last_slash = strrpos($func_name, "\\");
             $ns = substr($func_name, 0, $last_slash);
             $name = substr($func_name, $last_slash+1);
@@ -1450,7 +1493,7 @@ class FuncDefNode extends SpecialForm{
         if($params_count > 0 && $this->params[$params_count-1] instanceof SplatNode){
             $param = $params[count($params)-1];
             array_pop($params);
-            $code = $this->format_line("").$this->format_line_indent($param." = array_slice(func_get_args(), ".($params_count-1).");");
+            $code = $this->format_line("").$this->format_line_indent($param." = seq(array_slice(func_get_args(), ".($params_count-1)."));");
         }
         return $code;
     }
@@ -1955,7 +1998,7 @@ class LambdaNode extends FuncDefNode{
             $param = $params[count($params)-2];
             array_splice($params, count($params)-2, 1);
             $code = $this->format_line('$__splatargs = func_get_args();');
-            $code .= $this->format_line($param." = array_slice(\$__splatargs, ".($params_count-2).", count(\$__splatargs) - 1);");
+            $code .= $this->format_line($param." = seq(array_slice(\$__splatargs, ".($params_count-2).", count(\$__splatargs) - 1));");
             $code .= $this->format_line('$__closure_id = last($__splatargs);');
         }
         return $code;
@@ -2432,12 +2475,13 @@ class BindingNode extends Node{
         }
         $varnames = array();
         $code = "";
+        $bindings = array();
         foreach($pairs as $pair_node){
             $varname = $pair_node[0]->compile();
             $varnames[] = $varname;
 
             $scope->bind($varname, $pair_node[1]);
-            $code .= $this->format_statement($scope->get_binding($varname));
+            $bindings[$varname] = $this->format_statement($scope->get_binding($varname));
         }
 
         $body = "";
@@ -2469,11 +2513,12 @@ class BindingNode extends Node{
             $body .= $line->compile_statement();
         }
 
-        $lexings = $this->scope->init_lexical_scope();
+        $code .= $this->scope->init_lexical_scope();
         foreach($varnames as $varname){
-            $lexings .= $scope->get_lexing($varname);
+            $code .= $bindings[$varname];
+            $code .= $scope->get_lexing($varname);
         }
-        $code = $this->scope->get_lexical_bindings().$code.$lexings.$body.$last_line;
+        $code = $this->scope->get_lexical_bindings().$code.$body.$last_line;
 
         if($return === True || $prefix !== ""){
             $this->children = $ret_stashed_children;
@@ -2616,7 +2661,7 @@ class Parser{
         self::$literal_form = array("LiteralNode", self::$values);
         self::$cond_pair = array("LiteralNode", self::$value, self::$value);
         self::$list_form = array("ListNode", self::$values);
-        self::$list_access_form = array("ListAccessNode", self::$value, self::$value, self::$value);
+        self::$list_access_form = array("ListAccessNode", self::$value, self::$values);
 
         self::$special_forms = array(
             "fn" => array("FuncDefNode", "LeafNode", "LeafNode", "LiteralNode", self::$values),
@@ -2641,6 +2686,8 @@ class Parser{
             "class" => array("ClassNode", "LeafNode", "LeafNode", self::$values),
             "class-extends" => array("ClassExtendsNode", "LeafNode", "LeafNode", self::$list_form, self::$values),
             "access" => array("AccessModifierNode", "LeafNode", "LeafNode", self::$values),
+            "interface" => array("InterfaceNode", "LeafNode", "LeafNode", self::$values),
+            "signature*" => array("SignatureNode", "LeafNode", "LeafNode", "LeafNode", "LiteralNode"),
             "keyword-call" => array("KeywordCallNode", "LeafNode", "LeafNode",  array("LeafNode")),
             "ns" => array("NamespaceNode", "LeafNode", array("LeafNode")),
             "use" => array("UseNode", "LeafNode", array("LeafNode")),
@@ -2688,7 +2735,7 @@ class Parser{
                     array_push($state, self::$empty_node);
                 }else{
                     array_push($state, self::$func_call);
-                    if($lookahead instanceof OpenParenToken){
+                    if($lookahead instanceof OpenParenToken or $lookahead instanceof OpenBraceToken or $lookahead instanceof OpenBracketToken){
                         # Remove the func name part of the func_call state
                         #   because the next expression is a func call that
                         #   acts as a func name

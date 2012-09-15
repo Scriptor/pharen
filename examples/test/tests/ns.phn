@@ -1,0 +1,20 @@
+(ns foo)
+(fn test ()
+  42)
+
+(ns foo.bar)
+(fn test ()
+  100)
+
+(ns bar)
+(fn test ()
+  7)
+(use foo)
+(check (foo.test) 42)
+(check (test) 7)
+
+(ns baz)
+(use foo as f)
+(use foo.bar as fb)
+(check (f.test) 42)
+(check (fb.test) 100)

@@ -11,3 +11,9 @@
     ((== s "!dlrow, olleH") "That's backwards!")
     ((== s "Hello, world!") (. "Creative" " much?") "Who is world anyway?"))
   "Who is world anyway?")
+
+(def foo
+  (cond
+    ((== 1 1) "chicken")
+    ((== 1 2) "math broke again!")))
+(check foo "chicken")

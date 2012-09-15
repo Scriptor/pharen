@@ -1,3 +1,4 @@
+(ns pharen.test)
 (fn check (expr expected)
   (if (eq expr expected)
     TRUE

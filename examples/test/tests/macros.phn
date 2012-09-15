@@ -25,3 +25,10 @@
 (check (when-test (== 2 2)
                   (. "line" 1)
                   "foobar") "foobar")
+
+(defmacro var-in-macro (name)
+  (def nm name)
+  '(fn ~name () ~nm))
+
+(var-in-macro var-test)
+(check (var-test) "var-test")

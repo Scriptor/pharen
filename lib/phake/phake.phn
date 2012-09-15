@@ -1,6 +1,6 @@
-(require_once "path.php")
+(use pharen.path as path)
 (define "PHAKE_SYSTEM" (realpath (dirname __FILE__)))
-(define "PHAREN_SYSTEM" (path-join PHAKE-SYSTEM "../.."))
+(define "PHAREN_SYSTEM" (path.join PHAKE-SYSTEM "../.."))
 (define "PROJECT_SYSTEM" (getcwd))
 
 (require-once (. PHAREN-SYSTEM "/pharen.php"))
@@ -10,7 +10,7 @@
   "Do stuff with project info here")
 
 (fn project-path ([f ""])
-  (str-replace "\\" "/" (path-join PROJECT-SYSTEM f)))
+  (str-replace "\\" "/" (path.join PROJECT-SYSTEM f)))
 
 (fn not-dots (dir)
   (and (!== "." dir) (!== ".." dir)))
@@ -32,7 +32,7 @@
 (fn compile-dir (dir [compile-func #compile-file])
   (map 
     (lambda (f)
-            (def file (path-join dir f))
+            (def file (path.join dir f))
             (cond
               ((and (not-dots f) (is-dir file)) (compile-dir file compile-func))
               ((is-phn file) (do

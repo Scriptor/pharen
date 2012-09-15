@@ -1,11 +1,18 @@
 (class User
        (access public (local name ""))
+       (attr last-name "")
 
-       (access public (fn __construct (name)
-         (def (-> this name) name)))
+       (access public
+               (fn __construct (name last-name)
+                 (def (-> this name) name)
+                 (def (this last-name) last-name)))
 
        (access public (fn get-name ()
-         (-> this name))))
+         (-> this name)))
+       
+       (method get-last-name ()
+               (this last-name)))
 
-(local my-obj (new User "Julian"))
-(check (-> my-obj (get-name)) "Julian")
+(local my-obj (new User "Julius" "Caesar"))
+(check (-> my-obj (get-name)) "Julius")
+(check -> my-obj (get-last-name)

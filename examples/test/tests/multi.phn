@@ -1,8 +1,8 @@
-(defmulti fac (n))
-(defmethod fac ["int"] (n)
+(defmulti multi-tst (n))
+(defmethod multi-tst ["int"] (n)
   "int")
-(defmethod fac ["str"] (n)
+(defmethod multi-tst ["str"] (n)
   "string")
 
-(check (fac 2) "int")
-(check (fac "foo") "string")
+(check (multi-tst 2) "int")
+(check (multi-tst "foo") "string")

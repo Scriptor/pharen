@@ -1,0 +1,14 @@
+(ns lazy-tests)
+(use pharen.lazy as lazy)
+
+(check (lazy.map (* 2) [1 2 3]) [2 4 6])
+
+(check (lazy.take 3 (infinity)) [1 2 3])
+
+(check (lazy.interleave [1 2 3] [4 5 6]) [1 4 2 5 3 6])
+
+(check (lazy.filter #pos? [1 -2 3 -5]) [1 3])
+
+(check (take 5 (infinity)) [0 1 2 3 4])
+
+(check (take 3 (cycle [1 2])) [1 2 1])

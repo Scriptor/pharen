@@ -1,6 +1,7 @@
 (define "SYSTEM" (dirname __FILE__))
 (define "LIB_PATH" (. SYSTEM "/lib/"))
-(set-include-path (. (get-include-path) PATH_SEPARATOR LIB_PATH))
+(define "LIB_PHAREN_PATH" (. SYSTEM "/lib/pharen/"))
+(set-include-path (. (get-include-path) PATH_SEPARATOR LIB_PATH PATH_SEPARATOR LIB_PHAREN_PATH))
 (require "sequence.php")
 
 (defmacro comment (&exprs)
@@ -30,13 +31,7 @@
 (defmacro load (file)
   (local old-ns (:: RootNode ns))
   (local old-ns_string (:: RootNode ns-string))
-  (local paths (explode PATH_SEPARATOR (get-include-path)))
-  (local lib-path (until 
-                    (lambda (path)
-                            (if (file-exists (. path "/" file))
-                              (. path "/" file)
-                              FALSE))
-                    paths))
+  (local lib-path (stream-resolve-include-path file))
   (compile (file-get-contents lib-path))
   (= (:: RootNode ns) old-ns)
   (= (:: RootNode ns-string) old-ns-string)
@@ -115,6 +110,12 @@
   (do
     (print* s "\n")
     NULL))
+
+(fn false? (x)
+  (=== FALSE x))
+
+(fn true? (x)
+  (=== TRUE x))
 
 (fn zero? (n)
   (== n 0))
@@ -388,6 +389,12 @@
 
 (defmacro this (&exprs)
   '(-> this ~@exprs))
+
+(defmacro signature (name args)
+  '(signature* public ~name ~args))
+
+(defmacro private-signature (name args)
+  '(signature* private ~name ~args))
 
 (class MultiManager
        (access static (local multis NULL))
