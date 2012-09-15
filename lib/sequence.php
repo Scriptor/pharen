@@ -277,8 +277,8 @@ class PharenLazyList implements IPharenSeq, IPharenLazy{
 
     public function force(){
         if(!$this->lambda_result){
-            list($lambda, $scope_id) = $this->lambda;
-            $result = $lambda($scope_id);
+            $lambda = $this->lambda;
+            $result = $lambda();
 
             if(empty($result)){
                 $result = new PharenEmptyList;
