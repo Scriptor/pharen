@@ -10,6 +10,8 @@
   (compile-file (. TESTS-DIR "/tests/" fname ".phn") (. TESTS-DIR "/tmp"))
   (require (. TESTS-DIR "/tmp/" fname ".php")))
     
+    
+(fn check  (expr expected) (test.check expr expected))
 
 (let [tests 
       ["literals",
