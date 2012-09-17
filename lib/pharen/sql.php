@@ -1,5 +1,6 @@
 <?php
-require_once('C:\pharen/lang.php');
+namespace pharen\sql;
+require_once('/Users/historium/pharen/lang.php');
 use Pharen\Lexical as Lexical;
 Lexical::$scopes['sql'] = array();
 function sql_connect($user, $pass, $db){
@@ -18,7 +19,7 @@ function sql_quote($v){
 }
 
 function sql_vals($pairs){
-	return implode(", ", map("\\sql_quote", array_values($pairs)));
+	return implode(", ", map("pharen\sql\\sql_quote", array_values($pairs)));
 }
 
 function sql_cols($pairs){
@@ -26,9 +27,9 @@ function sql_cols($pairs){
 }
 
 function sql_fetch_by_id($table, $id){
-	$__scope_id = Lexical::init_closure("sql", 212);
+	$__scope_id = Lexical::init_closure("sql", 217);
 	$query = sprintf("SELECT * FROM %s WHERE id=%s;", mysql_real_escape_string($table), mysql_real_escape_string($id));
-	Lexical::bind_lexing("sql", 212, '$query', $query);
+	Lexical::bind_lexing("sql", 217, '$query', $query);
 	return mysql_fetch_assoc(mysql_query($query));
 }
 

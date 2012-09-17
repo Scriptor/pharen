@@ -1,9 +1,9 @@
 <?php
 namespace pharen\path;
-require_once('C:\pharen/lang.php');
+require_once('/Users/historium/pharen/lang.php');
 use Pharen\Lexical as Lexical;
 Lexical::$scopes['path'] = array();
-function path__lambdafunc19($chunk, $acc, $__closure_id){
+function path__lambdafunc22($chunk, $acc, $__closure_id){
 	
 	 Null;
 	if(empty($chunk)){
@@ -25,7 +25,7 @@ function path__lambdafunc19($chunk, $acc, $__closure_id){
 function path_normalize_array($chunks){
 
 
-	return reverse(reduce(new \PharenLambda("pharen\path\\path__lambdafunc19", Lexical::get_closure_id("path", Null)), \PharenVector::create_from_array(array()), $chunks));
+	return reverse(reduce(new \PharenLambda("pharen\path\\path__lambdafunc22", Lexical::get_closure_id("path", Null)), \PharenVector::create_from_array(array()), $chunks));
 }
 
 function path_normalize($path){
