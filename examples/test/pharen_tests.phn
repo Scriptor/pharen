@@ -11,7 +11,7 @@
   (require (. TESTS-DIR "/tmp/" fname ".php")))
     
     
-(fn check  (expr expected) (test.check expr expected))
+(fn check (expr expected) (test.check expr expected 1))
 
 (let [tests 
       ["literals",
