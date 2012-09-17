@@ -305,16 +305,16 @@ class PharenLazyList implements IPharenSeq, IPharenLazy, ArrayAccess, Iterator{
         for($x=$offset; $x > 0 && $list !== Null; $x--){
             $list = $list->rest->seq();
         }
-        return !($list instanceof PharenEmptyList);
+        return !($list->seq() instanceof PharenEmptyList);
     }
 
     public function offsetGet($offset){
         $list = $this->seq();
         for($x=$offset; $x > 0; $x--){
+            $list = $list->rest->seq();
             if($list instanceof PharenEmptyList){
                 throw new OutOfRangeException;
             }
-            $list = $list->rest->seq();
         }
         return $list->first;
     }
