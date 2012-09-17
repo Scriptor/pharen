@@ -390,7 +390,7 @@ class PharenDelay implements IPharenLazy{
     }
 }
 
-class PharenHashMap implements Countable, ArrayAccess, Iterator{
+class PharenHashMap implements Countable, ArrayAccess, Iterator, IPharenComparable{
     public $hashmap;
     public $count;
     public $delimiter_tokens = array("OpenBraceToken", "CloseBraceToken");
@@ -469,6 +469,16 @@ class PharenHashMap implements Countable, ArrayAccess, Iterator{
 
     public function valid(){
         return isset($this->hashmap[key($this->hashmap)]);
+    }
+
+    public function eq($other){
+        if($other instanceof PharenHashMap){
+            return $this->hashmap == $other->hashmap;
+        }else if(is_array($other)){
+            return $this->hashmap == $other;
+        }else{
+            return $this === $other;
+        }
     }
 }
 
