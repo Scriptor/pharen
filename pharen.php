@@ -1100,6 +1100,9 @@ class KeywordCallNode extends Node{
 class NamespaceNode extends KeywordCallNode{
 
     public function compile_statement(){
+        if(MacroNode::$ghosting) {
+            return "";
+        }
         array_unshift($this->children, Null);
         $this->children[1]->value = "namespace";
         if(empty(RootNode::$raw_ns)){
@@ -1108,6 +1111,7 @@ class NamespaceNode extends KeywordCallNode{
             RootNode::$ns_string = parent::compile_statement();
             return "";
         }else{
+            debug_print_backtrace();
             return parent::compile_statement();
         }
     }
