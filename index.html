@@ -1,0 +1,36 @@
+---
+layout: default
+title: Introduction to Pharen
+---
+
+<div class="container">
+    <div class="row-fluid">
+        <h2 class="offset3"><u>Pharen: Lisp -> PHP</u></h2>
+    </div>
+    <div class="row-fluid">
+        <div class="span4 offset2">
+            <p class="lead">
+                Pharen is a <a href="http://en.wikipedia.org/wiki/Lisp_%28programming_language%29">Lisp</a>
+                that compiles to <a href="http://php.net">PHP</a>, bringing lexical closures, macros, less PHP, and more.
+            </p>
+        </div>
+
+        <div class='span5'>
+        {% highlight clojure %}
+        (fn greet-person (name)
+            (. "Hello " name "!"))
+
+        (prn (greet-person "visitor"))
+        ; => Hello visitor!
+        {% endhighlight %}
+        </div>
+    </div>
+    <!--
+    Some of the rationale behind Pharen:
+    <ul>
+        <li>1. Abstract out problems and irregularities in PHP's own parser and the language itself.</li>
+        <li>2. Compile more sophisticated features, such as closures and macros, to native PHP.</li>
+        <li>3. Insanity.</li>
+    </ul>
+    -->
+</div>
