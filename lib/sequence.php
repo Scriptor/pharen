@@ -305,16 +305,16 @@ class PharenLazyList implements IPharenSeq, IPharenLazy, ArrayAccess, Iterator{
         for($x=$offset; $x > 0 && $list !== Null; $x--){
             $list = $list->rest->seq();
         }
-        return !($list instanceof PharenEmptyList);
+        return !($list->seq() instanceof PharenEmptyList);
     }
 
     public function offsetGet($offset){
         $list = $this->seq();
         for($x=$offset; $x > 0; $x--){
+            $list = $list->rest->seq();
             if($list instanceof PharenEmptyList){
                 throw new OutOfRangeException;
             }
-            $list = $list->rest->seq();
         }
         return $list->first;
     }
@@ -390,7 +390,7 @@ class PharenDelay implements IPharenLazy{
     }
 }
 
-class PharenHashMap implements Countable, ArrayAccess, Iterator{
+class PharenHashMap implements Countable, ArrayAccess, Iterator, IPharenComparable{
     public $hashmap;
     public $count;
     public $delimiter_tokens = array("OpenBraceToken", "CloseBraceToken");
@@ -469,6 +469,16 @@ class PharenHashMap implements Countable, ArrayAccess, Iterator{
 
     public function valid(){
         return isset($this->hashmap[key($this->hashmap)]);
+    }
+
+    public function eq($other){
+        if($other instanceof PharenHashMap){
+            return $this->hashmap == $other->hashmap;
+        }else if(is_array($other)){
+            return $this->hashmap == $other;
+        }else{
+            return $this === $other;
+        }
     }
 }
 

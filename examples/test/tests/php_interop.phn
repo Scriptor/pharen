@@ -1,0 +1,24 @@
+;check array interoperation
+(check (array-map (+ 1) (arr [1 2 3])) (array 2 3 4))
+(check (array-map (lambda (x) (+ x 1)) (arr [1 2 3])) (array 2 3 4))
+
+;???array filter in php act like a reject??????
+(check (array-filter (arr [1 2 3 4 5 6 7 8 9 10]) (> 4)) (array 1 2 3))
+(check (array-filter (arr [1 2 3 4 5 6 7 8 9 10]) (lambda (x) (> 4 x))) (array 1 2 3))
+
+(check (== (array 1 2 3) (array 1 2 3)) TRUE)
+(check (eq (array 1 2 3) (array 1 2 3)) TRUE)
+(check (eq [1 2 3] [1 2 3])  TRUE)
+(check (eq [1 2 3] (array 1 2 3))  TRUE)
+(check (== [1 2 3] (array 1 2 3))  FALSE)
+
+;interoperation with associative array in php isnt clare for now.
+;(print (array-keys (hashify {#a 1 #b 2})))
+
+;check lambda and closure interaction
+(let [sum 100]
+  (check (array-map (lambda (x) (+ x sum)) (arr [1 2 3])) (array 101 102 103)))
+  
+(def sum2 101)
+(check (array-map (lambda (x) (+ x sum2)) (arr [1 2 3])) (array 102 103 104))
+

@@ -1,10 +1,10 @@
 (ns pharen.test)
-(fn check (expr expected)
+(fn check (expr expected [backtrace-start 0])
   (if (eq expr expected)
     TRUE
     (do
       (def bt (debug_backtrace))
-      (error "Test failed on line: " (:bt 0 "line") " in " (:bt 0 "file"))
+      (error "Test failed on line: " (:bt backtrace-start "line") " in " (:bt backtrace-start "file"))
       FALSE)))
 
 (fn describe (msg func)

@@ -1,5 +1,6 @@
 <?php
-require_once('C:\pharen/lang.php');
+namespace pharen\html;
+require_once('/Users/historium/pharen/lang.php');
 use Pharen\Lexical as Lexical;
 Lexical::$scopes['html'] = array();
 function html_form($method, $action, $code){

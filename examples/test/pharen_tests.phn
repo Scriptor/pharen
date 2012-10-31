@@ -1,6 +1,6 @@
 (require "test.php")
 (use pharen.path as path)
-
+(use pharen.test as test)
 (define "TESTS_DIR" (dirname __FILE__))
 (require-once (path.join TESTS-DIR "../.." "pharen.php"))
 (compile-lang)
@@ -10,6 +10,8 @@
   (compile-file (. TESTS-DIR "/tests/" fname ".phn") (. TESTS-DIR "/tmp"))
   (require (. TESTS-DIR "/tmp/" fname ".php")))
     
+    
+(fn check (expr expected) (test.check expr expected 1))
 
 (let [tests 
       ["literals",
@@ -27,9 +29,10 @@
        "oop"
        "lazy"
        "ns",
-       "lang_functions"]]
+       "lang_functions",
+       "php_interop"]]
 
 
-  (describe "Pharen"
+  (test.describe "Pharen"
       (lambda ()
           (map #run-test tests))))
