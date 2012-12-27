@@ -93,6 +93,9 @@ class CommentToken extends Token{
 class FuncValToken extends Token{
 }
 
+class KeywordToken extends Token{
+}
+
 class Lexer{
     static $keyword_rewrites = array(
         'or' => 'pharen-or',
@@ -244,6 +247,9 @@ class Lexer{
                 $this->state = "append";
             }else if($this->char == '#'){
                 $this->tok = new FuncValToken;
+                $this->state = "append";
+            }else if($this->char == ':' && $this->code[$this->i+1] != ':'){
+                $this->tok = new KeywordToken;
                 $this->state = "append";
             }else if($this->char == '~' or $this->char == "'" or $this->char == '@'){
                 $this->tok = new ReaderMacroToken($this->char);
@@ -1107,13 +1113,14 @@ class NamespaceNode extends KeywordCallNode{
         array_unshift($this->children, Null);
         $this->children[1]->value = "namespace";
         if(empty(RootNode::$raw_ns)){
-            RootNode::$raw_ns = $this->children[2]->value;
-            RootNode::$ns = $this->children[2]->compile();
             RootNode::$ns_string = parent::compile_statement();
-            return "";
+            $output = "";
         }else{
-            return parent::compile_statement();
+            $output = parent::compile_statement();
         }
+        RootNode::$raw_ns = $this->children[2]->value;
+        RootNode::$ns = $this->children[2]->compile();
+        return $output;
     }
 
     public function compile(){
@@ -1199,6 +1206,13 @@ class StringNode extends LeafNode{
 
     public function compile(){
         return '"'.$this->value.'"';
+    }
+}
+
+class KeywordNode extends StringNode{
+    public function compile() {
+        $this->value = self::phpfy_name($this->value);
+        return parent::compile();
     }
 }
 
@@ -2647,6 +2661,7 @@ class Parser{
             "StringToken" => "StringNode",
             "NumberToken" => "LeafNode",
             "FuncValToken" => "FuncValNode",
+            "KeywordToken" => "KeywordNode",
             "SplatToken" => "SplatNode",
             "UnquoteToken" => "UnquoteNode",
             "UnstringToken" => "LeafNode"
