@@ -36,6 +36,10 @@ class Token{
     public function append($ch){
         $this->value .= $ch;
     }
+
+    public function __toString(){
+        return $this->value;
+    }
 }
 
 class OpenParenToken extends Token{
@@ -744,9 +748,6 @@ class Node implements Iterator, ArrayAccess, Countable{
                 $output[] = $arg;
             }else{
                 $output[] = $a = $arg->compile();
-                if($a == 'foo'){
-                    echo get_class($this->children[1]);
-                }
             }
         }
         return $output;
@@ -1111,7 +1112,6 @@ class NamespaceNode extends KeywordCallNode{
             RootNode::$ns_string = parent::compile_statement();
             return "";
         }else{
-            debug_print_backtrace();
             return parent::compile_statement();
         }
     }
@@ -1717,7 +1717,7 @@ class QuoteWrapper{
                     $val_node = $scope->find(LeafNode::phpfy_name(ltrim($tok->value, '-')), True, Null, False);
                     if($val_node instanceof Node){
                         $val = $val_node->convert_to_list();
-                    }else if($val_node instanceof PharenCachedList){
+                    }else if($val_node instanceof PharenList){
                         $val = $val_node;
                     }else{
                         $val = $this->lex_val($val_node);
@@ -2474,7 +2474,7 @@ class BindingNode extends Node{
         $scope->virtual = True;
 
         $pairs = $this->children[1]->children;
-        if(!($pairs[0] instanceof ListNode)){
+        if(isset($pairs[0]) && !($pairs[0] instanceof ListNode)){
             $pairs = array_chunk($pairs, 2);
         }
         $varnames = array();
@@ -2676,7 +2676,7 @@ class Parser{
             "$" => array("SuperGlobalNode", "LeafNode", "LeafNode", self::$value),
             "def" => array("DefNode", "LeafNode", "VariableNode", self::$value),
             "local" => array("LocalNode", "LeafNode", "VariableNode", self::$value),
-            "let" => array("BindingNode", self::$list_form, array(self::$value)),
+            "let" => array("BindingNode", "LeafNode", "LiteralNode", self::$values),
             "dict" => array("DictNode", "LeafNode", array(self::$value)),
             "dict-literal" => array("DictNode", array(self::$value)),
             "micro" => array("MicroNode", "LeafNode", "LeafNode", "LiteralNode", self::$values),
