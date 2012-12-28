@@ -80,8 +80,10 @@
   (str-replace "-" "_" (str-replace "." "_" ns)))
 
 (fn wrap-compile (code)
-  (let [embedded-code (. "(local *1 " code ") (lambda () "") (return *1)")]
-    (compile embedded-code NULL (phpfy-ns (:: .RootNode raw-ns)) (:: .RootNode last-scope))))
+  (let [embedded-code (. "(local *1 " code ") (return *1)")
+        raw-ns (:: .RootNode raw-ns)]
+    (= (:: .RootNode raw-ns) "")
+    (compile embedded-code NULL (phpfy-ns raw-ns) (:: .RootNode last-scope))))
 
 (fn compile-code (code)
   (local compiled-code (wrap-compile code))
