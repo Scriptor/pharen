@@ -307,7 +307,7 @@ class FuncInfo{
     public function get_num_args_needed(){
         $num = 0;
         foreach($this->func->params as $param){
-            if(!($param instanceof ListNode)){
+            if(!($param instanceof ListNode || $param instanceof SplatNode)){
                 $num++;
             }else{
                 break;
@@ -1505,12 +1505,11 @@ class FuncDefNode extends SpecialForm{
         return $node->compile_return($this->indent."\t");
     }
 
-    public function compile_splat_code($params){
-        $params_count = count($this->params);
+    public function compile_splat_code(&$params){
+        $params_count = count($params);
         $code = "";
         if($params_count > 0 && $this->params[$params_count-1] instanceof SplatNode){
-            $param = $params[count($params)-1];
-            array_pop($params);
+            $param = array_pop($params);
             $code = $this->format_line("").$this->format_line_indent($param." = seq(array_slice(func_get_args(), ".($params_count-1)."));");
         }
         return $code;
