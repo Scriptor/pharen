@@ -1,4 +1,4 @@
-(ns pharen-repl)
+(ns pharen.repl)
 (use pharen.path as path)
 (define "REPL_SYSTEM" (realpath (dirname __FILE__)))
 (define "PHAREN_SYSTEM" (path.join REPL-SYSTEM "../../"))
@@ -82,7 +82,6 @@
 (fn wrap-compile (code)
   (let [embedded-code (. "(local *1 " code ") (return *1)")
         raw-ns (:: .RootNode raw-ns)]
-    (= (:: .RootNode raw-ns) "")
     (compile embedded-code NULL (phpfy-ns raw-ns) (:: .RootNode last-scope))))
 
 (fn compile-code (code)

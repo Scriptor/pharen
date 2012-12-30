@@ -1,16 +1,16 @@
 <?php
-namespace pharen_repl;
+namespace pharen\repl;
 require_once('C:\pharen/lang.php');
 use Pharen\Lexical as Lexical;
 Lexical::$scopes['repl'] = array();
-$__scope_id = Lexical::init_closure("repl", 196);
+$__scope_id = Lexical::init_closure("repl", 197);
 use pharen\path as path;
 include_once 'pharen/path.php';
 define("REPL_SYSTEM", realpath(dirname(__FILE__)));
 define("PHAREN_SYSTEM", path\join(REPL_SYSTEM, "../../"));
 require_once((PHAREN_SYSTEM . "/pharen.php"));
 $greetings = \PharenVector::create_from_array(array("Maybe solve P v NP!", "Happy Pharening!", "(map) new worlds!", "Maybe solve Hello World!", "Curly fries are delicious and cheap!"));
-Lexical::bind_lexing("repl", 196, '$greetings', $greetings);
+Lexical::bind_lexing("repl", 197, '$greetings', $greetings);
 function starts_with($needle, $haystack){
 	return (substr($haystack, 0, strlen($needle)) == $needle);
 }
@@ -36,7 +36,7 @@ function prepend_chars($needle, $funcs){
 		if(!(false__question(strpos($needle, "#")))){
 	
 	
-		return map(new \PharenLambda("pharen_repl\\repl__lambdafunc19", Lexical::get_closure_id("repl", Null)), $funcs);
+		return map(new \PharenLambda("pharen\\repl\\repl__lambdafunc19", Lexical::get_closure_id("repl", Null)), $funcs);
 	}
 	else{
 		return $funcs;
@@ -51,22 +51,22 @@ function repl__lambdafunc20($func, $__closure_id){
 function strip_ns($funcs){
 
 
-	return map(new \PharenLambda("pharen_repl\\repl__lambdafunc20", Lexical::get_closure_id("repl", Null)), $funcs);
+	return map(new \PharenLambda("pharen\\repl\\repl__lambdafunc20", Lexical::get_closure_id("repl", Null)), $funcs);
 }
 
 function repl__partial0($arg0, $__closure_id){
-	$needle = Lexical::get_lexical_binding('repl', 205, '$needle', isset($__closure_id)?$__closure_id:0);;
+	$needle = Lexical::get_lexical_binding('repl', 206, '$needle', isset($__closure_id)?$__closure_id:0);;
 	return starts_with($needle, $arg0);
 }
 
 function pharen_complete_func($input){
-		$__scope_id = Lexical::init_closure("repl", 205);
+		$__scope_id = Lexical::init_closure("repl", 206);
 	$all_funcs = get_defined_functions();
 	$needle = get_needle($input);
-		Lexical::bind_lexing("repl", 205, '$needle', $needle);
+		Lexical::bind_lexing("repl", 206, '$needle', $needle);
 
 	
-	$starts_with_input = new \PharenLambda("pharen_repl\\repl__partial0", Lexical::get_closure_id("repl", $__scope_id));
+	$starts_with_input = new \PharenLambda("pharen\repl\\repl__partial0", Lexical::get_closure_id("repl", $__scope_id));
 	$internal_matches = prepend_chars($input, filter($starts_with_input, strip_ns($all_funcs["internal"])));
 	$user_matches = prepend_chars($input, filter($starts_with_input, strip_ns($all_funcs["user"])));
 	return arr(concat($user_matches, $internal_matches));
@@ -79,7 +79,7 @@ if(function_exists("readline")){
 		return $line;
 	}
 	
-	readline_completion_function("pharen_repl\\pharen_complete_func");
+	readline_completion_function("pharen\repl\\pharen_complete_func");
 }
 else{
 	function prompt($prompt){
@@ -124,7 +124,7 @@ function add_uses($code){
 		$uses = get(\RootNode::$ns, \RootNode::$uses);
 	
 	
-		$__condtmpvar5 = reduce_to_str(new \PharenLambda("pharen_repl\\repl__lambdafunc21", Lexical::get_closure_id("repl", Null)), $uses);
+		$__condtmpvar5 = reduce_to_str(new \PharenLambda("pharen\\repl\\repl__lambdafunc21", Lexical::get_closure_id("repl", Null)), $uses);
 	}
 	else{
 		$__condtmpvar5 = "";
@@ -171,7 +171,6 @@ function phpfy_ns($ns){
 function wrap_compile($code){
 	$embedded_code = ("(local *1 " . $code . ") (return *1)");
 	$raw_ns = \RootNode::$raw_ns;
-	\RootNode::$raw_ns = "";
 	return compile($embedded_code, NULL, phpfy_ns($raw_ns), \RootNode::$last_scope);
 }
 
@@ -188,7 +187,7 @@ function compile_code($code){
 }
 
 function intro(){
-	$greetings = Lexical::get_lexical_binding('repl', 196, '$greetings', isset($__closure_id)?$__closure_id:0);;
+	$greetings = Lexical::get_lexical_binding('repl', 197, '$greetings', isset($__closure_id)?$__closure_id:0);;
 	return prn(("Initialized Pharen REPL. " . $greetings[array_rand(arr($greetings))] . "\n"));
 }
 

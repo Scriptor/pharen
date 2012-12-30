@@ -47,9 +47,9 @@ if(__FILE__ === realpath($_SERVER['SCRIPT_NAME'])){
             $repl_vars = array_diff_assoc($new_vars, $existing_vars);
         }
         include_once("repl.php");
-        pharen_repl\intro();
+        pharen\repl\intro();
         compile_lang();
-        pharen_repl\work("", $repl_vars);
+        pharen\repl\work("", $repl_vars);
     }
     if(isset($_SERVER['REQUEST_METHOD'])){
         echo "<pre>$php_code</pre>";
