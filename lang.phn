@@ -106,9 +106,10 @@
      (map (lambda (~varname) ~@exprs) [0 .. ~n])
      NULL))
 
-(fn prn (s)
-  (do
-    (print* s "\n")
+(fn prn (s &other)
+  (let
+    [str (. s (seq-join other))]
+    (print* str "\n")
     NULL))
 
 (fn false? (x)
