@@ -1996,7 +1996,8 @@ class LambdaNode extends FuncDefNode{
         array_splice($this->children, 1, 1);
         array_pop($this->children[1]->children);
         self::$in_lambda_compile = False;
-        return 'new \PharenLambda("'.RootNode::$ns.'\\\\'.$name.'", Lexical::get_closure_id("'.Node::$ns.'", '.$scope_id_str.'))';
+        $ns = str_replace('\\', '\\\\', RootNode::$ns);
+        return 'new \PharenLambda("'.$ns.'\\\\'.$name.'", Lexical::get_closure_id("'.Node::$ns.'", '.$scope_id_str.'))';
     }
 
     public function compile_statement(){
