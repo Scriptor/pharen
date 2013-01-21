@@ -47,6 +47,7 @@ if(__FILE__ === realpath($_SERVER['SCRIPT_NAME'])){
             $repl_vars = array_diff_assoc($new_vars, $existing_vars);
         }
         include_once("repl.php");
+        NamespaceNode::$repling = True;
         pharen\repl\intro();
         compile_lang();
         pharen\repl\work("", $repl_vars);
