@@ -976,15 +976,15 @@ class RootNode extends Node{
     public function compile(){
         $code = "";
         $hashbang = "";
-        if(isset(Flags::$flags['executable']) && Flags::$flags['executable']){
+        if(Flags::is_true('executable')){
             $hashbang = $this->format_line("#! /usr/bin/env php");
         }
 
         $php_tag = $this->format_line("<?php");
-        if(!isset(Flags::$flags['no-import-lang']) or Flags::$flags['no-import-lang'] == False){
+        if(!Flags::is_true('no-import-lang')){
             $code .= $this->format_line("require_once('".COMPILER_SYSTEM."/"."lang.php"."');");
-        }else if(Flags::$flags['no-import-lang'] == True){
-            if(!isset(Flags::$flags['import-lexi-relative']) or Flags::$flags['import-lexi-relative'] == False){
+        }else{
+            if(!Flags::is_true('import-lexi-relative')){
                 $prefix = "'".COMPILER_SYSTEM."'";
             } else {
                 $prefix = "dirname(__FILE__)";
@@ -1147,12 +1147,12 @@ class UseNode extends KeywordCallNode{
         }
         RootNode::$uses[RootNode::$ns] []= $use;
 
-        $code =  parent::compile_statement();
         // Require needs to be added after the compilation is done
         $file = str_replace("\\", "/", $use[0]).".php";
         if(stream_resolve_include_path($file)){
             Node::$tmp .= $this->format_line("include_once '" . $file . "';");
         }
+        $code =  parent::compile_statement();
         return $code;
     }
 }
@@ -2869,6 +2869,10 @@ class Flags{
         'e' => 'executable',
         'l' => 'no-import-lang'
     );
+
+    public static function is_true($flag) {
+        return isset(self::$flags[$flag]) && self::$flags[$flag];
+    }
 }
 
 function set_flag($flag, $setting=True){
