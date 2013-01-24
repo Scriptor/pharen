@@ -259,6 +259,9 @@
 (fn seq-join (xs [glue ""])
   (implode glue (arr xs)))
 
+(fn seq-rand (xs)
+  (:xs (rand 0 (count xs))))
+
 (fn infinity ([n 0])
   (lazy-seq (cons n (infinity (+ n 1)))))
 
