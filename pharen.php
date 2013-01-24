@@ -1167,7 +1167,7 @@ class FuncValNode extends LeafNode{
         }else{
             $ns = "";
         }
-        return '"'."$ns\\\\".$name.'"';
+        return "'"."$ns\\".$name."'";
     }
 }
 
