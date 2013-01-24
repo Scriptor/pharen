@@ -260,7 +260,7 @@
   (implode glue (arr xs)))
 
 (fn seq-rand (xs)
-  (:xs (rand 0 (count xs))))
+  (:xs (rand 0 (dec (count xs)))))
 
 (fn infinity ([n 0])
   (lazy-seq (cons n (infinity (+ n 1)))))
