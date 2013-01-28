@@ -1627,6 +1627,8 @@ class MacroNode extends FuncDefNode{
             $scope->bind_tok($param_node->compile(True), $tok);
             if($tok instanceof PharenCachedList){
                 $scope->bind($param_node->compile(True), self::get_values_from_list($tok));
+            }else if($tok instanceof PharenHashMap){
+                $scope->bind($param_node->compile(True), $tok);
             }else{
                 $scope->bind($param_node->compile(True), $tok->value);
             }
@@ -2311,6 +2313,43 @@ class DictNode extends Node{
 
     public function compile_statement(){
         return $this->compile().";\n";
+    }
+
+    public function convert_to_list($return_as_array=False, $get_values=False){
+        $list = array();
+        foreach($this->tokens as $key=>$tok){
+            if($tok instanceof Node){
+                $list[] = $val = $tok->convert_to_list($return_as_array, $get_values);
+            }else{
+                if($get_values && ($tok instanceof StringToken || $tok instanceof NumberToken)){
+                    $tok_value = $tok->value;
+                    if($tok instanceof NumberToken){
+                        if(ctype_digit($tok_value)){
+                            $tok_value = intval($tok_value);
+                        }else{
+                            $tok_value = floatval($tok_value);
+                        }
+                    }
+                    $list[] = $tok_value;
+                }else{
+                    $list[] = $tok;
+                }
+            }
+        }
+
+        $pairs = array_chunk($list, 2);
+        $dict = array();
+        foreach($pairs as $pair){
+            $dict[$pair[0]] = $pair[1];
+        }
+
+        if($return_as_array){
+            return $dict;
+        }else{
+            $pharen_map = new PharenHashMap($dict);
+            $pharen_map->delimiter_tokens = $this->get_delims();
+            return $pharen_map;
+        }
     }
 }
 
