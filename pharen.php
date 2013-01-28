@@ -1212,7 +1212,6 @@ class StringNode extends LeafNode{
 
 class KeywordNode extends StringNode{
     public function compile() {
-        $this->value = self::phpfy_name($this->value);
         return parent::compile();
     }
 }
