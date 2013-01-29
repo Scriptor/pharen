@@ -47,6 +47,12 @@ class PharenList implements IPharenSeq, IPharenComparable, Countable, ArrayAcces
             }else{
                 return self::create_from_array($xs);
             }
+        }else if($xs instanceof PharenHashMap) {
+            $arr = array();
+            foreach($xs as $key=>$val){
+                $arr []= array($key, $val);
+            }
+            return self::create_from_array($arr);
         }else if(is_string($xs)){
             $splitted = str_split($xs);
             return self::create_from_array($splitted);
