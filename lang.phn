@@ -163,6 +163,9 @@
 (fn sequential? (x)
   (or (inst? x IPharenSeq) (is-array x)))
 
+(fn assoc? (x)
+  (inst? x PharenHashMap))
+
 (fn seq (x)
   (if (inst? x IPharenSeq)
     (-> x (seq))
