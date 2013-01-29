@@ -286,7 +286,7 @@
   (array-values (arr m)))
 
 (fn append (x xs)
-  (array-merge xs [x]))
+  (concat xs [x]))
 
 (fn apply (f &args)
   (let [name (if (is-array f) (:f 0) f)
