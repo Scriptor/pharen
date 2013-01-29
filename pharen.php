@@ -2296,9 +2296,7 @@ class DictNode extends Node{
         $pairs = array_slice($this->children, $offset);
 
         // Code uses the paren-less syntax for dictionaries, so break it up into pairs
-        if(count($pairs) > 0 && $pairs[0][0] === Null){
-            $pairs = array_chunk($pairs, 2);
-        }
+        $pairs = array_chunk($pairs, 2);
 
         $mappings = array();
         $code = "";
