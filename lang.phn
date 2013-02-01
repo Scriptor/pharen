@@ -145,8 +145,8 @@
 (fn dec (x)
   (- x 1))
 
-(fn set! (var val)
-  (local var val))
+(defmacro set! (var val)
+  '(local ~var ~val))
 
 (fn comp (&fs)
   (let [rfs (reverse fs)]
