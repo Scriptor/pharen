@@ -148,6 +148,9 @@
 (defmacro set! (var val)
   '(local ~var ~val))
 
+(defmacro alter (var f &args)
+  '(local ~var (~$f ~var ~@args)))
+
 (fn comp (&fs)
   (let [rfs (reverse fs)]
     (lambda (&args)
