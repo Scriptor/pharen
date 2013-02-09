@@ -2928,13 +2928,18 @@ function compile_file($fname, $output_dir=Null){
     RootNode::$raw_ns = "";
     RootNode::$ns_string = "";
     $file = basename($fname, EXTENSION);
+    $output_dir = $output_dir === Null ? dirname($fname) : $output_dir;
     $ns = str_replace('-', '_', $file);
-    Node::$ns = $ns;
+
+    $dir = str_replace("\\", "_", $output_dir);
+    $dir = str_replace("-", "_", $dir);
+    $first_underscore = strpos($dir, "_");
+    $dir = substr($dir, $first_underscore);
+    Node::$ns = $dir.$ns;
 
     $code = file_get_contents($fname);
     $phpcode = compile($code);
  
-    $output_dir = $output_dir === Null ? dirname($fname) : $output_dir;
     $output = $output_dir.DIRECTORY_SEPARATOR.$file.".php";
     file_put_contents($output, $phpcode);
     return $phpcode;
