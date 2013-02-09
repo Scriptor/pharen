@@ -1,0 +1,57 @@
+(ns awe)
+
+(fn get-rules (css)
+  (let [pairs (partition 2 (rest css))]
+    (cons (first css)
+          (reduce (lambda (pair rules)
+                          (if (seq? (:pair 0))
+                            (concat rules (map #get-rules pair))
+                            (append {(:pair 0) (:pair 1)} rules)))
+                  []
+                  pairs))))
+
+
+(fn process-rule (rule)
+  (if (assoc? rule)
+    (let [rule (seq rule)]
+      (. (:rule 0 0) ": " (:rule 0 1) ";"))
+    (process-rules rule selector)))
+
+(fn process-rules (rules [parent-sel ""])
+  (let [selector (trim (. parent-sel " " (first rules)))]
+    (cons selector (map #process-rule (rest rules)))))
+
+(fn gen-css (rule-strs [start-indent ""])
+  (let [indent (. start-indent "    ")
+        selector (first rule-strs)
+        state (reduce (lambda (rule-str state)
+                              (if (seq? rule-str)
+                                [(:state 0) (append (gen-css rule-str indent) (:state 1))]
+                                [(. (:state 0) (. indent rule-str "\n")) (:state 1)]))
+                      ["" []]
+                      (rest rule-strs))]
+    (. start-indent selector " {\n" (:state 0) start-indent "}\n" (seq-join (:state 1) "\n"))))
+
+(fn css (&css-seqs)
+  (seq-join
+    (map (lambda (css-seq)
+                 (gen-css (process-rules (get-rules css-seq))))
+         css-seqs)))
+
+(def content-css
+  [:div#content
+   :width: "80%"
+   :margin-left "5px"
+   :margin-right "5px"
+   [:a
+    :color "#00F"
+    [:img
+     :width "200px"]]
+   [:p
+    :font "Helvetica"]])
+
+(def sidebar-css
+  [:div#sidebar
+   :width "20%"])
+
+(prn (css content-css sidebar-css))

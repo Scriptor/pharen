@@ -242,7 +242,7 @@ class Lexer{
             }else if($this->in_sexpr_opening() && $this->char == '$' && trim($this->code[$this->i+1]) != ""){
                 $this->tok = new ExplicitVarToken;
                 $this->state = "append";
-            }else if($this->char == '&'){
+            }else if($this->char == '&' && trim($this->code[$this->i+1]) != ""){
                 $this->tok = new SplatToken;
                 $this->state = "append";
             }else if($this->char == '#'){
@@ -2686,7 +2686,7 @@ class Parser{
     private $tokens;
 
     public function __construct($tokens){
-        self::$INFIX_OPERATORS = array("+", "-", "*", ".", "/", "%", "=", "=&", "<", ">", "<=", ">=", "===", "==", "!=", "!==", "instanceof");
+        self::$INFIX_OPERATORS = array("+", "-", "*", ".", "/", "%", "=", "=&", "<", ">", "<=", ">=", "===", "==", "!=", "!==", "instanceof", "|", "&");
 
         self::$reader_macros = array(
             "'" => "quote",
