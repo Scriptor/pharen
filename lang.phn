@@ -119,7 +119,7 @@
   (=== TRUE x))
 
 (fn zero? (n)
-  (== n 0))
+  (=== n 0))
 
 (fn pos? (n)
   (> n 0))
@@ -128,10 +128,10 @@
   (< n 0))
 
 (fn odd? (n)
-  (== (% n 2) 1))
+  (=== (% n 2) 1))
 
 (fn even? (n)
-  (== (% n 2) 0))
+  (=== (% n 2) 0))
 
 (fn str (s1 s2)
   (. s1 s2))
@@ -244,7 +244,7 @@
     (reverse (rest xs) (cons (first xs) acc))))
 
 (fn interpose (sep xs [acc []])
-  (if (== (count xs) 1)
+  (if (=== (count xs) 1)
     [(first xs)]
     (cons (first xs) (cons sep (interpose sep (rest xs))))))
 
