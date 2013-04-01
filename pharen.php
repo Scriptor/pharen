@@ -1732,13 +1732,13 @@ class QuoteWrapper{
                     $val_node = $scope->find(LeafNode::phpfy_name(ltrim($tok->value, '-')), True, Null, False);
                     if($val_node instanceof Node){
                         $val = $val_node->convert_to_list();
-                    }else if($val_node instanceof PharenList){
+                    }else if($val_node instanceof PharenList || $val_node instanceof PharenHashMap){
                         $val = $val_node;
                     }else{
                         $val = $this->lex_val($val_node);
                     }
                 }
-                if($val instanceof PharenList){
+                if($val instanceof PharenList || $val instanceof PharenHashMap){
                     $flattened = $this->flatten($val);
                     $new_tokens = array_merge($new_tokens, $flattened);
                 }else{
@@ -1786,10 +1786,20 @@ class QuoteWrapper{
         }
     }
 
-    public function flatten(PharenList $list){
+    public function flatten($list){
         $delims = $list->delimiter_tokens;
         $tokens = array();
         $tokens []= new $delims[0];
+
+        if ($list instanceof PharenHashMap) {
+            $listified = array();
+            foreach ($list as $key=>$val) {
+                $listified[] = $key;
+                $listified[] = $val;
+            }
+            $list = $listified;
+        }
+
         foreach($list as $el){
             if($el instanceof PharenList){
                 $tokens = array_merge($tokens, $this->flatten($el));
@@ -2933,6 +2943,7 @@ function compile_file($fname, $output_dir=Null){
 
     $dir = str_replace("\\", "_", $output_dir);
     $dir = str_replace("-", "_", $dir);
+    $dir = str_replace(".", "_", $dir);
     $first_underscore = strpos($dir, "_");
     $dir = substr($dir, $first_underscore);
     Node::$ns = $dir.$ns;
