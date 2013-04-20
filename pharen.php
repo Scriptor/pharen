@@ -23,7 +23,7 @@ function split_body_last($xs){
     return array($body, $last);
 }
             
-class Token{
+class Token implements IPharenComparable, IPharenHashable{
     public $value;
     public $quoted;
     public $unquoted;
@@ -38,6 +38,20 @@ class Token{
     }
 
     public function __toString(){
+        return $this->value;
+    }
+    
+    public function eq($other){
+        if(is_object($other)){
+            if($other instanceof Token){
+                return $this->value === $other->value;
+            }
+        }else{
+            return $this->value === $other;
+        }
+    }
+
+    public function hash(){
         return $this->value;
     }
 }
