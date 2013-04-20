@@ -14,6 +14,10 @@ interface IPharenComparable{
     public function eq($other);
 }
 
+interface IPharenHashable{
+    public function hash();
+}
+
 class PharenList implements IPharenSeq, IPharenComparable, Countable, ArrayAccess, Iterator{
     public $first;
     public $rest;
