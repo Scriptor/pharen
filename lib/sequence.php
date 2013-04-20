@@ -436,17 +436,32 @@ class PharenHashMap implements Countable, ArrayAccess, Iterator, IPharenComparab
         }
     }
 
+    public function hashOf($key){
+        if(is_object($key)){
+            if($key instanceof IPharenHashable){
+                return $key->hash();
+            }else{
+                return spl_object_hash($key);
+            }
+        }else{
+            return $key;
+        }
+    }
+
     public function assoc($key, $val){
         $new_hashmap = $this->hashmap;
+        $key = $this->hashOf($key);
         $new_hashmap[$key] = $val;
         return new PharenHashMap($new_hashmap, $this->count+1);
     }
 
     public function offsetGet($key){
+        $key = $this->hashOf($key);
         return $this->hashmap[$key];
     }
 
     public function offsetSet($key, $val){
+        $key = $this->hashOf($key);
         $this->hashmap[$key] = $val;
     }
 
@@ -454,6 +469,7 @@ class PharenHashMap implements Countable, ArrayAccess, Iterator, IPharenComparab
     }
 
     public function offsetExists($key){
+        $key = $this->hashOf($key);
         return isset($this->hashmap[$key]);
     }
 
