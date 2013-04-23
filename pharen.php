@@ -1436,6 +1436,7 @@ class FuncDefNode extends SpecialForm{
         list($body_nodes, $last_node) = $this->split_body_last();
 
         $body = "";
+        $original_params = $params;
         $splats = $this->compile_splat_code($params);
         $params_string = $this->build_params_string($params);
 
@@ -1494,7 +1495,7 @@ class FuncDefNode extends SpecialForm{
             $body .= $last;
         }
         $body = $this->scope->get_lexical_bindings().$body;
-        $lexings = $this->get_param_lexings($params);
+        $lexings = $this->get_param_lexings($original_params);
 
         $code = $this->format_line("function ".$this->name.$params_string."{", $prefix).
             $splats.
@@ -1529,6 +1530,8 @@ class FuncDefNode extends SpecialForm{
         $code = "";
         if($params_count > 0 && $this->params[$params_count-1] instanceof SplatNode){
             $param = array_pop($params);
+            $this->scope->bind($param, new LeafNode($this, Null, $param));
+
             $code = $this->format_line("").$this->format_line_indent($param." = seq(array_slice(func_get_args(), ".($params_count-1)."));");
         }
         return $code;
