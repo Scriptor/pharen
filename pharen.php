@@ -2961,6 +2961,8 @@ function compile_file($fname, $output_dir=Null){
     $ns = str_replace('-', '_', $file);
 
     $dir = str_replace("\\", "_", $output_dir);
+    $dir = str_replace("/", "_", $dir);
+    $dir = str_replace(":", "_", $dir);
     $dir = str_replace("-", "_", $dir);
     $dir = str_replace(".", "_", $dir);
     $first_underscore = strpos($dir, "_");
