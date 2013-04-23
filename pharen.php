@@ -1083,7 +1083,12 @@ class LeafNode extends Node{
     }
 
     public function convert_to_list($return_as_array=False, $get_value=False){
-        return $get_value ? $this->tok->value : $this->tok;
+        if ($get_value) {
+            if($this->tok instanceof NumberToken){
+                return $this->tok->value;
+            }
+        }
+        return $this->tok;
     }
 
     public function search($value){
