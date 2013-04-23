@@ -10,7 +10,10 @@
   (compile-file (. TESTS-DIR "/tests/" fname ".phn") (. TESTS-DIR "/tmp"))
   (require (. TESTS-DIR "/tmp/" fname ".php")))
     
-    
+(set-error-handler (lambda (errno errstr file line)
+                           (throw (new ErrorException errstr errno 0 file line))
+                           TRUE))
+
 (fn check (expr expected) (test.check expr expected 1))
 
 (let [tests 
