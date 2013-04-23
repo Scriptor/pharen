@@ -26,9 +26,11 @@
                   (. "line" 1)
                   "foobar") "foobar")
 
-(defmacro var-in-macro (name)
+(defmacro var-in-macro (name val)
   (def nm name)
-  '(fn ~name () ~nm))
+  '(fn ~name ()
+     (let [~nm ~val]
+       ~nm)))
 
-(var-in-macro var-test)
-(check (var-test) "var-test")
+(var-in-macro var-test "foo")
+(check (var-test) "foo")
