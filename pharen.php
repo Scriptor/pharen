@@ -1490,6 +1490,7 @@ class FuncDefNode extends SpecialForm{
             $body .= $this->format_line("}");
             $this->decrease_indent();
         }else{
+            Node::$prev_tmp = "";
             $body .= count($body_nodes) > 0 ? parent::compile_body($body_nodes) : "";
             $last = $last_node->compile_return();
             $body .= $last;
