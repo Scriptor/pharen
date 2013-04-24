@@ -1,0 +1,55 @@
+(defmacro when-set (val)
+  '(when (isset ~val) ~val))
+
+(defmacro defop (name args &key-val-pairs)
+  (def args-len (count args))
+  (def state (reduce (lambda (pair state)
+                             (assoc (:pair 0) (:pair 1) state))
+                     {:pc (:args (- args-len 4))
+                      :stack (:args (- args-len 3))
+                      :flags (:args (- args-len 2))
+                      :instructions (:args (- args-len 1))}
+                     (partition 2 key-val-pairs)))
+  '(fn ~name ~args ~state))
+
+(defop jmp (loc pc stack flags instrs)
+  :pc loc)
+
+(defop cmp (loc pc stack flags instrs)
+  (let [flags (& (zero? (- (:stack a) (:stack b))) flags)]
+    :flags flags))
+
+(defop jeq (loc cur-pc stack flags instrs)
+  :pc (if (& flags 1)
+        loc
+        cur-pc))
+
+(defop psh (val pc stack flags instrs)
+  :stack (cons val stack))
+
+(fn stepper (_ state)
+  (let [pc (:state :pc)
+        stack (:state :stack)
+        flags (:state :flags)
+        instrs (:state :instructions)
+        instr (:instrs pc)
+        op (:instr 0)
+        a (:instr 1)
+        b (when-set (:instr 2))
+        c (when-set (:instr 3))]
+    ((cond
+       ((=== op :jmp) (jmp a))
+       ((=== op :cmp) (cmp a b))
+       ((=== op :jeq) (jeq a pc))
+       ((=== op :psh) (psh a)))
+       (inc pc) stack flags instrs)))
+
+(fn run (instrs)
+  (reduce #stepper 
+          {:pc 0
+           :stack []
+           :flags 0
+           :instructions [[:jmp 1] [:jmp 0]]}
+          (infinity)))
+
+(run [[:jmp 1] [:jmp 0]])
