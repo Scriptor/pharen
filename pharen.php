@@ -2114,7 +2114,7 @@ class ClassNode extends SpecialForm{
     public function compile_statement(){
         $class_name = $this->children[1]->compile();
         $this->class_name = $class_name;
-        $body = $this->compile_body();
+        $body = isset($this->children[2]) ? $this->compile_body() : "";
         return $this->generate($class_name, $body);
     }
 }
@@ -2128,9 +2128,9 @@ class ClassExtendsNode extends ClassNode{
 
         $class_name = $this->children[1]->compile();
         $this->class_name = $class_name;
-        $parent_class = $this->children[2]->children[0]->value;
-        $body = $this->compile_body();
-        return $this->generate($class_name." extends ".$parent_class, $body);
+        $parent_class = $this->children[2]->compile();
+        $body = isset($this->children[3]) ? $this->compile_body() : "";
+        return $this->generate("$class_name extends $parent_class", $body);
     }
 }
 
@@ -2773,7 +2773,7 @@ class Parser{
             "::" => array("StaticCallNode", "LeafNode", "LeafNode", self::$values),
             "new" => array("InstantiationNode", "LeafNode", "LeafNode", self::$values),
             "class" => array("ClassNode", "LeafNode", "LeafNode", self::$values),
-            "class-extends" => array("ClassExtendsNode", "LeafNode", "LeafNode", self::$list_form, self::$values),
+            "class-extends" => array("ClassExtendsNode", "LeafNode", "LeafNode", "LeafNode", "LeafNode", self::$values),
             "access" => array("AccessModifierNode", "LeafNode", "LeafNode", self::$values),
             "interface" => array("InterfaceNode", "LeafNode", "LeafNode", self::$values),
             "signature*" => array("SignatureNode", "LeafNode", "LeafNode", "LeafNode", "LiteralNode"),
