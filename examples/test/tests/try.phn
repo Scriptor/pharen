@@ -1,0 +1,59 @@
+(ns TestTry)
+(use Exception as Exception)
+
+; Default Exception
+(check 
+  (inst? (try 
+           (do (throw (new Exception)) NULL)
+           (catch Exception e e))
+         Exception)
+  TRUE)
+
+
+; Without return
+(try
+  (throw (new Exception))
+  (catch Exception e (check (inst? e Exception) TRUE)))
+
+; Inside function
+(fn exception ()
+  (try
+    (do (throw (new Exception "Custom")) NULL)
+    (catch Exception e (-> e (getMessage)))))
+(check (exception) "Custom")
+
+; Custom exception
+(class-extends DefException Exception)
+(check
+  (inst? (try
+           (do (throw (new DefException)) NULL)
+           (catch DefException e e))
+         DefException)
+  TRUE)
+
+; Get error message
+(check
+  (try
+    (do (throw (new DefException "Custom exception")) NULL)
+    (catch DefException e (-> e (getMessage))))
+  "Custom exception")
+
+; Multiple catch
+(class-extends OtherException Exception)
+(check
+  (try
+    (do (throw (new OtherException "Other custom exception")) NULL)
+    (catch DefException e e)
+    (catch OtherException e (-> e (getMessage))))
+  "Other custom exception")
+
+; Capture tree
+(check
+  (try
+    (do
+      (try
+        (do (throw (new DefException "Custom exception")) NULL)
+        (catch OtherException e e)
+      ) NULL)
+    (catch DefException e (-> e (getMessage))))
+  "Custom exception")
