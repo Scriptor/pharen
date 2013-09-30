@@ -826,7 +826,7 @@ class Node implements Iterator, ArrayAccess, Countable{
         }else{
             $scope_id_str = '$__scope_id';
         }
-        return 'new \PharenLambda("'.RootNode::$ns.'\\\\'.$tmp_name.'", Lexical::get_closure_id("'.Node::$ns.'", '.$scope_id_str.'))';
+        return 'new \PharenLambda(\''.RootNode::$ns.'\\\\'.$tmp_name.'\', Lexical::get_closure_id("'.Node::$ns.'", '.$scope_id_str.'))';
     }
 
     public function compile($is_statement=False, $is_return=False){
@@ -1408,7 +1408,7 @@ class FuncDefNode extends SpecialForm{
         Node::$in_func++;
         $this->compile_statement();
         Node::$in_func--;
-        return '"'.RootNode::$ns."\\\\".$this->name.'"';
+        return '\''.RootNode::$ns."\\\\".$this->name.'\'';
     }
 
     public function add_to_functions_list($name){
