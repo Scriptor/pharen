@@ -1291,14 +1291,16 @@ class SpecialForm extends Node{
         // If there is a prefix then it should be indented as if it were an expression.
         $body_index = $lines === false ? $this->body_index : 0;
         $lines = $lines === false ? $this->children : $lines;
-        $last = array_pop($lines);
         $last_line = "";
 
-        if(!$omit_last_line){
-            if($return){
-                $last_line = $last->compile_return();
-            }else{
-                $last_line = $last->compile_statement($prefix);
+        if ($this->body_index < count($lines)) {
+            $last = array_pop($lines);
+            if(!$omit_last_line){
+                if($return){
+                    $last_line = $last->compile_return();
+                }else{
+                    $last_line = $last->compile_statement($prefix);
+                }
             }
         }
 
