@@ -23,6 +23,16 @@ function split_body_last($xs){
     return array($body, $last);
 }
             
+class Annotation {
+    public $typename;
+    public $var;
+
+    public function __construct($typename, $var){
+        $this->typename = $typename;
+        $this->var = $var;
+    }
+}
+
 class Token implements IPharenComparable, IPharenHashable{
     public $value;
     public $quoted;
@@ -102,6 +112,9 @@ class ReaderMacroToken extends Token{
 }
 
 class CommentToken extends Token{
+}
+
+class AnnotationToken extends Token{
 }
 
 class FuncValToken extends Token{
@@ -261,6 +274,9 @@ class Lexer{
                 $this->state = "append";
             }else if($this->char == '#'){
                 $this->tok = new FuncValToken;
+                $this->state = "append";
+            }else if($this->char == '^'){
+                $this->tok = new AnnotationToken;
                 $this->state = "append";
             }else if($this->char == ':' && $this->code[$this->i+1] != ':'){
                 $this->tok = new KeywordToken;
@@ -1047,6 +1063,7 @@ class LeafNode extends Node{
 
     public $value;
     public $tok;
+    public $annotation;
 
     public static function phpfy_name($name){
         $char_mappings = array(
@@ -1209,6 +1226,16 @@ class VariableNode extends LeafNode{
             return $varname;
         }
     }
+    
+    public function get_annotation(){
+        $varname = '$'.parent::compile();
+        $var = $this->get_scope()->find($varname, true, true);
+        if($var && isset($var->annotation)){
+            return $var->annotation;
+        }else{
+            return null;
+        }
+    }
 
     public function compile_nolookup(){
         return '$'.parent::compile();
@@ -1216,6 +1243,9 @@ class VariableNode extends LeafNode{
 }
 
 class SplatNode extends VariableNode{
+}
+
+class AnnotationNode extends LeafNode{
 }
 
 class StringNode extends LeafNode{
@@ -1545,6 +1575,8 @@ class FuncDefNode extends SpecialForm{
         foreach($varnames as $varname){
             if(is_array($varname)){
                 $varname = $varname[0];
+            }else if($varname instanceof Annotation){
+                $varname = $varname->var;
             }
             $lexings .= $this->scope->get_lexing($varname);
         }
@@ -1557,7 +1589,13 @@ class FuncDefNode extends SpecialForm{
             if($node instanceof VariableNode || $node instanceof UnquoteWrapper){
                 $params[] = $node->compile(True);
             }else if($node instanceof ListNode){
-                $params[] = array($node->children[0]->compile(True), $node->children[1]);
+                if ($node->children[0] instanceof AnnotationNode) {
+                    $typename = $node->children[0]->compile();
+                    $var = $node->children[1]->compile();
+                    $params[] = new Annotation($typename, $var);
+                }else{
+                    $params[] = array($node->children[0]->compile(True), $node->children[1]);
+                }
             }
         }
         return $params;
@@ -1571,7 +1609,13 @@ class FuncDefNode extends SpecialForm{
         if(is_array($param)){
             $this->scope->bind($param[0], $param[1]);
         }else{
-            $this->scope->bind($param, new LeafNode($this, Null, $param));
+            $val = new LeafNode($this, Null, $param);
+            if($param instanceof Annotation){
+                $val->annotation = $param->typename;
+                $this->scope->bind($param->var, $val);
+            } else {
+                $this->scope->bind($param, $val);
+            }
         }
     }
 
@@ -1587,6 +1631,8 @@ class FuncDefNode extends SpecialForm{
                 $default = $param[1]->compile();
             }
             $params .= ", ".$param[0].'='.$default;
+        }else if($param instanceof Annotation){
+            $params .= ",{$param->typename} {$param->var}";
         }else{
             $params .= ", $param";
         }
@@ -2136,6 +2182,45 @@ class ClassExtendsNode extends ClassNode{
     }
 }
 
+class DefTypeNode extends ClassNode{
+    static $type_attrs = array();
+
+    public $body_index = 2;
+
+    public function process_attrs(){
+        $attrs = array_slice($this->children, $this->body_index);
+        $attr_body = "";
+        $constructor_body = $this->format_line("parent::__construct("
+            .count($attrs).");");
+        $attrnames = array();
+        self::$type_attrs[$this->class_name] = array();
+        foreach($attrs as $index=>$attr){
+            $attrname = $attr->compile();
+            $attrnames[] = '$'.$attrname;
+            self::$type_attrs[$this->class_name][$attrname] = $index;
+            $attr_body .= $this->format_line("public $".$attrname.";");
+            $constructor_body .= $this->format_line('$this->'.$attrname.' = $'.$attrname.';');
+            $constructor_body .= $this->format_line("\$this[$index] = \$$attrname;");
+        }
+        $constructor_header = "function __construct("
+            .implode($attrnames, ", ")."){";
+        return $attr_body.$this->format_line($constructor_header)
+            .$constructor_body
+            .$this->format_line("}");
+    }
+
+    public function compile_statement(){
+        if(MacroNode::$ghosting)
+            return "";
+
+        $name = $this->children[1]->compile();
+        $this->class_name = $name;
+        $parent_class = "SplFixedArray";
+        $body = $this->process_attrs();
+        return $this->generate($name." extends ".$parent_class, $body);
+    }
+}
+
 class AccessModifierNode extends SpecialForm{
     public $body_index = 2;
 
@@ -2295,13 +2380,27 @@ class ListAccessNode extends Node{
 
     public function compile($prefix=""){
         $list_name_node = $this->children[0];
+        $type = Null;
         if($list_name_node instanceof LeafNode){
             $varname = $list_name_node->compile();
+            $type = $list_name_node->get_annotation();
         }else{
             $varname = '$__listAcessTmpVar'.self::$tmp_var++;
             Node::$tmp .= $varname.' = '.$this->children[0]->compile().";\n";
         }
         $indexes = "";
+
+        if(isset(DefTypeNode::$type_attrs[$type])){
+            $slice = array_slice($this->children, 1, 1);
+            $first_index_node = $slice[0];
+            $first_index = LeafNode::phpfy_name($first_index_node->value);
+            if(isset(DefTypeNode::$type_attrs[$type][$first_index])){
+                $attr_index = DefTypeNode::$type_attrs[$type][$first_index];
+                $indexes .= '['.$attr_index.']';
+                array_splice($this->children, 1, 1);
+            }
+        }
+
         foreach(array_slice($this->children, 1) as $index){
             $indexes .= '['.$index->compile().']';
         }
@@ -2734,6 +2833,7 @@ class Parser{
             "NumberToken" => "LeafNode",
             "FuncValToken" => "FuncValNode",
             "KeywordToken" => "KeywordNode",
+            "AnnotationToken" => "AnnotationNode",
             "SplatToken" => "SplatNode",
             "UnquoteToken" => "UnquoteNode",
             "UnstringToken" => "LeafNode"
@@ -2778,12 +2878,12 @@ class Parser{
             "class-extends" => array("ClassExtendsNode", "LeafNode", "LeafNode", self::$list_form, self::$values),
             "access" => array("AccessModifierNode", "LeafNode", "LeafNode", self::$values),
             "interface" => array("InterfaceNode", "LeafNode", "LeafNode", self::$values),
+            "deftype" => array("DefTypeNode", "LeafNode", "LeafNode", array("LeafNode")),
             "signature*" => array("SignatureNode", "LeafNode", "LeafNode", "LeafNode", "LiteralNode"),
             "keyword-call" => array("KeywordCallNode", "LeafNode", "LeafNode",  array("LeafNode")),
             "ns" => array("NamespaceNode", "LeafNode", array("LeafNode")),
             "use" => array("UseNode", "LeafNode", array("LeafNode")),
             "plambda" => array("PlambdaDefNode",  "LeafNode", "LiteralNode", self::$values),            
-            
         );
         
         $this->tokens = $tokens;
