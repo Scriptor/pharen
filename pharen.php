@@ -1343,7 +1343,11 @@ class SpecialForm extends Node{
 
     public function get_body_nodes(){
         # Where body is all but the last child of a special form node
+        # Weird hack used since before body->children and this->children
+        # pointed to the same array
+        $old_children = $this->children;
         $body = clone $this;
+        $body->children =& $old_children;
         $last_child = array_pop($body->children);
         foreach($body->children as $c){
             $c->parent = $body;
@@ -1509,6 +1513,9 @@ class FuncDefNode extends SpecialForm{
             }
             $body .= Node::add_tmp($recur);
             $x=0;
+            if ($this instanceof LambdaNode) {
+                array_pop($params);
+            }
             foreach($params as $param){
                 if(is_array($param)){
                     $param_name = $param[0];
@@ -1547,11 +1554,15 @@ class FuncDefNode extends SpecialForm{
     }
 
     public function is_tail_recursive($last_node){
+        if ($last_node instanceof QuoteWrapper ||
+            $last_node instanceof FuncDefNode) return False;
         $last_func_call = $last_node->get_last_func_call();
+        $last_func_call_val = $last_func_call->compile();
+        if ($last_func_call_val === "recur") return True;
         return count($this->children) > 3 &&
             !($this instanceof MacroNode) &&
             !($last_func_call instanceof EmptyNode)
-            && $this->children[1]->compile() == $last_func_call->compile();
+            && $this->children[1]->compile() == $last_func_call_val;
     }
 
     public function compile_last($node){
