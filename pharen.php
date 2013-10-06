@@ -876,9 +876,16 @@ class Node implements Iterator, ArrayAccess, Countable{
                     // This prevents it from adding unnecessary semicolons
                     $this->returns_special_form = True;
                 }else if(get_class($expanded) == 'Node'){
+                    $old_tmp = Node::$tmp;
+                    $old_prev_tmp = Node::$prev_tmp;
+                    $old_lambda_tmp = Node::$lambda_tmp;
                     if(MacroNode::is_macro($expanded->get_func_name())){
                         $this->returns_special_form = True;
                     }
+                    Node::add_tmp('');
+                    Node::$tmp = $old_tmp;
+                    Node::$prev_tmp = $old_prev_tmp;
+                    Node::$lambda_tmp = $old_lambda_tmp;
                 }
                 
                 if($is_statement){
