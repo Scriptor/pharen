@@ -36,7 +36,7 @@
 (check (when-not (== 1 2) #a) #a)
 
 (let [y 100]
-  (dotimes [x 100] (= y (+ x y)) (check y (+ x 100)))) 
+  (dotimes [x 100] (set! y (+ x 100)) (check y (+ x 100))))
     
 (check (zero? 0) TRUE)
 (check (zero? 1) FALSE)
