@@ -879,13 +879,16 @@ class Node implements Iterator, ArrayAccess, Countable{
                     $old_tmp = Node::$tmp;
                     $old_prev_tmp = Node::$prev_tmp;
                     $old_lambda_tmp = Node::$lambda_tmp;
+                    $old_tmpfunc = Node::$tmpfunc;
                     if(MacroNode::is_macro($expanded->get_func_name())){
                         $this->returns_special_form = True;
                     }
                     Node::add_tmp('');
+                    Node::add_tmpfunc('');
                     Node::$tmp = $old_tmp;
                     Node::$prev_tmp = $old_prev_tmp;
                     Node::$lambda_tmp = $old_lambda_tmp;
+                    Node::$tmpfunc = $old_tmpfunc;
                 }
                 
                 if($is_statement){
@@ -2408,6 +2411,7 @@ class ListAccessNode extends Node{
         }
         $indexes = "";
 
+        $start_child_index = 1;
         if(isset(DefTypeNode::$type_attrs[$type])){
             $slice = array_slice($this->children, 1, 1);
             $first_index_node = $slice[0];
@@ -2415,11 +2419,11 @@ class ListAccessNode extends Node{
             if(isset(DefTypeNode::$type_attrs[$type][$first_index])){
                 $attr_index = DefTypeNode::$type_attrs[$type][$first_index];
                 $indexes .= '['.$attr_index.']';
-                array_splice($this->children, 1, 1);
+                $start_child_index = 2;
             }
         }
 
-        foreach(array_slice($this->children, 1) as $index){
+        foreach(array_slice($this->children, $start_child_index) as $index){
             $indexes .= '['.$index->compile().']';
         }
         return $varname.$indexes;
