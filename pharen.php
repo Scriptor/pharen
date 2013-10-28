@@ -414,10 +414,14 @@ class Scope{
     public $lex_vars = False;
     public $virtual=False;
     public $id;
+    public $postfix;
+    public $replacements;
 
-    public function __construct($owner){
+    public function __construct($owner, $postfix=False, $replacements=array()){
         $this->owner = $owner;
         $this->id = self::$scope_id++;
+        $this->postfix = $postfix;
+        $this->replacements = $replacements;
         self::$scopes[$this->id] = $this;
     }
 
@@ -829,6 +833,10 @@ class Node implements Iterator, ArrayAccess, Countable{
                 $this->has_variable_func = True;
             }
             $func_name = $func_name_node->compile();
+
+            if(isset(ExpandableFuncNode::$funcs[$func_name])){
+                $func_node = ExpandableFuncNode::$funcs[$func_name];
+            }
         }
         return $func_name;
     }
@@ -850,6 +858,7 @@ class Node implements Iterator, ArrayAccess, Countable{
         $func_name = $this->get_func_name();
 
         $func = new FuncInfo($func_name, $this->force_not_partial, array_slice($this->children, 1), $this->get_scope());
+
         if(MicroNode::is_micro($func_name)){
             $micro = MicroNode::get_micro($func_name);
             return $micro->get_body(array_slice($this->children, 1), $this->indent);
@@ -910,6 +919,9 @@ class Node implements Iterator, ArrayAccess, Countable{
             }
         }else if(!$this->has_splice && $func->is_partial()){
             return $this->create_partial($func);
+        }else if(isset(ExpandableFuncNode::$funcs[$func_name])){
+            $func_node = ExpandableFuncNode::$funcs[$func_name];
+            return $func_node->inline(array_slice($this->children, 1));
         }
 
         $args = $this->compile_args(array_slice($this->children, 1));
@@ -1218,10 +1230,15 @@ class FuncValNode extends LeafNode{
 }
 
 class VariableNode extends LeafNode{
+    static $postfix_counter = 0;
     
     public function compile($in_binding=False){
         $scope = $this->get_scope();
         $varname = '$'.parent::compile();
+
+        if(isset($scope->replacements[$varname])){
+            return $scope->replacements[$varname];
+        }
 
         if($in_binding or $varname[1] == '$'){
             return $varname;
@@ -1426,6 +1443,7 @@ class FuncDefNode extends SpecialForm{
     public $scope;
 
     public $params = array();
+    public $param_vals = array();
     public $is_partial;
     public $name;
 
@@ -1541,18 +1559,18 @@ class FuncDefNode extends SpecialForm{
         }else{
             Node::$prev_tmp = "";
             $body .= count($body_nodes) > 0 ? parent::compile_body($body_nodes) : "";
-            $last = $last_node->compile_return();
+            $last = $this->compile_return_line($last_node);
             $body .= $last;
         }
         $body = $this->scope->get_lexical_bindings().$body;
         $lexings = $this->get_param_lexings($original_params);
 
-        $code = $this->format_line("function ".$this->name.$params_string."{", $prefix).
-            $splats.
-            $lexings.
-            $body.
-            $this->format_line("}").$this->format_line("");
+        $code = $this->wrap_fn_headers($body, $params_string, $prefix, $splats, $lexings);
 
+        return $this->handle_tmpfunc($code);
+    }
+
+    public function handle_tmpfunc($code){
         if(Node::$in_func > 1){
             Node::$in_func--;
             Node::$tmpfunc .= $code;
@@ -1561,6 +1579,18 @@ class FuncDefNode extends SpecialForm{
             Node::$in_func--;
             return Node::add_tmpfunc($code);
         }
+    }
+
+    public function wrap_fn_headers($body, $params_string, $prefix, $splats, $lexings){
+        return $this->format_line("function ".$this->name.$params_string."{", $prefix).
+            $splats.
+            $lexings.
+            $body.
+            $this->format_line("}").$this->format_line("");
+    }
+
+    public function compile_return_line($node){
+        return $node->compile_return();
     }
 
     public function is_tail_recursive($last_node){
@@ -1629,13 +1659,16 @@ class FuncDefNode extends SpecialForm{
     public function bind_param($param){
         if(is_array($param)){
             $this->scope->bind($param[0], $param[1]);
+            $this->param_vals[] = $param[0];
         }else{
             $val = new LeafNode($this, Null, $param);
             if($param instanceof Annotation){
                 $val->annotation = $param->typename;
                 $this->scope->bind($param->var, $val);
+                $this->param_vals[] = $param->var;
             } else {
                 $this->scope->bind($param, $val);
+                $this->param_vals[] = $param;
             }
         }
     }
@@ -1664,6 +1697,106 @@ class FuncDefNode extends SpecialForm{
         list($body_nodes, $last) = parent::split_body_last();
         $body_nodes = array_merge($body_nodes, $last->get_body_nodes());
         return array($body_nodes, $last->get_last_expr());
+    }
+}
+
+class ExpandableFuncNode extends FuncDefNode{
+    static $funcs = array();
+    static $inline_counter = 0;
+    static $tmp_var_counter = 0;
+
+    public $inlining = False;
+    public $tmp_var;
+
+    public static function get_next_tmp_var(){
+        return '$__inline_result'.self::$tmp_var_counter++;
+    }
+
+    public function compile_statement($prefix="", $replacements=array()){
+        $this->scope = new Scope($this, "__inline".self::$inline_counter++, $replacements);
+        $code = parent::compile_statement($prefix);
+        self::$funcs[$this->name] = $this;
+        return $code;
+    }
+
+    public function inline($args){
+        $this->inlining = true;
+        # Todo: Modify VariableNode to change every instance of param
+        # name to the argument
+        $replacements = array();
+        foreach($this->param_vals as $i=>$param) {
+            $arg = $args[$i];
+            if($arg instanceof LeafNode){
+                $replacements[$param] = $arg->compile();
+            }
+        }
+
+        $simple = False;
+        if(!$this->simple_inlinable()){
+            $this->tmp_var = self::get_next_tmp_var();
+        }else{
+            $simple = True;
+            $this->tmp_var = "";
+        }
+
+        $code = $this->compile_statement("", $replacements);
+
+        if(!$simple){
+            return $this->tmp_var;
+        }else{
+            return $code;
+        }
+    }
+
+    public function handle_tmpfunc($code){
+        if(!$this->inlining){
+            return parent::handle_tmpfunc($code);
+        }
+
+        return $code;
+    }
+
+    public function simple_inlinable(){
+        if (count($this->children) > 4) return False;
+        if($this->children[3] instanceof SpecialForm) return False;
+
+        return True;
+    }
+
+    public function wrap_fn_headers($body, $params_string, $prefix, $splats, $lexings){
+        if(!$this->inlining){
+            return parent::wrap_fn_headers($body, $params_string, $prefix, $splats, $lexings);
+        }
+
+        Node::$tmp .= $lexings;
+        Node::$tmp .= $splats;
+
+        if($this->simple_inlinable()){
+            return trim($body, " \t\n;");
+        }else{
+            Node::$tmp .= $body;
+            return "";
+        }
+    }
+
+    public function compile_return_line($node){
+        if(!$this->inlining){
+            return parent::compile_return_line($node);
+        }
+
+        if($this->tmp_var){
+            $prefix = $this->tmp_var.' = ';
+        } else {
+            $prefix = "";
+        }
+        return $node->compile_statement($prefix);
+    }
+
+    public function bind_params($params){
+        if(!$this->inlining){
+            return parent::bind_params($params);
+        }
+        return Null;
     }
 }
 
@@ -2677,7 +2810,10 @@ class BindingNode extends Node{
         if(MacroNode::$ghosting){
             return "";
         }
-        $scope = $this->scope = new Scope($this);
+        $parent_scope = $this->parent->get_scope();
+        $parent_postfix = $parent_scope->postfix;
+        $parent_replacements = $parent_scope->replacements;
+        $scope = $this->scope = new Scope($this, $parent_postfix, $parent_replacements);
         $scope->virtual = True;
 
         $pairs = $this->children[1]->children;
@@ -2879,6 +3015,7 @@ class Parser{
         self::$special_forms = array(
             "fn" => array("FuncDefNode", "LeafNode", "LeafNode", "LiteralNode", self::$values),
             "lambda" => array("LambdaNode", "LeafNode", "LiteralNode", self::$values),
+            "fun" => array("ExpandableFuncNode", "LeafNode", "LeafNode", "LiteralNode", self::$values),
             "do" => array("DoNode", "LeafNode", self::$values),
             "cond" => array("CondNode", "LeafNode", array(self::$cond_pair)),
             "if" => array("LispyIfNode", "LeafNode", self::$value, self::$value, self::$value),
