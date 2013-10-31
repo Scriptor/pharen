@@ -1237,7 +1237,8 @@ class VariableNode extends LeafNode{
         $varname = '$'.parent::compile();
 
         if(isset($scope->replacements[$varname])){
-            return $scope->replacements[$varname];
+            $replacement = $scope->replacements[$varname];
+            return $replacement;
         }
 
         if($in_binding or $varname[1] == '$'){
@@ -1704,16 +1705,28 @@ class ExpandableFuncNode extends FuncDefNode{
     static $funcs = array();
     static $inline_counter = 0;
     static $tmp_var_counter = 0;
+    static $replacement_counter = 0;
 
     public $inlining = False;
     public $tmp_var;
+    public $replacement_tmps;
 
     public static function get_next_tmp_var(){
         return '$__inline_result'.self::$tmp_var_counter++;
     }
 
+    public static function get_next_replacement_var(){
+        return '$__inline_arg'.self::$replacement_counter++;
+    }
+
     public function compile_statement($prefix="", $replacements=array()){
-        $this->scope = new Scope($this, "__inline".self::$inline_counter++, $replacements);
+        if(!$this->scope){
+            $this->scope = new Scope($this,
+                                     "__inline".self::$inline_counter++,
+                                     $replacements);
+        }else{
+            $this->scope->replacements = $replacements;
+        }
         $code = parent::compile_statement($prefix);
         self::$funcs[$this->name] = $this;
         return $code;
@@ -1728,6 +1741,11 @@ class ExpandableFuncNode extends FuncDefNode{
             $arg = $args[$i];
             if($arg instanceof LeafNode){
                 $replacements[$param] = $arg->compile();
+            } else {
+                $tmp_var = self::get_next_replacement_var();
+                $this->replacement_tmps .= $this->format_line($tmp_var
+                    .' = '.$arg->compile().';');
+                $replacements[$param] = $tmp_var;
             }
         }
 
@@ -1770,6 +1788,7 @@ class ExpandableFuncNode extends FuncDefNode{
 
         Node::$tmp .= $lexings;
         Node::$tmp .= $splats;
+        Node::$tmp .= $this->replacement_tmps;
 
         if($this->simple_inlinable()){
             return trim($body, " \t\n;");
