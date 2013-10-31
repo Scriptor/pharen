@@ -1011,6 +1011,7 @@ class RootNode extends Node{
     public static $ns;
     public static $ns_string;
     public static $uses = array();
+    public static $pharen_uses = array();
     public static $last_scope = Null;
 
     public function __construct($scope=Null){
@@ -1191,20 +1192,27 @@ class NamespaceNode extends KeywordCallNode{
 class UseNode extends KeywordCallNode{
 
     public function compile(){
-        $c = $this->compile_statement();
+        Node::$tmp .= $this->compile_statement();
         return "NULL";
     }
 
     public function compile_statement(){
         array_unshift($this->children, Null);
         $use = array($this->children[2]->compile());
+        $pharen_use = array($this->children[2]->value);
         if(isset($this->children[4])){
             $use []=$this->children[4]->compile();
+            $pharen_use []=$this->children[4]->value;
         }
         if(!isset(RootNode::$uses[RootNode::$ns])){
             RootNode::$uses[RootNode::$ns] = array();
+            RootNode::$pharen_uses[RootNode::$ns] = array();
         }
-        RootNode::$uses[RootNode::$ns] []= $use;
+
+        if(!isset(RootNode::$uses[RootNode::$ns][$use[0]])){
+            RootNode::$uses[RootNode::$ns][$use[0]] = $use;
+            RootNode::$pharen_uses[RootNode::$ns] []= $pharen_use;
+        }
 
         // Require needs to be added after the compilation is done
         $file = str_replace("\\", "/", $use[0]).".php";
