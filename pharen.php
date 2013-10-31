@@ -1723,9 +1723,9 @@ class ExpandableFuncNode extends FuncDefNode{
         if(!$this->scope){
             $this->scope = new Scope($this,
                                      "__inline".self::$inline_counter++,
-                                     $replacements);
+                                     new ArrayObject);
         }else{
-            $this->scope->replacements = $replacements;
+            $this->scope->replacements->exchangeArray($replacements);
         }
         $code = parent::compile_statement($prefix);
         self::$funcs[$this->name] = $this;
