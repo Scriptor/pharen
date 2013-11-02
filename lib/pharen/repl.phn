@@ -57,15 +57,15 @@
         (. "pharen" suffix))))
 
 (fn add-uses (code)
-  (let [use-str (if-let [uses (get (:: .RootNode ns) (:: .RootNode uses))]
+  (let [use-str (if-let [uses (get (:: .RootNode ns) (:: .RootNode pharen-uses))]
                   (reduce-to-str 
                     (lambda (ns)
                             (if (== (count ns) 2)
-                              (. "use " (:ns 0) " as " (:ns 1) ";\n")
-                              (. "use " (:ns 0) ";\n")))
+                              (. "(use " (:ns 0) " as " (:ns 1) ")\n")
+                              (. "(use " (:ns 0) ")\n")))
                     uses)
                   "")]
-    (substr-replace code use-str (+ (strpos code ";") 2) 0)))
+    (. use-str code)))
 
 (fn prn-result (x)
   (prn (cond
@@ -81,15 +81,14 @@
 
 (fn wrap-compile (code)
   (let [embedded-code (. "(local *1 " code ") (return *1)")
-        raw-ns (:: .RootNode raw-ns)]
-    (compile embedded-code NULL (phpfy-ns raw-ns) (:: .RootNode last-scope))))
+        raw-ns (:: .RootNode raw-ns)
+        final-code (add-uses embedded-code)]
+    (compile final-code NULL (phpfy-ns raw-ns) (:: .RootNode last-scope))))
 
 (fn compile-code (code)
   (local compiled-code (wrap-compile code))
   (if compiled-code
-    (let [with-uses (add-uses compiled-code)
-          final-code with-uses]
-      final-code)
+    compiled-code
     FALSE))
 
 (fn intro ()
