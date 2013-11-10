@@ -10,15 +10,14 @@
                   []
                   pairs))))
 
-
-(fn process-rule (rule)
-  (if (assoc? rule)
-    (let [rule (seq rule)]
-      (. (:rule 0 0) ": " (:rule 0 1) ";"))
-    (process-rules rule selector)))
-
 (fn process-rules (rules [parent-sel ""])
   (let [selector (trim (. parent-sel " " (first rules)))]
+    (fn process-rule (rule)
+      (if (assoc? rule)
+        (let [rule (seq rule)]
+          (. (:rule 0 0) ": " (:rule 0 1) ";"))
+        (process-rules rule selector)))
+
     (cons selector (map #process-rule (rest rules)))))
 
 (fn gen-css (rule-strs [start-indent ""])
