@@ -44,7 +44,7 @@ if(__FILE__ === realpath($_SERVER['SCRIPT_NAME'])){
             $existing_vars = get_defined_vars();
             include_once($last_file_php);
             $new_vars = get_defined_vars();
-            $repl_vars = array_diff_assoc($new_vars, $existing_vars);
+            $repl_vars = array_diff_key($new_vars, $existing_vars);
         }
         include_once("repl.php");
         NamespaceNode::$repling = True;
