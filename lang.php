@@ -532,9 +532,9 @@ function reduce_fns($fns, $acc, $xs){
 		if(empty__question($xs)){
 				return $acc;
 		}
-			$__tmpfuncname0 = first($fns);
+			$__tmpfuncname1 = first($fns);
 		$__tailrecursetmp0 = rest($fns);
-		$__tailrecursetmp1 = $__tmpfuncname0(first($xs), $acc);
+		$__tailrecursetmp1 = $__tmpfuncname1(first($xs), $acc);
 		$__tailrecursetmp2 = rest($xs);
 		$fns = $__tailrecursetmp0;
 		$acc = $__tailrecursetmp1;
