@@ -180,6 +180,9 @@
     (-> x (seq))
     (:: PharenList (seqify x))))
 
+(fun seq ([^Seq x])
+     x)
+
 (fn hashify (x)
   (if (inst? x PharenHashMap)
     x
