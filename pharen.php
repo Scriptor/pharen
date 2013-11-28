@@ -921,7 +921,29 @@ class Node implements Iterator, ArrayAccess, Countable{
             return $this->create_partial($func);
         }else if(isset(ExpandableFuncNode::$funcs[$func_name])){
             $func_node = ExpandableFuncNode::$funcs[$func_name];
-            return $func_node->inline(array_slice($this->children, 1));
+            $args = array_slice($this->children, 1);
+            $typesig = "";
+            foreach($args as $arg){
+                if($arg instanceof VariableNode){
+                    if($ann = $arg->get_annotation()){
+                        $typesig .= $ann;
+                    }
+                }
+            }
+
+            $typesig_found = False;
+            if($typesig !== ""){
+                $typesig_map = ExpandableFuncNode::$typesig_map;
+                $typed_name = $func_name.$typesig;
+                if(isset($typesig_map[$typed_name])){
+                    $func_node = $typesig_map[$typed_name];
+                    $typesig_found = True;
+                }
+            }
+
+            if(!$func_node->typed_only || $typesig_found){
+                return $func_node->inline(array_slice($this->children, 1));
+            }
         }
 
         $args = $this->compile_args(array_slice($this->children, 1));
@@ -1714,10 +1736,15 @@ class ExpandableFuncNode extends FuncDefNode{
     static $inline_counter = 0;
     static $tmp_var_counter = 0;
     static $replacement_counter = 0;
+    static $name_counters = array();
+    static $typesig_map = array();
 
     public $inlining = False;
     public $tmp_var;
     public $replacement_tmps;
+    public $typesig = "";
+    public $typed_only = False;
+    public $parent_name;
 
     public static function get_next_tmp_var(){
         return '$__inline_result'.self::$tmp_var_counter++;
@@ -1736,7 +1763,11 @@ class ExpandableFuncNode extends FuncDefNode{
             $this->scope->replacements->exchangeArray($replacements);
         }
         $code = parent::compile_statement($prefix);
-        self::$funcs[$this->name] = $this;
+
+        self::$funcs[$this->parent_name] = $this;
+        if($this->typesig !== ''){
+            self::$typesig_map[$this->parent_name.$this->typesig] = $this;
+        }
         return $code;
     }
 
@@ -1771,6 +1802,24 @@ class ExpandableFuncNode extends FuncDefNode{
             return $this->tmp_var;
         }else{
             return $code;
+        }
+    }
+
+    public function get_name(){
+        $this->parent_name = $parent_name = parent::get_name();
+        if($this->inlining){
+            return $parent_name;
+        }
+        if(!isset(self::$name_counters[$parent_name])){
+            self::$name_counters[$parent_name] = 1;
+            if (isset(FuncDefNode::$functions[$parent_name])){
+                $this->typed_only = True;
+                return $parent_name."1";
+            }else {
+                return $parent_name;
+            }
+        }else{
+            return $parent_name.self::$name_counters[$parent_name]++;
         }
     }
 
@@ -1817,6 +1866,15 @@ class ExpandableFuncNode extends FuncDefNode{
             $prefix = "";
         }
         return $node->compile_statement($prefix);
+    }
+
+    public function bind_param($param){
+        if($param instanceof Annotation){
+            $this->typesig .= $param->typename;
+        } else {
+            $this->typesig .= "Any";
+        }
+        parent::bind_param($param);
     }
 
     public function bind_params($params){
