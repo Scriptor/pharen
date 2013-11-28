@@ -50,6 +50,7 @@ if(__FILE__ === realpath($_SERVER['SCRIPT_NAME'])){
         NamespaceNode::$repling = True;
         pharen\repl\intro();
         compile_lang();
+        set_include_path(get_include_path() . PATH_SEPARATOR . getcwd());
         pharen\repl\work("", $repl_vars);
     }
     if(isset($_SERVER['REQUEST_METHOD'])){
