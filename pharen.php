@@ -910,10 +910,13 @@ class Node implements Iterator, ArrayAccess, Countable{
                 }else if($is_return){
                     return $expanded->compile_return();
                 }else{
+
                     return $expanded->compile();
                 }
             }else if(is_string($macro_result)){
                 return '"'.$macro_result.'"';
+            }else if(is_bool($macro_result) || $macro_result===Null){
+                return $macro_result ? "True" : "False";
             }else{
                 return $macro_result;
             }

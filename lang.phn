@@ -32,10 +32,12 @@
   (local old-ns (:: RootNode ns))
   (local old-ns_string (:: RootNode ns-string))
   (local lib-path (stream-resolve-include-path file))
-  (compile (file-get-contents lib-path))
-  (= (:: RootNode ns) old-ns)
-  (= (:: RootNode ns-string) old-ns-string)
-  FALSE)
+  (when lib-path
+    (compile (file-get-contents lib-path))
+    (= (:: RootNode ns) old-ns)
+    (= (:: RootNode ns-string) old-ns-string)
+    TRUE))
+
 
 (defmacro runtime (expr)
   '(let [time-start (microtime TRUE)
