@@ -28,15 +28,19 @@
      ((not ~e2) ~e2)
      (TRUE      ~e2)))
 
-(defmacro load (file)
+(defmacro load (name)
+  (def php-file (. name ".php"))
+  (local file (. name ".phn"))
   (local old-ns (:: RootNode ns))
+  (local raw-ns (:: RootNode raw-ns))
   (local old-ns_string (:: RootNode ns-string))
   (local lib-path (stream-resolve-include-path file))
   (when lib-path
-    (compile (file-get-contents lib-path))
+    (compile-file lib-path)
     (= (:: RootNode ns) old-ns)
     (= (:: RootNode ns-string) old-ns-string)
-    TRUE))
+    (= (:: RootNode raw-ns) raw-ns)
+    '(include ~php-file)))
 
 
 (defmacro runtime (expr)
