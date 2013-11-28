@@ -927,12 +927,16 @@ class Node implements Iterator, ArrayAccess, Countable{
                 if($arg instanceof VariableNode){
                     if($ann = $arg->get_annotation()){
                         $typesig .= $ann;
+                    }else{
+                        $typesig .= "Any";
                     }
+                }else{
+                    $typesig .= "Any";
                 }
             }
 
             $typesig_found = False;
-            if($typesig !== ""){
+            if(str_replace("Any", "", $typesig) !== ""){
                 $typesig_map = ExpandableFuncNode::$typesig_map;
                 $typed_name = $func_name.$typesig;
                 if(isset($typesig_map[$typed_name])){
