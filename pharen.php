@@ -1674,17 +1674,21 @@ class FuncDefNode extends SpecialForm{
 
     public function get_param_names($param_nodes){
         $params = array();
+        $last_ann = Null;
         foreach($param_nodes as $node){
             if($node instanceof VariableNode || $node instanceof UnquoteWrapper){
-                $params[] = $node->compile(True);
-            }else if($node instanceof ListNode){
-                if ($node->children[0] instanceof AnnotationNode) {
-                    $typename = $node->children[0]->compile();
-                    $var = $node->children[1]->compile();
+                if($last_ann !== Null){
+                    $typename = $last_ann->compile();
+                    $var = $node->compile();
                     $params[] = new Annotation($typename, $var);
+                    $last_ann = Null;
                 }else{
-                    $params[] = array($node->children[0]->compile(True), $node->children[1]);
+                    $params[] = $node->compile(True);
                 }
+            }else if($node instanceof AnnotationNode){
+                $last_ann = $node;
+            }else if($node instanceof ListNode){
+                $params[] = array($node->children[0]->compile(True), $node->children[1]);
             }
         }
         return $params;

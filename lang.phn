@@ -186,7 +186,7 @@
     (-> x (seq))
     (:: PharenList (seqify x))))
 
-(fun seq ([^Seq x])
+(fun seq (^Seq x)
      x)
 
 (fn hashify (x)
