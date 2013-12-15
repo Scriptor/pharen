@@ -2641,18 +2641,7 @@ class ListAccessNode extends Node{
         $indexes = "";
 
         $start_child_index = 1;
-        if(isset(DefTypeNode::$type_attrs[$type])){
-            $slice = array_slice($this->children, 1, 1);
-            $first_index_node = $slice[0];
-            $first_index = LeafNode::phpfy_name($first_index_node->value);
-            if(isset(DefTypeNode::$type_attrs[$type][$first_index])){
-                $attr_index = DefTypeNode::$type_attrs[$type][$first_index];
-                $indexes .= '['.$attr_index.']';
-                $start_child_index = 2;
-            }
-        }
-
-        foreach(array_slice($this->children, $start_child_index) as $index){
+        foreach(array_slice($this->children, 1) as $index){
             $indexes .= '['.$index->compile().']';
         }
         return $varname.$indexes;
