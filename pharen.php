@@ -2070,6 +2070,11 @@ class QuoteWrapper{
                 }
             }else if($tok->unquote_spliced){
                 $els = $scope->find($tok->value, True, Null, True);
+                if($els === False) {
+                    // els is a spliced variable that is not defined in the parameters
+                    // might be defined in the macro body or outside the macro entirely
+                    $els = $scope->find(LeafNode::phpfy_name(ltrim($tok->value, '-')), True, Null, False);
+                }
                 if($els === False){
                     $els_node = $scope->find($tok->value, True, Null, False);
                     if($els_node instanceof PharenCachedList){
