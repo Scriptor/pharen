@@ -2432,7 +2432,7 @@ class ClassExtendsNode extends ClassNode{
     }
 }
 
-class DefTypeNode extends ClassNode{
+class DefRecordNode extends ClassNode{
     static $type_attrs = array();
 
     public $body_index = 2;
@@ -3122,7 +3122,7 @@ class Parser{
             "class-extends" => array("ClassExtendsNode", "LeafNode", "LeafNode", self::$list_form, self::$values),
             "access" => array("AccessModifierNode", "LeafNode", "LeafNode", self::$values),
             "interface" => array("InterfaceNode", "LeafNode", "LeafNode", self::$values),
-            "deftype" => array("DefTypeNode", "LeafNode", "LeafNode", array("LeafNode")),
+            "defrecord" => array("DefRecordNode", "LeafNode", "LeafNode", array("LeafNode")),
             "signature*" => array("SignatureNode", "LeafNode", "LeafNode", "LeafNode", "LiteralNode"),
             "keyword-call" => array("KeywordCallNode", "LeafNode", "LeafNode",  array("LeafNode")),
             "ns" => array("NamespaceNode", "LeafNode", array("LeafNode")),
