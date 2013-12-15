@@ -2440,18 +2440,23 @@ class DefTypeNode extends ClassNode{
     public function process_attrs(){
         $attrs = array_slice($this->children, $this->body_index);
         $attr_body = "";
+        $constructor_body = "";
         $attrnames = array();
         self::$type_attrs[$this->class_name] = array();
+        $this->increase_indent();
         foreach($attrs as $index=>$attr){
             $attrname = $attr->compile();
             $attrnames[] = '$'.$attrname;
             self::$type_attrs[$this->class_name][$attrname] = $index;
+            $constructor_body .= $this->format_line_indent('$this->'.$attrname.' = $'.$attrname.';');
             $attr_body .= $this->format_line("public $".$attrname.";");
         }
+        $this->decrease_indent();
         $constructor_header = "function __construct("
             .implode($attrnames, ", ")."){";
-        return $this->format_line_indent($attr_body)
+        return $this->format_line($attr_body)
             .$this->format_line_indent($constructor_header)
+            .$constructor_body
             .$this->format_line_indent("}");
     }
 
