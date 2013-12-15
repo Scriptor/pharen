@@ -2440,8 +2440,6 @@ class DefTypeNode extends ClassNode{
     public function process_attrs(){
         $attrs = array_slice($this->children, $this->body_index);
         $attr_body = "";
-        $constructor_body = $this->format_line("parent::__construct("
-            .count($attrs).");");
         $attrnames = array();
         self::$type_attrs[$this->class_name] = array();
         foreach($attrs as $index=>$attr){
@@ -2449,14 +2447,12 @@ class DefTypeNode extends ClassNode{
             $attrnames[] = '$'.$attrname;
             self::$type_attrs[$this->class_name][$attrname] = $index;
             $attr_body .= $this->format_line("public $".$attrname.";");
-            $constructor_body .= $this->format_line('$this->'.$attrname.' = $'.$attrname.';');
-            $constructor_body .= $this->format_line("\$this[$index] = \$$attrname;");
         }
         $constructor_header = "function __construct("
             .implode($attrnames, ", ")."){";
-        return $attr_body.$this->format_line($constructor_header)
-            .$constructor_body
-            .$this->format_line("}");
+        return $this->format_line_indent($attr_body)
+            .$this->format_line_indent($constructor_header)
+            .$this->format_line_indent("}");
     }
 
     public function compile_statement(){
@@ -2465,9 +2461,8 @@ class DefTypeNode extends ClassNode{
 
         $name = $this->children[1]->compile();
         $this->class_name = $name;
-        $parent_class = "SplFixedArray";
         $body = $this->process_attrs();
-        return $this->generate($name." extends ".$parent_class, $body);
+        return $this->generate($name, $body);
     }
 }
 
