@@ -1,4 +1,6 @@
 pharen_old.php
 *.tmp
 *.swp
+lib/pharen/*.php
+examples/*.php
 .DS_Store
