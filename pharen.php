@@ -2070,18 +2070,13 @@ class QuoteWrapper{
                 }
             }else if($tok->unquote_spliced){
                 $els = $scope->find($tok->value, True, Null, True);
-                if($els === False) {
-                    // els is a spliced variable that is not defined in the parameters
-                    // might be defined in the macro body or outside the macro entirely
-                    $els = $scope->find(LeafNode::phpfy_name(ltrim($tok->value, '-')), True, Null, False);
-                }
                 if($els === False){
-                    $els_node = $scope->find($tok->value, True, Null, False);
-                    if($els_node instanceof PharenCachedList){
-                        $els = $els_node;
-                    }else{
-                        $els = $els_node;
-                    }
+                    $phpfied = LeafNode::phpfy_name($tok->value);
+                    $els = $scope->find(LeafNode::phpfy_name($tok->value), True, Null, False);
+                }
+                if($els instanceof Node){
+                    $closure_id = Lexical::get_closure_id(Node::$ns, $scope->id);
+                    $els = Lexical::get_lexical_binding(Node::$ns, $scope->id, '$'.$phpfied, $closure_id);
                 }
                 foreach($els as $el){
                     if($el instanceof PharenList && isset($el->delimiter_tokens)){
@@ -2451,10 +2446,11 @@ class DefRecordNode extends ClassNode{
         $this->increase_indent();
         foreach($attrs as $index=>$attr){
             $attrname = $attr->compile();
-            $attrnames[] = '$'.$attrname;
+            $no_dollar = substr($attrname, 1);
+            $attrnames[] = $attrname;
             self::$type_attrs[$this->class_name][$attrname] = $index;
-            $constructor_body .= $this->format_line_indent('$this->'.$attrname.' = $'.$attrname.';');
-            $attr_body .= $this->format_line("public $".$attrname.";");
+            $constructor_body .= $this->format_line_indent('$this->'.$no_dollar.' = '.$attrname.';');
+            $attr_body .= $this->format_line("public ".$attrname.";");
         }
         $this->decrease_indent();
         $constructor_header = "function __construct("
@@ -2472,7 +2468,17 @@ class DefRecordNode extends ClassNode{
         $name = $this->children[1]->compile();
         $this->class_name = $name;
         $body = $this->process_attrs();
-        return $this->generate($name, $body);
+        return $this->format_statement($this->generate($name, $body));
+    }
+
+    public function compile(){
+        Node::$tmp .= $this->compile_statement();
+        return '$'.$this->class_name;
+    }
+
+    public function compile_as_string(){
+        Node::$tmp .= $this->compile_statement();
+        return '"'.$this->class_name.'"';
     }
 }
 
@@ -3127,7 +3133,7 @@ class Parser{
             "class-extends" => array("ClassExtendsNode", "LeafNode", "LeafNode", self::$list_form, self::$values),
             "access" => array("AccessModifierNode", "LeafNode", "LeafNode", self::$values),
             "interface" => array("InterfaceNode", "LeafNode", "LeafNode", self::$values),
-            "defrecord" => array("DefRecordNode", "LeafNode", "LeafNode", array("LeafNode")),
+            "defrecord" => array("DefRecordNode", "LeafNode", "LeafNode", self::$values),
             "signature*" => array("SignatureNode", "LeafNode", "LeafNode", "LeafNode", "LiteralNode"),
             "keyword-call" => array("KeywordCallNode", "LeafNode", "LeafNode",  array("LeafNode")),
             "ns" => array("NamespaceNode", "LeafNode", array("LeafNode")),
