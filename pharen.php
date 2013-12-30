@@ -443,7 +443,7 @@ class Scope{
     }
 
     public function rescope($var_name){
-            Node::$post_tmp .= $this->owner->format_line_indent("Scope::\$scopes['{$this->id}']->bindings['$var_name'] = $var_name;");
+        Node::$post_tmp .= $this->owner->format_line_indent("Scope::\$scopes['{$this->id}']->bindings['$var_name'] = $var_name;");
     }
 
     public function get_binding($var_name){
@@ -875,7 +875,7 @@ class Node implements Iterator, ArrayAccess, Countable{
 
             $macro_result = call_user_func_array($func_name, $arg_values);
             if($macro_result instanceof QuoteWrapper){
-                $tokens = $macro_result->get_tokens();
+                $tokens = $macro_result->get_tokens(Null, $this->get_scope());
                 $parser = new Parser($tokens);
                 $macro_result = $parser->parse($this->parent);
                 $count = count($this->parent->children);
@@ -910,7 +910,6 @@ class Node implements Iterator, ArrayAccess, Countable{
                 }else if($is_return){
                     return $expanded->compile_return();
                 }else{
-
                     return $expanded->compile();
                 }
             }else if(is_string($macro_result)){
@@ -1947,7 +1946,7 @@ class MacroNode extends FuncDefNode{
             $scope->bind_tok($param_node->compile(True), $tok);
             if($tok instanceof PharenCachedList){
                 $scope->bind($param_node->compile(True), self::get_values_from_list($tok));
-            }else if($tok instanceof PharenHashMap){
+            }else if($tok instanceof PharenHashMap || $tok instanceof QuoteWrapper){
                 $scope->bind($param_node->compile(True), $tok);
             }else{
                 $scope->bind($param_node->compile(True), $tok->value);
@@ -2028,6 +2027,10 @@ class QuoteWrapper{
         $this->literal_id = $literal_id;
     }
 
+    public function str(){
+        return 'MacroNode::$literals['.$this->literal_id.']';
+    }
+
     public function compile_return(){
         $tmpfunc = Node::$tmpfunc;
         // Only compile to put any variables in scope
@@ -2036,12 +2039,35 @@ class QuoteWrapper{
         MacroNode::downghost();
         Node::$tmpfunc = $tmpfunc;
         Node::add_tmp('');
-        return 'return MacroNode::$literals['.$this->literal_id.'];'."\n";
+        return $this->format_line("return ".$this->str().";");
     }
 
-    public function get_tokens(){
-        $tokens = $this->node->get_tokens();
-        $scope = $this->node->parent->get_scope();
+    public function convert_to_list($return_as_array=False, $get_value=False){
+        $old_tokens = $this->node->tokens;
+        $this->node->tokens = $this->str_tokens(True);
+        $list = $this->node->convert_to_list($return_as_array, $get_value);
+        $this->node->tokens = $old_tokens;
+        return $list;
+    }
+
+    public function str_tokens($trim_parens=False){
+        $pharen_code = "(:: MacroNode (:literals {$this->literal_id}))";
+        $lexer = new Lexer($pharen_code);
+        $toks = $lexer->lex();
+        if($trim_parens){
+            return array_slice($toks, 1, -1);
+        }else{
+            return $toks;
+        }
+    }
+
+    public function get_tokens($tokens=Null, $caller_scope=Null){
+        if($tokens === Null) {
+            $tokens = $this->node->get_tokens();
+            $scope = $this->node->parent->get_scope();
+        }else{
+            $scope = $caller_scope;
+        }
         $new_tokens = array();
         $this->lexer = new Lexer("");
         foreach($tokens as $key=>$tok){
@@ -2061,7 +2087,10 @@ class QuoteWrapper{
                 }
                 if($val instanceof PharenList || $val instanceof PharenHashMap){
                     $flattened = $this->flatten($val);
+                    $flattened = $this->get_tokens($flattened, $caller_scope);
                     $new_tokens = array_merge($new_tokens, $flattened);
+                }else if($val instanceof QuoteWrapper){
+                    $new_tokens = array_merge($new_tokens, $val->str_tokens());
                 }else{
                     if($tok->value[0]=='-'){
                         $val = new UnstringToken(is_string($val) ? $val : $val->value);
@@ -2072,7 +2101,7 @@ class QuoteWrapper{
                 $els = $scope->find($tok->value, True, Null, True);
                 if($els === False){
                     $phpfied = LeafNode::phpfy_name($tok->value);
-                    $els = $scope->find(LeafNode::phpfy_name($tok->value), True, Null, False);
+                    $els = $scope->find($phpfied, True, Null, False);
                 }
                 if($els instanceof Node){
                     $closure_id = Lexical::get_closure_id(Node::$ns, $scope->id);
@@ -2240,11 +2269,13 @@ class SpliceWrapper extends UnquoteWrapper{
         if(MacroNode::$ghosting){
             return array();
         }
+
         if($this->as_collection){
             return $this->exprs;
         }else{
             $varname = str_replace('@', '', $this->node->compile(True));
-            return $this->get_scope()->find($varname, True);
+            $scope = $this->get_scope();
+            return $scope->find($varname, True, Null, True);
         }
     }
 
@@ -2434,6 +2465,7 @@ class ClassExtendsNode extends ClassNode{
 
 class DefRecordNode extends ClassNode{
     static $type_attrs = array();
+    static $existing_records = array();
 
     public $body_index = 2;
 
@@ -2445,8 +2477,13 @@ class DefRecordNode extends ClassNode{
         self::$type_attrs[$this->class_name] = array();
         $this->increase_indent();
         foreach($attrs as $index=>$attr){
-            $attrname = $attr->compile();
-            $no_dollar = substr($attrname, 1);
+            $attrname = trim($attr->compile(), '"');
+            if($attrname[0] === '$'){
+                $no_dollar = substr($attrname, 1);
+            }else{
+                $no_dollar = $attrname;
+                $attrname = '$'.$attrname;
+            }
             $attrnames[] = $attrname;
             self::$type_attrs[$this->class_name][$attrname] = $index;
             $constructor_body .= $this->format_line_indent('$this->'.$no_dollar.' = '.$attrname.';');
@@ -2467,6 +2504,7 @@ class DefRecordNode extends ClassNode{
 
         $name = $this->children[1]->compile();
         $this->class_name = $name;
+        self::$existing_records[$this->children[1]->value] = $this;
         $body = $this->process_attrs();
         return $this->format_statement($this->generate($name, $body));
     }
@@ -3133,7 +3171,7 @@ class Parser{
             "class-extends" => array("ClassExtendsNode", "LeafNode", "LeafNode", self::$list_form, self::$values),
             "access" => array("AccessModifierNode", "LeafNode", "LeafNode", self::$values),
             "interface" => array("InterfaceNode", "LeafNode", "LeafNode", self::$values),
-            "defrecord" => array("DefRecordNode", "LeafNode", "LeafNode", self::$values),
+            "defrecord" => array("DefRecordNode", "LeafNode", "LeafNode", array("VariableNode")),
             "signature*" => array("SignatureNode", "LeafNode", "LeafNode", "LeafNode", "LiteralNode"),
             "keyword-call" => array("KeywordCallNode", "LeafNode", "LeafNode",  array("LeafNode")),
             "ns" => array("NamespaceNode", "LeafNode", array("LeafNode")),
