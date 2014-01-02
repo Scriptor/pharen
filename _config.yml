@@ -1,0 +1,2 @@
+exclude: ['phakefile.php', 'lib', 'examples']
+watch: true
