@@ -130,6 +130,9 @@
 (fn true? (x)
   (=== TRUE x))
 
+(fn null? (x)
+  (=== NULL x))
+
 (fn zero? (n)
   (=== n 0))
 
