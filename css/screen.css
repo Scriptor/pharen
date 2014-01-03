@@ -1,85 +1,40 @@
-* {
-	margin: 0px;
-	padding: 0px;
+pre {
+    background-color: inherit;
+    border: none;
 }
-body {
-	height: 100%;
-	width: 100%;
-	background-color: white;
-	font-family: 'verdana';
+
+.btn-xlarge {
+    padding: 18px 28px;
+    font-size: 22px;
+    line-height: normal;
+    -webkit-border-radius: 8px;
+       -moz-border-radius: 8px;
+            border-radius: 8px;
 }
-#topbar {
-	margin-left: 20%;
-	margin-right: 20%;
-	margin-top: 20px;
-	border-bottom: 1px solid black;
-	padding-bottom: 2px;
-	text-align: center;
-}
+
 #content {
-	margin-top: 5%;
-	padding-bottom: 3%;
-	width: 60%;
-	float: left;
-}
-#content ul,ol{
-	padding-left: 3%;
-}
-#content ul{
-	list-style-type: square;
-}
-#content ul li,ol li{
-	font-size: 0.9em;
-	margin-bottom: 3px;
+    margin-top: 3%;
 }
 
-#sidebar {
-	width: 15%;
-	margin-right: 3%;
-	margin-top: 10%;
-	margin-left: 5%;
-	float: left;
-}
-#sidebar ul{
-	list-style: none;
-}
-#sidebar ul li{
-	font-size: 0.9em;
-	border-left: 2px solid #999;
-	padding: 6px 6px;
-	padding-right: 8px;
-}
-#sidebar ul li:hover {
-	border-left: 2px solid black;
-}
-#sidebar ul li a{
-    text-decoration: none;
+.sample {
+    display: none;
 }
 
-h2{
-	font-size: 1.2em;
-	margin-bottom: 15px;
+.highlight {
+    border-radius: 20px;
 }
-h3{
-	margin-top: 17px;
-	font-size: 1.05em;
+
+.highlight code {
+    font-size: 1.12em;
+    font-family: 'Inconsolata', Monospace;
+}    
+
+.more {
+    margin-top: 7%;
 }
-h4{
-    font-size: 0.8em;
-}
-p{
-	margin-bottom: 10px;
-	clear: both;
-	display: block;
-	font-size: 0.9em;
-}
-div.code-left {
-	float: left;
-}
-div.code-right{
-	float: left;
-	height: inherit;
-	padding-left: 15px;
-	border-left: 1px solid #DDD;
-    margin-right: -400px;
+
+.more .download {
+    max-height: 100px;
+    padding: 5px;
+    border: 2px solid black;
 }
