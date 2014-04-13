@@ -3,21 +3,20 @@ layout: default
 title: Introduction to Pharen
 ---
 
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-md-4 col-md-offset-5">
-            <h2>Pharen: Lisp -> PHP</h2>
+<div class="container">
+    <div id="header" class="row">
+        <div class="col-md-4 col-md-offset-4">
+            <a href='index.html'><h2>Pharen: Lisp to PHP</h2></a>
         </div>
     </div>
     <div class="row">
-        <div class="col-md-3 col-md-offset-3">
+        <div class="col-md-4 col-md-offset-1">
             <p class="lead">
                 Pharen is a Lisp
                 that compiles to PHP, with macros, lexical closures, and more parentheses.
             </p>
         </div>
-
-        <div class='col-md-3'>
+        <div id='samples' class='col-md-4 col-md-offset-1'>
             <div class='sample'>
 {% highlight clojure %}
 (fn greet-person (name)
@@ -30,8 +29,8 @@ title: Introduction to Pharen
 
             <div class='sample'>
 {% highlight clojure %}
-(map (* 2) [1 2 3 4])
-; => [2 4 6 8]
+pharen.repl> (map (* 2) [1 2 3 4])
+[2 4 6 8]
 {% endhighlight %}
             </div>
 
@@ -43,14 +42,95 @@ title: Introduction to Pharen
     (* n (factorial (dec n)))))
 {% endhighlight %}
             </div>
+
+            <div class='sample'>
+{% highlight clojure %}
+pharen.repl> ({:foo "bar" 123 :456} "foo")
+"bar"
+{% endhighlight %}
+            </div>
         </div>
     </div>
-    <div class="row more">
-        <div class="col-md-3 col-md-offset-1 download">
-            <h3>Getting Started<h3>
-            <div class="box">
-            
-            </div>
+
+    <div id="more" class="row">
+        <div id='get-it' class="col-md-3 col-md-offset-1 box">
+            <h3>Get it</h3>
+            <a href='/download.html'>
+                <h3>Download Pharen 0.6</h3>
+            </a>
+        </div>
+        <div class="col-md-5 col-md-offset-2 box">
+            <h3>Learn</h3>
+            <a href='/repl.html'>
+                <h3>Start with the (offline) REPL</h3>
+            </a>
+            <a href='/tutorial.html'>
+                <h3>And then onto the tutorial</h3>
+            </a>
+            <a href='/reference.html'>
+                <h3>Finally, read the reference for fun!</h3>
+            </a>
+        </div>
+    </div>
+    <div id="features" class="row box">
+        <h3>Features (click to expand)</h3>
+        <div id='feature-names' class="col-md-9 col-md-offset-1">
+            <ul class='list-group'>
+                <a href='#macros' id='macros' class='list-group-item'>
+                    <h3 class="list-group-item-heading">Macros</h3>
+                    <p class="list-group-item-text">
+                        Lisp-style macros allow manipulation of code as
+                        lists at compile time, enabling the creation
+                        of new special forms.
+                    </p>
+                    <div class='feature-info'>
+{% highlight clojure %}
+(defmacro when (condition &body)
+  '(if ~condition
+     (do
+       ~@body)
+     NULL))
+{% endhighlight %}
+                    </div>
+                </a>
+                <a  href='#closures' id='closures' class='list-group-item'>
+                    <h3 class="list-group-item-heading">Closures</h3>
+                    <p class="list-group-item-text">
+                        Everything is lexically scoped, unlike in PHP
+                        there is no `use` keyword and manual management
+                        of captured variables.
+                    </p>
+                    <div class='feature-info'>
+{% highlight clojure %}
+(fn make-greeter (greeting)
+  (lambda (name)
+          (. greeting " " name)))
+
+((make-greeter "Hello") "World!")
+; => Hello World!
+{% endhighlight %}
+                    </div>
+                </a>
+                <a  href='#oop' id='oop' class='list-group-item'>
+                    <h3 class="list-group-item-heading">OOP and Namespace Integration</h3>
+                    <p class="list-group-item-text">
+                        Work with or create new objects and namespaces,
+                        making integration into existing codebases possible.
+                        Here is an example derived from the Laravel docs.
+                    </p>
+                    <div class='feature-info'>
+{% highlight clojure %}
+(ns laravel-app.pharen)
+
+(->
+  (:: Route (get "user/{name}"
+                 (lambda ()
+                         "Users!")))
+  (where "name" "[A-Za-z]+")
+{% endhighlight %}
+                    </div>
+                </a>
+            </ul>
         </div>
     </div>
     <!--
@@ -63,9 +143,8 @@ title: Introduction to Pharen
     -->
     <script type="text/javascript">
         $(function() {
-            var $codeSamples = $('div.sample');
+            var $codeSamples = $('#samples .sample');
             var random = Math.floor(Math.random() * $codeSamples.length);
-            console.log($codeSamples.eq(random-1)[0], random);
             $codeSamples.eq(random).css('display', 'block');
         });
     </script>

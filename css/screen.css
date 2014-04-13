@@ -1,40 +1,85 @@
+body {
+    color: #000;
+}
+
 pre {
     background-color: inherit;
     border: none;
 }
 
-.btn-xlarge {
-    padding: 18px 28px;
-    font-size: 22px;
-    line-height: normal;
-    -webkit-border-radius: 8px;
-       -moz-border-radius: 8px;
-            border-radius: 8px;
-}
+#header {
+    margin-top: 4%;
+    margin-bottom: 4%; }
+    #header h2 {
+        margin-top: 1%;
+    }
 
-#content {
-    margin-top: 3%;
-}
-
-.sample {
+#samples .sample {
     display: none;
+}
+
+#more {
+    margin-top: 6%;
 }
 
 .highlight {
     border-radius: 20px;
 }
+    .highlight code {
+        font-size: 1.12em;
+        font-family: 'Inconsolata', Monospace;
+    }
 
-.highlight code {
-    font-size: 1.12em;
-    font-family: 'Inconsolata', Monospace;
-}    
+.box {
+    font-size: 1.6em;
+}
+    .box > h3 {
+        text-decoration: underline;
+        margin-left: 40%;
+    }
 
-.more {
-    margin-top: 7%;
+#get-it a > h3 {
+    text-align: center;
+    border: 1px solid #EEE;
+    height: 50px;
+    line-height: 50px;
+}
+    #get-it a > h3:hover {
+        border-color: #DDD;
+    }
+
+#features {
+    font-size: 1.3em;
 }
 
-.more .download {
-    max-height: 100px;
-    padding: 5px;
-    border: 2px solid black;
-}
+    #features>h3 {
+        margin-left: 35%;
+    }
+
+    #features code {
+        font-size: 1.3em;
+    }
+
+    #features a.list-group-item {
+        outline: none;
+        background-color: #FFF;
+        text-align: left;
+    }
+        #features a.list-group-item:hover {
+            border-left-color: #DDD;
+            border-right-color: #DDD;
+            border-left-width: 2px;
+            border-right-width: 2px;
+            padding-left: 14px;
+            padding-right: 14px;
+        }
+
+    #features .list-group-item .feature-info {
+        display: none;
+    }
+
+    #features .list-group-item:target .feature-info {
+        outline: none;
+        display: block;
+        outline: none;
+    }
