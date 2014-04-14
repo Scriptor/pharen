@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>{{ page.title }}</title>
+	
+    <script src="http://code.jquery.com/jquery-latest.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+
+    <link href='http://fonts.googleapis.com/css?family=Inconsolata' rel='stylesheet' type='text/css'>
+    <link href="css/bootstrap.css" rel="stylesheet">
+	<link rel='stylesheet' href='css/tomorrow.css'/>
+    <link href="css/page.css" rel="stylesheet">
+</head>
+<body>
+	<div id='content' class="row col-md-10">
+        <div id="navbar">
+            <ul>
+            {% for section in page.sections %}
+                <li>
+                    <a href='#{{ section }}'>{{ section | replace: '-', ' ' | capitalize }}</a>
+                </li>
+            {% endfor %}
+            </ul>
+        </div>
+        <div class="col-md-9 col-md-offset-3">
+            {{ content }}
+        </div>
+	</div>
+	
+	<script type="text/javascript">
+
+	  var _gaq = _gaq || [];
+	  _gaq.push(['_setAccount', 'UA-2124259-2']);
+	  _gaq.push(['_trackPageview']);
+
+	  (function() {
+	    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+	    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+	    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+	  })();
+
+	</script>
+</body>
+</html>
