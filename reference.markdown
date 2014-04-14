@@ -1,11 +1,16 @@
 ---
-layout: default
+layout: page
 title: Pharen Language Reference
+sections: ['basics', 'expressions', 'infix-operators', 'defining-variables', 'lists',
+            'dictionaries', 'variables-as-functions', 'if', 'do', 'cond',
+            'functions', 'scope', 'lambdas', 'object-integration', 'macros']
 ---
 
 ## Pharen Language Reference ##
-### Data Types and Basics ### {#data-types-and-basics}
+
+### Data Types and Basics ### {#basics}
 Since much of the reference relies on using code examples, the following list of points should be read to ensure the examples are fully understood.
+
 - Comments start with a semicolon and go to the end of the line.
 - Numbers (integers, floats, and positive/negative numbers) work as they do in PHP.
 - Strings are always double-quoted and are equivalent to PHP's double-quoted strings. All escape characters will work, and a double-quote inside a string can be escaped as well.

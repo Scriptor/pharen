@@ -1,1 +1,2 @@
 exclude: ['phakefile.php', 'lib', 'examples']
+markdown: kramdown
