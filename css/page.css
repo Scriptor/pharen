@@ -19,17 +19,47 @@ li {
     font-size: 1.3em;
 }
 
-#navbar {
-    position: fixed;
-    margin: 3%;
-    font-size: 1em;
-    padding-right: 8px;
-    border: 2px solid #DDD;
+nav a.navbar-brand {
+    font-size: 1.8em;
 }
 
-#navbar ul {
-    list-style: none;
+#navbar {
+    position: fixed;
+    margin-top: 3%;
+    margin-left: 1%;
 }
+
+@media (max-width: 1050px) {
+    #navbar {
+        position: relative;
+    }
+}
+
+    #navbar ul {
+        list-style: none;
+    }
+
+    #navbar li {
+        font-size: 1.2em;
+        padding: 4px;
+        border: 2px solid #F9F9F9;
+        border-top: 0px;
+    }
+    #navbar li:first-child {
+        border-top: 2px solid #F9F9F9;
+    }
+    #navbar li:hover {
+        border-left: 4px solid #DDD;
+    }
+    #navbar li:hover > a {
+        color: #777;
+    }
+    #navbar li > a {
+        color: #999;
+    }
+    #navbar li > a:hover {
+        text-decoration: none;
+    }
 
 .highlight {
     border-radius: 20px;
