@@ -1,0 +1,40 @@
+body {
+    color: #000;
+}
+
+pre {
+    background-color: inherit;
+    border: none;
+}
+
+h3 {
+    font-weight: bold;
+}
+
+p {
+    font-size: 1.4em;
+}
+
+li {
+    font-size: 1.3em;
+}
+
+#navbar {
+    position: fixed;
+    margin: 3%;
+    font-size: 1em;
+    padding-right: 8px;
+    border: 2px solid #DDD;
+}
+
+#navbar ul {
+    list-style: none;
+}
+
+.highlight {
+    border-radius: 20px;
+}
+    .highlight code {
+        font-size: 1.12em;
+        font-family: 'Inconsolata', Monospace;
+    }
