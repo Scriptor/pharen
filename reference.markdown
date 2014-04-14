@@ -1,9 +1,11 @@
 ---
 layout: page
 title: Pharen Language Reference
+name: reference
 sections: ['basics', 'expressions', 'infix-operators', 'defining-variables', 'lists',
             'dictionaries', 'variables-as-functions', 'if', 'do', 'cond',
             'functions', 'scope', 'lambdas', 'object-integration', 'macros']
+active: active
 ---
 
 ## Pharen Language Reference ##

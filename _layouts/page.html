@@ -9,19 +9,26 @@
     <link href='http://fonts.googleapis.com/css?family=Inconsolata' rel='stylesheet' type='text/css'>
     <link href="css/bootstrap.css" rel="stylesheet">
 	<link rel='stylesheet' href='css/tomorrow.css'/>
-    <link href="css/page.css" rel="stylesheet">
+    <link href="css/page.css" rel="stylesheet"/>
 </head>
 <body>
     <nav class="navbar navbar-default" role="navigation">
         <a class="navbar-brand" href="/">Pharen</a>
         <ul class="navbar-nav nav">
-            <li>
+            {% if page.name == "download" %}
+                {% assign dl_active = "active" %}
+            {% elsif page.name == "tutorial" %}
+                {% assign tl_active = "active" %}
+            {% elsif page.name == "reference" %}
+                {% assign rf_active = "active" %}
+            {% endif %}
+            <li class="{{ dl_active }}">
                 <a href="/download.html">Download</a>
             </li>
-            <li>
+            <li class="{{ tl_active }}">
                 <a href="/tutorial.html">Tutorial</a>
             </li>
-            <li class="active">
+            <li class="{{ rf_active }}">
                 <a href="/reference.html">Reference</a>
             </li>
         </ul>

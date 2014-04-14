@@ -1,9 +1,10 @@
 ---
-layout: default
+layout: page
 title: Pharen Tutorial
+name: tutorial
 ---
 
-### About this tutorial{#goal}
+### About this tutorial {#about}
 This tutorial will you get started with Pharen by writing a bare-bones pastebin. Each section is split into a code-centered portion and a more in-depth explanation. Every code sample starts with a comment containing the filename the code should go in. You can initially skip the in-depth stuff to get something up and running fast, then read the rest later. The finished code for the pastebin is available [on Github](http://github.com/scriptor/pastebin).
 
 ### Prerequisites {#prerequisites}
@@ -26,12 +27,12 @@ Open a text editor (any should work) and enter the following code:
 {% highlight clojure %}
 ; hello.phn
 ; This is a comment and won't show up
-(print "Hello, world!")
+(prn "Hello, world!")
 {% endhighlight %}
 
 Save this in your server's document root directory as `hello.phn`. From inside this directory run the following command to compile it:
 
-{% highlight bash %}
+{% highlight sh %}
 $ pharen hello.phn
 {% endhighlight %}
 

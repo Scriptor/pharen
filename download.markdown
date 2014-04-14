@@ -1,6 +1,7 @@
 ---
-layout: default
+layout: page
 title: Download and Install
+name: download
 ---
 
 ## Downloading and Usage ##
@@ -9,14 +10,14 @@ title: Download and Install
 You can download Pharen [from Github](http://github.com/Scriptor/pharen/archives/master).
 If you have Git installed, you can also run:
 
-{% highlight bash %}
+{% highlight sh %}
 $ git clone git://github.com/Scriptor/pharen.git
 {% endhighlight %}
 
 ### Installing Pharen ### {#installing-pharen}
 After downloading Pharen, `cd` into its directory and run:
 
-{% highlight bash %}
+{% highlight sh %}
 $ sudo ./install.sh
 {% endhighlight %}
 
@@ -25,7 +26,7 @@ For now there is only an install script for Unix systems.
 ### Using Pharen ### {#using-pharen}
 To use the compiler:
 
-{% highlight bash %}
+{% highlight sh %}
 $ pharen your_file.phn
 {% endhighlight %}
 
@@ -35,7 +36,7 @@ for a Pharen file extension, although you can use your own.
 
 Adding more file names causes each file to be compiled in order:
 
-{% highlight bash %}
+{% highlight sh %}
 $ pharen your_file.phn file2.phn file3.phn fileN.phn
 {% endhighlight %}
 
