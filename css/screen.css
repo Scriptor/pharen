@@ -7,6 +7,13 @@ pre {
     border: none;
 }
 
+nav a.navbar-brand {
+    font-size: 1.4em;
+}
+
+li {
+    font-size: 1.3em;
+}
 #header {
     margin-top: 4%;
     margin-bottom: 4%; }
@@ -37,15 +44,21 @@ pre {
         text-decoration: underline;
         margin-left: 40%;
     }
+    .box a:hover {
+        text-decoration: none;
+    }
 
 #get-it a > h3 {
     text-align: center;
     border: 1px solid #EEE;
+    border-radius: 10px;
     height: 50px;
     line-height: 50px;
+    background-color: #F8F8F8;
 }
     #get-it a > h3:hover {
         border-color: #DDD;
+        background-color: #F4F4F4;
     }
 
 #features {

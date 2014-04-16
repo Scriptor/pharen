@@ -21,6 +21,8 @@
                 {% assign tl_active = "active" %}
             {% elsif page.name == "reference" %}
                 {% assign rf_active = "active" %}
+            {% elsif page.name == "contribute" %}
+                {% assign cn_active = "active" %}
             {% endif %}
             <li class="{{ dl_active }}">
                 <a href="/download.html">Download</a>
@@ -30,6 +32,9 @@
             </li>
             <li class="{{ rf_active }}">
                 <a href="/reference.html">Reference</a>
+            </li>
+            <li class="{{ cn_active }}">
+                <a href="/contribute.html">Reference</a>
             </li>
         </ul>
     </nav>

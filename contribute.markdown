@@ -1,6 +1,7 @@
 ---
-layout: default
+layout: page
 title: Contributing to Pharen
+name: contribute
 ---
 
 ## Contributing to Pharen ##
@@ -41,7 +42,7 @@ This method is best explained by the [Git website](http://git-scm.com). Look und
 ### Writing Tests ### {#writing-tests}
 Right now, the Pharen test suite only covers the absolute basics. A very useful way to help is to add new tests that cover more edge cases and any new features that come about:
 
-1. Understand how to [submit code](#submit-code).
+1. Understand how to [submit code](#submitting-code).
 2. Tests are located in `examples/test/tests`. You can either edit an existing test file or create a new one.
 3. Use the `check` function to test whatever value you got against the value you expected. `(check (. "foo" "bar") "foobar")` will work, while `(check (. "foo "bar") "stuff")` will cause the test to fail.
 4. If you created a new file, add it to the list called `tests` in `examples/test/tests/pharen_tests.phn`.

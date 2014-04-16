@@ -7,7 +7,8 @@ name: download
 ## Downloading and Usage ##
 
 ### Getting Pharen ### {#getting-pharen}
-You can download Pharen [from Github](http://github.com/Scriptor/pharen/archives/master).
+You can download the [ZIP file](http://github.com/Scriptor/pharen/archives/master.zip)
+from Github.
 If you have Git installed, you can also run:
 
 {% highlight sh %}
@@ -15,13 +16,17 @@ $ git clone git://github.com/Scriptor/pharen.git
 {% endhighlight %}
 
 ### Installing Pharen ### {#installing-pharen}
-After downloading Pharen, `cd` into its directory and run:
+After downloading and if needed, extracting, Pharen, `cd` into its directory and run:
 
+<b>On Unix systems:</b>
 {% highlight sh %}
 $ sudo ./install.sh
 {% endhighlight %}
 
-For now there is only an install script for Unix systems.
+<b>On Windows:</b>
+{% highlight sh %}
+install.bat
+{% endhighlight %}
 
 ### Using Pharen ### {#using-pharen}
 To use the compiler:

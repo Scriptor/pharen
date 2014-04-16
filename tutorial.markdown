@@ -5,21 +5,22 @@ name: tutorial
 ---
 
 ### About this tutorial {#about}
-This tutorial will you get started with Pharen by writing a bare-bones pastebin. Each section is split into a code-centered portion and a more in-depth explanation. Every code sample starts with a comment containing the filename the code should go in. You can initially skip the in-depth stuff to get something up and running fast, then read the rest later. The finished code for the pastebin is available [on Github](http://github.com/scriptor/pastebin).
-
-### Prerequisites {#prerequisites}
-This tutorial is somewhat Unix-oriented and requires knowledge of its command-line. For now, there is no installation script for Windows. However, most of it is platform-agnostic.
-
-You will need a text editor and a server that can handle PHP files. If you want language integration you can set your editor to use a plugin for another Lisp. For example, I currently use VimClojure and have it treat Pharen (.phn) files as Clojure files.
+This tutorial will you get started with Pharen by writing a bare-bones pastebin. Each section is split into a code-centered portion and a more in-depth explanation. Every code sample starts with a comment containing the filename it should go into. The finished code for the pastebin is available [on Github](http://github.com/scriptor/pastebin).
 
 ### Getting set up {#set-up}
 First, get Pharen from the [download page](/pharen/download.html). Then open up a shell, cd into the directory the Pharen files are located and run:
 
-{% highlight bash %}
+{% highlight sh %}
 $ sudo ./install.sh
 {% endhighlight %}
 
 This installs the `pharen` command so you can use it from anywhere.
+
+Note regarding syntax highlighting: There are no editor plugins for Pharen available yet. For now, you can configure your editor to use another lisp's highlighting for Pharen. For example, to have Vim treat Pharen files (.phn) as Clojure files (.clj), add the following to your .vimrc:
+
+{% highlight sh %}
+au BufNewFile,BufRead *.phn set filetype=clojure
+{% endhighlight %}*
 
 ### Hello world {#hello-world}
 Open a text editor (any should work) and enter the following code:
