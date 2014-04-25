@@ -337,7 +337,9 @@ class FuncInfo{
     public function get_num_args_needed(){
         $num = 0;
         foreach($this->func->params as $param){
-            if(!($param instanceof ListNode || $param instanceof SplatNode)){
+            if(!($param instanceof ListNode
+                || $param instanceof AnnotationNode
+                || $param instanceof SplatNode)){
                 $num++;
             }else{
                 break;
@@ -1584,6 +1586,8 @@ class FuncDefNode extends SpecialForm{
             foreach($params as $param){
                 if(is_array($param)){
                     $param_name = $param[0];
+                }else if($param instanceof Annotation){
+                    $param_name = $param->var;
                 }else{
                     $param_name = $param;
                 }
