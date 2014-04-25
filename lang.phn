@@ -351,6 +351,10 @@
   (if (empty? xs)
     acc
     (reduce f ($f (first xs) acc) (rest xs))))
+(fun reduce (f acc ^Seq xs)
+  (if (empty? xs)
+    acc
+    (reduce f ($f (first xs) acc) (rest xs))))
 
 (fn reduce-fns (fns acc xs)
   (if (empty? xs)
