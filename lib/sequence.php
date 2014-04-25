@@ -4,6 +4,7 @@ interface IPharenSeq{
     public function rest();
     public function cons($item);
 }
+class_alias("IPharenSeq", "Seq");
 
 interface IPharenLazy{
     public function force();
