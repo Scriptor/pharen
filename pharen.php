@@ -1847,6 +1847,9 @@ class ExpandableFuncNode extends FuncDefNode{
             return parent::handle_tmpfunc($code);
         }
 
+        if(Node::$in_func > 1){
+            Node::$in_func--;
+        }
         return $code;
     }
 
