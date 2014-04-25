@@ -67,8 +67,12 @@
 
 (fn first (xs)
   (-> (seq xs) (first)))
+(fun first (^Seq xs)
+  (-> (seq xs) (first)))
 
 (fn rest (xs)
+  (-> (seq xs) (rest)))
+(fun rest (^Seq xs)
   (-> (seq xs) (rest)))
 
 (fn pharen-list (a &xs)
@@ -177,6 +181,8 @@
 
 (fn empty? (xs)
   (or (inst? (seq xs) PharenEmptyList) (not (seq xs))))
+(fun empty? (xs)
+  (or (inst? xs PharenEmptyList) (not (seq xs))))
 
 (fn seq? (x)
   (inst? x IPharenSeq))
