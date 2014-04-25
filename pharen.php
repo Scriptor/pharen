@@ -1529,7 +1529,7 @@ class FuncDefNode extends SpecialForm{
     }
 
     public function compile_statement($prefix=""){
-        $this->scope = $this->scope == Null ? new Scope($this) : $this->scope;
+        $this->scope = $this->scope === Null ? new Scope($this) : $this->scope;
 
         if(!$this->name){
             $this->name = $this->get_name();
@@ -1824,6 +1824,11 @@ class ExpandableFuncNode extends FuncDefNode{
         }
     }
 
+    public function get_mainfunc_node(){
+        $parent_name = parent::get_name();
+        return FuncDefNode::$functions[$parent_name];
+    }
+
     public function get_name(){
         $this->parent_name = $parent_name = parent::get_name();
         if($this->inlining){
@@ -1904,6 +1909,21 @@ class ExpandableFuncNode extends FuncDefNode{
             return parent::bind_params($params);
         }
         return Null;
+    }
+}
+
+class AnnotatedFuncNode extends ExpandableFuncNode{
+    public function compile_statement($prefix="", $replacements=array()){
+        if (!isset($this->children[3])) {
+            $parent_node = $this->get_mainfunc_node();
+            $this->children = array_merge($this->children, array_slice($parent_node->children, 3));
+            $len = count($this->children);
+            for($x=3; $x<$len; $x++){
+                $this->children[$x]->parent = $this;
+            }
+        }
+        $code = parent::compile_statement($prefix, $replacements);
+        return $code;
     }
 }
 
@@ -3162,6 +3182,7 @@ class Parser{
             "fn" => array("FuncDefNode", "LeafNode", "LeafNode", "LiteralNode", self::$values),
             "lambda" => array("LambdaNode", "LeafNode", "LiteralNode", self::$values),
             "fun" => array("ExpandableFuncNode", "LeafNode", "LeafNode", "LiteralNode", self::$values),
+            "ann" => array("AnnotatedFuncNode", "LeafNode", "LeafNode", "LiteralNode"),
             "do" => array("DoNode", "LeafNode", self::$values),
             "cond" => array("CondNode", "LeafNode", array(self::$cond_pair)),
             "if" => array("LispyIfNode", "LeafNode", self::$value, self::$value, self::$value),
