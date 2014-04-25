@@ -949,7 +949,9 @@ class Node implements Iterator, ArrayAccess, Countable{
                 }
             }
 
-            if(!$func_node->typed_only || $typesig_found){
+            if($func_node->is_tail_recursive && $typesig_found){
+                $func_name = $func_node->get_name();
+            }else if(!$func_node->typed_only || $typesig_found){
                 return $func_node->inline(array_slice($this->children, 1));
             }
         }
@@ -1485,6 +1487,7 @@ class FuncDefNode extends SpecialForm{
     public $param_vals = array();
     public $is_partial;
     public $name;
+    public $is_tail_recursive;
 
     static function is_pharen_func($func_name){
         if(!empty(RootNode::$ns) && strpos($func_name, "\\")){
@@ -1548,6 +1551,8 @@ class FuncDefNode extends SpecialForm{
             $this->decrease_indent();
         }
         if($this->is_tail_recursive($last_node)){
+            $this->is_tail_recursive = true;
+
             // Final $last_expr->get_last_expr() -> The last function call, which provides the new args for the tail recurse
             // $while_body_nodes -> The body of the function, anything that's not the last "statementy" expression and isn't a return
             // $while_last_node -> What's returned when tail recursion stops
