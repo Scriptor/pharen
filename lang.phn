@@ -67,13 +67,11 @@
 
 (fn first (xs)
   (-> (seq xs) (first)))
-(fun first (^Seq xs)
-  (-> (seq xs) (first)))
+(ann first (^Seq xs))
 
 (fn rest (xs)
   (-> (seq xs) (rest)))
-(fun rest (^Seq xs)
-  (-> (seq xs) (rest)))
+(ann rest (^Seq xs))
 
 (fn pharen-list (a &xs)
   (cons a xs))
@@ -181,8 +179,7 @@
 
 (fn empty? (xs)
   (or (inst? (seq xs) PharenEmptyList) (not (seq xs))))
-(fun empty? (xs)
-  (or (inst? xs PharenEmptyList) (not (seq xs))))
+(ann empty? (xs))
 
 (fn seq? (x)
   (inst? x IPharenSeq))
@@ -351,10 +348,7 @@
   (if (empty? xs)
     acc
     (reduce f ($f (first xs) acc) (rest xs))))
-(fun reduce (f acc ^Seq xs)
-  (if (empty? xs)
-    acc
-    (reduce f ($f (first xs) acc) (rest xs))))
+(ann reduce (f acc ^Seq xs))
 
 (fn reduce-fns (fns acc xs)
   (if (empty? xs)
