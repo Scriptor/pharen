@@ -855,7 +855,7 @@ class Node implements Iterator, ArrayAccess, Countable{
         return 'new \PharenLambda(\''.RootNode::$ns.'\\\\'.$tmp_name.'\', Lexical::get_closure_id("'.Node::$ns.'", '.$scope_id_str.'))';
     }
 
-    public function compile($is_statement=False, $is_return=False){
+    public function compile($is_statement=False, $is_return=False, $prefix=""){
         $scope = $this->get_scope();
         $func_name = $this->get_func_name();
 
@@ -903,7 +903,7 @@ class Node implements Iterator, ArrayAccess, Countable{
                 }
                 
                 if($is_statement){
-                    $code = $expanded->compile_statement();
+                    $code = $expanded->compile_statement($prefix);
                     if(!$this->returns_special_form){
                         # Special forms shouldn't have semicolons anyway
                         $code = trim($code, ";\n");
@@ -961,7 +961,7 @@ class Node implements Iterator, ArrayAccess, Countable{
         return "$func_name($args_string)";
     }
 
-    public function add_semicolon ($code){
+    public function add_semicolon($code){
         if($this->returns_special_form){
             $semicolon="";
         }else{
@@ -971,7 +971,12 @@ class Node implements Iterator, ArrayAccess, Countable{
     }
 
     public function compile_statement($prefix=""){
-        return $this->format_statement($this->add_semicolon($this->compile(True)), $prefix);
+        $code = $this->add_semicolon($this->compile(True, False, $prefix));
+        if($this->in_macro){
+            return $this->format_statement($code);
+        }else{
+            return $this->format_statement($code, $prefix);
+        }
     }
 
     public function compile_return($prefix=""){
@@ -1860,7 +1865,13 @@ class ExpandableFuncNode extends FuncDefNode{
 
     public function simple_inlinable(){
         if (count($this->children) > 4) return False;
-        if($this->children[3] instanceof SpecialForm) return False;
+        $fourth_node = $this->children[3];
+        if($fourth_node instanceof SpecialForm) return False;
+        if($fourth_node instanceof Node && count($fourth_node->children) >= 3) {
+            if(MacroNode::is_macro($fourth_node->get_func_name())){
+                return False;
+            }
+        }
 
         return True;
     }
