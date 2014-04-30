@@ -179,10 +179,12 @@
 
 (fn empty? (xs)
   (or (inst? (seq xs) PharenEmptyList) (not (seq xs))))
-(ann empty? (xs))
+(ann empty? (^Seq xs))
 
 (fn seq? (x)
   (inst? x IPharenSeq))
+(fun seq? (^Seq x)
+     TRUE)
 
 (fn sequential? (x)
   (or (inst? x IPharenSeq) (is-array x)))
@@ -240,6 +242,7 @@
   (if (seq? xs)
     (-> xs (cons x))
     (-> (seq xs) (cons x))))
+(ann cons (x ^Seq xs))
 
 (fn assoc (key val hm)
   (-> (hashify hm) (assoc key val)))
