@@ -833,8 +833,14 @@ class Node implements Iterator, ArrayAccess, Countable{
         }else{
             if($func_name_node instanceof VariableNode){
                 $this->has_variable_func = True;
+                if($ann=$func_name_node->get_annotation()){
+                    $func_name = '^'.$ann;
+                }else{
+                    $func_name = $func_name_node->compile();
+                }
+            }else{
+                $func_name = $func_name_node->compile();
             }
-            $func_name = $func_name_node->compile();
 
             if(isset(ExpandableFuncNode::$funcs[$func_name])){
                 $func_node = ExpandableFuncNode::$funcs[$func_name];
@@ -949,9 +955,10 @@ class Node implements Iterator, ArrayAccess, Countable{
                 }
             }
 
-            if($func_node->is_tail_recursive && $typesig_found){
-                $func_name = $func_node->get_name();
-            }else if(!$func_node->typed_only || $typesig_found){
+            $is_tail = $func_node->is_tail_recursive;
+            if($is_tail && ($typesig_found || $func_name[0] === '^')){
+                $func_name = $func_node->true_name;
+            }else if(!$is_tail && (!$func_node->typed_only || $typesig_found)){
                 return $func_node->inline(array_slice($this->children, 1));
             }
         }
@@ -1584,11 +1591,14 @@ class FuncDefNode extends SpecialForm{
             $new_param_values = array_slice($last_expr->get_last_expr()->children, 1);
             $params_len = count($new_param_values);
             $recur = "";
+            $tmp = "";
             for($x=0; $x<$params_len; $x++){
                 $val_node = $new_param_values[$x];
                 $recur .= $this->format_line_indent("\$__tailrecursetmp$x = " . $val_node->compile().";");
+                $tmp .= Node::$tmp;
+                Node::$tmp = "";
             }
-            $body .= Node::add_tmp($recur);
+            $body .= Node::add_tmp($tmp.$recur);
             $x=0;
             if ($this instanceof LambdaNode) {
                 array_pop($params);
@@ -1762,6 +1772,7 @@ class ExpandableFuncNode extends FuncDefNode{
     static $replacement_counter = 0;
     static $name_counters = array();
     static $typesig_map = array();
+    static $functypes = array();
 
     public $inlining = False;
     public $tmp_var;
@@ -1769,6 +1780,7 @@ class ExpandableFuncNode extends FuncDefNode{
     public $typesig = "";
     public $typed_only = False;
     public $parent_name;
+    public $true_name;
 
     public static function get_next_tmp_var(){
         return '$__inline_result'.self::$tmp_var_counter++;
@@ -1786,6 +1798,7 @@ class ExpandableFuncNode extends FuncDefNode{
         }else{
             $this->scope->replacements->exchangeArray($replacements);
         }
+
         $code = parent::compile_statement($prefix);
 
         self::$funcs[$this->parent_name] = $this;
@@ -1822,10 +1835,10 @@ class ExpandableFuncNode extends FuncDefNode{
 
         $code = $this->compile_statement("", $replacements);
 
-        if(!$simple){
-            return $this->tmp_var;
-        }else{
+        if($simple){
             return $code;
+        }else{
+            return $this->tmp_var;
         }
     }
 
@@ -1834,21 +1847,38 @@ class ExpandableFuncNode extends FuncDefNode{
         return FuncDefNode::$functions[$parent_name];
     }
 
+    public function generate_functype($name) {
+        if(isset(self::$functypes[$name])){
+            return;
+        }
+        self::$functypes[$name] = True;
+        $code = "class_alias('PharenLambda', '$name');";
+        Node::$tmpfunc .= $this->format_statement($code);
+    }
+
     public function get_name(){
-        $this->parent_name = $parent_name = parent::get_name();
+        $parent_name = parent::get_name();
+        if($this->children[1] instanceof AnnotationNode){
+            $this->generate_functype($parent_name);
+            $this->parent_name = '^'.$parent_name;
+        }else{
+            $this->parent_name = $parent_name;
+        }
+
         if($this->inlining){
             return $parent_name;
         }
         if(!isset(self::$name_counters[$parent_name])){
             self::$name_counters[$parent_name] = 1;
-            if (isset(FuncDefNode::$functions[$parent_name])){
+            if(isset(FuncDefNode::$functions[$parent_name])){
                 $this->typed_only = True;
-                return $parent_name."1";
-            }else {
-                return $parent_name;
+                $this->true_name = $parent_name."1";
+            }else{
+                $this->true_name = $parent_name;
             }
+            return $this->true_name;
         }else{
-            return $parent_name.self::$name_counters[$parent_name]++;
+            return $this->true_name = $parent_name.++self::$name_counters[$parent_name];
         }
     }
 
@@ -3142,6 +3172,7 @@ class Parser{
     static $value;
     static $values;
     static $func_call_name;
+    static $ann_or_name;
     static $func_call;
     static $infix_call;
     static $empty_node;
@@ -3180,6 +3211,12 @@ class Parser{
             "NameToken" => "LeafNode",
             "ExplicitVarToken" => "VariableNode"
         );
+
+        self::$ann_or_name = array(
+            "AnnotationToken" => "AnnotationNode",
+            "NameToken" => "LeafNode"
+        );
+
         self::$func_call = array("Node", self::$func_call_name, array(self::$value));
         self::$infix_call = array("InfixNode", "LeafNode", array(self::$value));
         self::$empty_node = array("EmptyNode");
@@ -3192,7 +3229,7 @@ class Parser{
         self::$special_forms = array(
             "fn" => array("FuncDefNode", "LeafNode", "LeafNode", "LiteralNode", self::$values),
             "lambda" => array("LambdaNode", "LeafNode", "LiteralNode", self::$values),
-            "fun" => array("ExpandableFuncNode", "LeafNode", "LeafNode", "LiteralNode", self::$values),
+            "fun" => array("ExpandableFuncNode", "LeafNode", self::$ann_or_name, "LiteralNode", self::$values),
             "ann" => array("AnnotatedFuncNode", "LeafNode", "LeafNode", "LiteralNode"),
             "do" => array("DoNode", "LeafNode", self::$values),
             "cond" => array("CondNode", "LeafNode", array(self::$cond_pair)),
