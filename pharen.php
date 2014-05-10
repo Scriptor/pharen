@@ -26,10 +26,52 @@ function split_body_last($xs){
 class Annotation {
     public $typename;
     public $var;
+    public $value_type;
 
-    public function __construct($typename, $var){
+    public function __construct($typename, $var, $value_type){
         $this->typename = $typename;
         $this->var = $var;
+        $this->value_type = $value_type;
+    }
+}
+
+class TypeSig {
+    const SAME_VALTYPE = 3;
+    const SAME_TYPE = 2;
+    const ANY_MATCH = 1;
+
+    public $any = True;
+    public $annotations = array();
+
+    public function add_type($ann){
+        if($ann !== "Any"){
+            $this->any = False;
+        }
+        array_unshift($this->annotations, $ann);
+    }
+
+    public function match(TypeSig $other){
+        $thislen = count($this->annotations);
+        $otherlen = count($other->annotations);
+
+        if($thislen !== $otherlen) return 0;
+        $score = 0;
+
+        for($x=0; $x<$thislen; $x++){
+            $thistype = $this->annotations[$x];
+            $othertype = $other->annotations[$x];
+
+            if($thistype === "Any" || $othertype === "Any"){
+                $score += self::ANY_MATCH;
+            }else if($thistype->value_type === $othertype->value_type){
+                $score += self::SAME_VALTYPE;
+            }else if($thistype->typename === $othertype->typename){
+                $score += self::SAME_TYPE;
+            }else{
+                return 0;
+            }
+        }
+        return $score;
     }
 }
 
@@ -833,8 +875,9 @@ class Node implements Iterator, ArrayAccess, Countable{
         }else{
             if($func_name_node instanceof VariableNode){
                 $this->has_variable_func = True;
-                if($ann=$func_name_node->get_annotation()){
-                    $func_name = '^'.$ann;
+                $ann = $func_name_node->get_annotation();
+                if($ann && $ann->value_type){
+                    $func_name = $ann->value_type;
                 }else{
                     $func_name = $func_name_node->compile();
                 }
@@ -932,26 +975,30 @@ class Node implements Iterator, ArrayAccess, Countable{
         }else if(isset(ExpandableFuncNode::$funcs[$func_name])){
             $func_node = ExpandableFuncNode::$funcs[$func_name];
             $args = array_slice($this->children, 1);
-            $typesig = "";
+            $typesig = new TypeSig;
             foreach($args as $arg){
                 if($arg instanceof VariableNode){
                     if($ann = $arg->get_annotation()){
-                        $typesig .= $ann;
+                        $typesig->add_type($ann);
                     }else{
-                        $typesig .= "Any";
+                       $typesig->add_type("Any");
                     }
                 }else{
-                    $typesig .= "Any";
+                    $typesig->add_type("Any");
                 }
             }
 
             $typesig_found = False;
-            if(str_replace("Any", "", $typesig) !== ""){
-                $typesig_map = ExpandableFuncNode::$typesig_map;
-                $typed_name = $func_name.$typesig;
-                if(isset($typesig_map[$typed_name])){
-                    $func_node = $typesig_map[$typed_name];
-                    $typesig_found = True;
+            if(!$typesig->any){
+                $typesig_map = ExpandableFuncNode::$typesig_map[$func_name];
+                $highest_score = 0;
+                foreach($typesig_map as $pair){
+                    $func_typesig = $pair[0];
+                    $score = $typesig->match($func_typesig);
+                    if ($score > $highest_score) {
+                        $typesig_found = True;
+                        $func_node = $pair[1];
+                    }
                 }
             }
 
@@ -1326,6 +1373,24 @@ class SplatNode extends VariableNode{
 }
 
 class AnnotationNode extends LeafNode{
+
+    public function compile(){
+        $code = $this->value;
+        $lexer = new Lexer($code);
+        $toks = $lexer->lex();
+        $tok = $toks[0];
+        $value_type = "";
+        switch(get_class($tok)){
+        case 'NameToken':
+            $type = parent::compile();
+            break;
+        case 'FuncValToken':
+            $type = "callable";
+            $value_type = $tok->value;
+            break;
+        }
+        return array($type, $value_type);
+    }
 }
 
 class StringNode extends LeafNode{
@@ -1701,9 +1766,11 @@ class FuncDefNode extends SpecialForm{
         foreach($param_nodes as $node){
             if($node instanceof VariableNode || $node instanceof UnquoteWrapper){
                 if($last_ann !== Null){
-                    $typename = $last_ann->compile();
+                    $type_data = $last_ann->compile();
+                    $typename = $type_data[0];
+                    $value_type = $type_data[1];
                     $var = $node->compile();
-                    $params[] = new Annotation($typename, $var);
+                    $params[] = new Annotation($typename, $var, $value_type);
                     $last_ann = Null;
                 }else{
                     $params[] = $node->compile(True);
@@ -1728,7 +1795,7 @@ class FuncDefNode extends SpecialForm{
         }else{
             $val = new LeafNode($this, Null, $param);
             if($param instanceof Annotation){
-                $val->annotation = $param->typename;
+                $val->annotation = $param;
                 $this->scope->bind($param->var, $val);
                 $this->param_vals[] = $param->var;
             } else {
@@ -1777,7 +1844,7 @@ class ExpandableFuncNode extends FuncDefNode{
     public $inlining = False;
     public $tmp_var;
     public $replacement_tmps;
-    public $typesig = "";
+    public $typesig;
     public $typed_only = False;
     public $parent_name;
     public $true_name;
@@ -1799,12 +1866,16 @@ class ExpandableFuncNode extends FuncDefNode{
             $this->scope->replacements->exchangeArray($replacements);
         }
 
+        $this->typesig = new TypeSig;
+
         $code = parent::compile_statement($prefix);
 
         self::$funcs[$this->parent_name] = $this;
-        if($this->typesig !== ''){
-            self::$typesig_map[$this->parent_name.$this->typesig] = $this;
+
+        if(!isset(self::$typesig_map[$this->parent_name])){
+            self::$typesig_map[$this->parent_name] = array();
         }
+        self::$typesig_map[$this->parent_name][] = array($this->typesig, $this);
         return $code;
     }
 
@@ -1938,9 +2009,9 @@ class ExpandableFuncNode extends FuncDefNode{
 
     public function bind_param($param){
         if($param instanceof Annotation){
-            $this->typesig .= $param->typename;
+            $this->typesig->add_type($param);
         } else {
-            $this->typesig .= "Any";
+            $this->typesig->add_type("Any");
         }
         parent::bind_param($param);
     }
