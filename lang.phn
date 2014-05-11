@@ -68,10 +68,14 @@
 (fn first (xs)
   (-> (seq xs) (first)))
 (ann first (^Seq xs))
+(fun first (^FastSeq xs)
+     (-> xs first))
 
 (fn rest (xs)
   (-> (seq xs) (rest)))
 (ann rest (^Seq xs))
+(fun rest (^FastSeq xs)
+     (-> xs rest))
 
 (fn pharen-list (a &xs)
   (cons a xs))
@@ -180,6 +184,7 @@
 (fn empty? (xs)
   (or (inst? (seq xs) PharenEmptyList) (not (seq xs))))
 (ann empty? (^Seq xs))
+(ann empty? (^FastSeq xs))
 
 (fn seq? (x)
   (inst? x IPharenSeq))
@@ -196,8 +201,9 @@
   (if (inst? x IPharenSeq)
     (-> x (seq))
     (:: PharenList (seqify x))))
-
 (fun seq (^Seq x)
+     x)
+(fun seq (^FastSeq x)
      x)
 
 (fn hashify (x)

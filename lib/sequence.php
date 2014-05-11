@@ -19,7 +19,15 @@ interface IPharenHashable{
     public function hash();
 }
 
-class PharenList implements IPharenSeq, IPharenComparable, Countable, ArrayAccess, Iterator{
+abstract class FastSeq {
+    public $first;
+    public $rest;
+    public $length;
+}
+
+class PharenList extends FastSeq
+    implements IPharenSeq, IPharenComparable, Countable, ArrayAccess, Iterator{
+
     public $first;
     public $rest;
     public $length = Null;
