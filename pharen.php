@@ -38,7 +38,7 @@ class Annotation {
 class TypeSig {
     const SAME_VALTYPE = 3;
     const SAME_TYPE = 2;
-    const ANY_MATCH = 1;
+    const ANY_MATCH = 0;
 
     public $any = True;
     public $annotations = array();
@@ -63,7 +63,8 @@ class TypeSig {
 
             if($thistype === "Any" || $othertype === "Any"){
                 $score += self::ANY_MATCH;
-            }else if($thistype->value_type === $othertype->value_type){
+            }else if(($thistype->value_type && $othertype->value-type) &&
+                     ($thistype->value_type === $othertype->value_type)){
                 $score += self::SAME_VALTYPE;
             }else if($thistype->typename === $othertype->typename){
                 $score += self::SAME_TYPE;
@@ -603,6 +604,8 @@ class Node implements Iterator, ArrayAccess, Countable{
     public $force_not_partial;
     public $returns_special_form;
     public $indent = Null;
+    public $is_method_call;
+    public $value_type_match = False;
 
     public $quoted;
     public $unquoted;
@@ -877,16 +880,13 @@ class Node implements Iterator, ArrayAccess, Countable{
                 $this->has_variable_func = True;
                 $ann = $func_name_node->get_annotation();
                 if($ann && $ann->value_type){
+                    $this->value_type_match = True;
                     $func_name = $ann->value_type;
                 }else{
                     $func_name = $func_name_node->compile();
                 }
             }else{
                 $func_name = $func_name_node->compile();
-            }
-
-            if(isset(ExpandableFuncNode::$funcs[$func_name])){
-                $func_node = ExpandableFuncNode::$funcs[$func_name];
             }
         }
         return $func_name;
@@ -972,7 +972,8 @@ class Node implements Iterator, ArrayAccess, Countable{
             }
         }else if(!$this->has_splice && $func->is_partial()){
             return $this->create_partial($func);
-        }else if(isset(ExpandableFuncNode::$funcs[$func_name])){
+        }else if(!$this->is_method_call &&
+                isset(ExpandableFuncNode::$funcs[$func_name])){
             $func_node = ExpandableFuncNode::$funcs[$func_name];
             $args = array_slice($this->children, 1);
             $typesig = new TypeSig;
@@ -989,23 +990,26 @@ class Node implements Iterator, ArrayAccess, Countable{
             }
 
             $typesig_found = False;
-            if(!$typesig->any){
-                $typesig_map = ExpandableFuncNode::$typesig_map[$func_name];
-                $highest_score = 0;
-                foreach($typesig_map as $pair){
-                    $func_typesig = $pair[0];
-                    $score = $typesig->match($func_typesig);
-                    if ($score > $highest_score) {
-                        $typesig_found = True;
-                        $func_node = $pair[1];
-                    }
+            $typesig_map = ExpandableFuncNode::$typesig_map[$func_name];
+            $highest_score = 0;
+            if($this->value_type_match){
+                $func_name = trim($func_name, '^');
+                $highest_score = -1;
+            }
+            foreach($typesig_map as $pair){
+                $func_typesig = $pair[0];
+                $score = $typesig->match($func_typesig);
+                if ($score > $highest_score) {
+                    $highest_score = $score;
+                    $typesig_found = True;
+                    $func_node = $pair[1];
                 }
             }
 
             $is_tail = $func_node->is_tail_recursive;
             if($is_tail && ($typesig_found || $func_name[0] === '^')){
                 $func_name = $func_node->true_name;
-            }else if(!$is_tail && (!$func_node->typed_only || $typesig_found)){
+            }else if(!$is_tail && $typesig_found){
                 return $func_node->inline(array_slice($this->children, 1));
             }
         }
@@ -1429,6 +1433,7 @@ class MethodCallNode extends Node{
         $node_chain = array_slice($this->children, 2);
         $chain = array();
         foreach($node_chain as $node){
+            $node->is_method_call = True;
             if($node instanceof VariableNode){
                 $chain []= substr($node->compile(), 1); // $ sign not needed for field access
             }else{
@@ -1870,12 +1875,13 @@ class ExpandableFuncNode extends FuncDefNode{
 
         $code = parent::compile_statement($prefix);
 
-        self::$funcs[$this->parent_name] = $this;
-
-        if(!isset(self::$typesig_map[$this->parent_name])){
-            self::$typesig_map[$this->parent_name] = array();
+        if(!$this->inlining){
+            self::$funcs[$this->parent_name] = $this;
+            if(!isset(self::$typesig_map[$this->parent_name])){
+                self::$typesig_map[$this->parent_name] = array();
+            }
+            self::$typesig_map[$this->parent_name][] = array($this->typesig, $this);
         }
-        self::$typesig_map[$this->parent_name][] = array($this->typesig, $this);
         return $code;
     }
 
