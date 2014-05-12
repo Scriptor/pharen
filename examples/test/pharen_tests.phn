@@ -9,14 +9,14 @@
   (print (. "Running test: " fname "\n"))
   (compile-file (. TESTS-DIR "/tests/" fname ".phn") (. TESTS-DIR "/tmp"))
   (require (. TESTS-DIR "/tmp/" fname ".php")))
-    
+
 (set-error-handler (lambda (errno errstr file line)
                            (throw (new ErrorException errstr errno 0 file line))
                            TRUE))
 
 (fn check (expr expected) (test.check expr expected 1))
 
-(let [tests 
+(let [tests
       ["literals",
        "func_calls",
        "comments",
@@ -24,7 +24,9 @@
        "lists_and_dicts",
        "cond",
        "if",
+       "try",
        "function_definition",
+       "class",
        "lambdas",
        "plambda",
        "macros",

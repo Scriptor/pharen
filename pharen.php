@@ -2587,7 +2587,7 @@ class ClassNode extends SpecialForm{
     public function compile_statement(){
         $class_name = $this->children[1]->compile();
         $this->class_name = $class_name;
-        $body = $this->compile_body();
+        $body = isset($this->children[2]) ? $this->compile_body() : "";
         return $this->generate($class_name, $body);
     }
 }
@@ -2601,9 +2601,9 @@ class ClassExtendsNode extends ClassNode{
 
         $class_name = $this->children[1]->compile();
         $this->class_name = $class_name;
-        $parent_class = $this->children[2]->children[0]->value;
-        $body = $this->compile_body();
-        return $this->generate($class_name." extends ".$parent_class, $body);
+        $parent_class = $this->children[2]->compile();
+        $body = isset($this->children[3]) ? $this->compile_body() : "";
+        return $this->generate("$class_name extends $parent_class", $body);
     }
 }
 
@@ -2810,6 +2810,72 @@ class LispyIfNode extends CondNode{
 
     public function get_last_expr(){
         return $this->children[3];
+    }
+}
+
+class TryNode extends SpecialForm {
+    static $tmp_num = 0;
+
+    static function get_tmp_name(){
+        return "\$__trytmpvar".self::$tmp_num++;
+    }
+
+    public function compile(){
+        $tmp_var = self::get_tmp_name();
+        Node::$prev_tmp.= $this->format_line("").$this->compile_statement($tmp_var." = ");
+        return $tmp_var;
+    }
+
+    public function compile_statement($prefix="", $return=False){
+        $compile_func = $return ? "compile_return" : "compile_statement";
+
+        $code = !($prefix) ? "" :
+            $this->format_line("").$this->format_line("$prefix Null;");
+
+        $code .= $this->format_line("try {");
+        $code .= $this->children[1]->$compile_func($prefix);
+        $code .= $this->format_line("}");
+
+        foreach(array_slice($this->children, 2) as $children) {
+            //$children->indent = $this->parent instanceof RootNode ? "" : $this->parent->indent;
+            $children->indent = ($this->indent === Null) ? "" : $this->indent;
+            $code .= $children->$compile_func($prefix);
+        }
+
+        return $code;
+    }
+
+    public function compile_return(){
+      return $this->compile_statement(False, True);
+    }
+
+    public function get_last_func_call(){
+        return $this->children[sizeof($this->children) - 1]->get_last_func_call();
+    }
+
+    public function get_last_expr(){
+        return $this->children[sizeof($this->children) - 1];
+    }
+}
+
+class CatchNode extends TryNode {
+    public $type_name;
+
+    public function compile_statement($prefix="", $return=False){
+        $compile_func = $return ? "compile_return" : "compile_statement";
+
+        $type_name = $this->children[1]->compile();
+        $var_name  = $this->children[2]->compile();
+
+        $this->type_name = $type_name;
+
+        $this->children[3]->indent = $this->indent . "\t";
+
+        $code  = $this->format_line("catch ($type_name $var_name) {");
+        $code .= $this->children[3]->$compile_func($prefix);
+        $code .= $this->format_line("}");
+
+        return $code;
     }
 }
 
@@ -3305,6 +3371,8 @@ class Parser{
             "do" => array("DoNode", "LeafNode", self::$values),
             "cond" => array("CondNode", "LeafNode", array(self::$cond_pair)),
             "if" => array("LispyIfNode", "LeafNode", self::$value, self::$value, self::$value),
+            "try" => array("TryNode", "LeafNode", self::$value, self::$values),
+            "catch" => array("CatchNode", "LeafNode", "LeafNode", "VariableNode", self::$value),
             "$" => array("SuperGlobalNode", "LeafNode", "LeafNode", self::$value),
             "def" => array("DefNode", "LeafNode", "VariableNode", self::$value),
             "local" => array("LocalNode", "LeafNode", "VariableNode", self::$value),
@@ -3320,7 +3388,7 @@ class Parser{
             "::" => array("StaticCallNode", "LeafNode", "LeafNode", self::$values),
             "new" => array("InstantiationNode", "LeafNode", "LeafNode", self::$values),
             "class" => array("ClassNode", "LeafNode", "LeafNode", self::$values),
-            "class-extends" => array("ClassExtendsNode", "LeafNode", "LeafNode", self::$list_form, self::$values),
+            "class-extends" => array("ClassExtendsNode", "LeafNode", "LeafNode", "LeafNode", "LeafNode", self::$values),
             "access" => array("AccessModifierNode", "LeafNode", "LeafNode", self::$values),
             "interface" => array("InterfaceNode", "LeafNode", "LeafNode", self::$values),
             "defrecord" => array("DefRecordNode", "LeafNode", "LeafNode", array("VariableNode")),

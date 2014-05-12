@@ -1,0 +1,25 @@
+; Test class definition
+(ns TestClass)
+
+; Support blank class
+(class Blank)
+(check (inst? (new Blank) Blank) TRUE)
+
+; Support constructor
+(class A
+       (access public (local message ""))
+       (fn __construct (msg)
+         (def (-> this message) msg))
+       (fn msg ()
+         (-> this message)))
+
+(def obj (new A "Msg"))
+(check (-> obj message) "Msg")
+
+; Support extends
+(class-extends B A
+    (fn msg ()
+      (:: parent (msg))))
+(def obj (new B "B msg"))
+(check (-> obj (msg)) "B msg")
+(check (inst? obj A) TRUE)
