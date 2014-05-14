@@ -184,7 +184,8 @@
 (fn empty? (xs)
   (or (inst? (seq xs) PharenEmptyList) (not (seq xs))))
 (ann empty? (^Seq xs))
-(ann empty? (^FastSeq xs))
+(fun empty? (^FastSeq xs)
+     (=== (-> xs length) 0))
 
 (fn seq? (x)
   (inst? x IPharenSeq))

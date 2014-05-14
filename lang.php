@@ -168,15 +168,7 @@ function empty__question1(Seq $xs){
 }
 
 function empty__question2(FastSeq $xs){
-		if((seq($xs) instanceof PharenEmptyList)){
-				return (seq($xs) instanceof PharenEmptyList);
-
-	}
-	else{
-				return !(seq($xs));
-
-	}
-
+	return ($xs->length === 0);
 }
 
 function seq__question($x){
