@@ -7,8 +7,8 @@
   "license": "",
   "authors": [
     {
-      "name": "",
-      "email": ""
+      "name": "Tamreen Khan",
+      "email": "tamreenkhan@gmail.com"
     }
   ],
   "bin": ["bin/pharen"],
