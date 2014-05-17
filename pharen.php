@@ -1570,6 +1570,7 @@ class FuncDefNode extends SpecialForm{
     public $is_partial;
     public $name;
     public $is_tail_recursive;
+    public $return_type = Null;
 
     static function is_pharen_func($func_name){
         if(!empty(RootNode::$ns) && strpos($func_name, "\\")){
@@ -1621,6 +1622,13 @@ class FuncDefNode extends SpecialForm{
 
         $params = $this->get_param_names($this->params);
         $this->bind_params($params);
+        if($this->children[3] instanceof AnnotationNode){
+            $this->body_index = 4;
+            $ann_node = $this->children[3];
+            list($typename, $value_type) = $ann_node->compile();
+            $this->return_type = new Annotation($typename, "<return>", $value_type);
+        }
+
         list($body_nodes, $last_node) = $this->split_body_last();
 
         $body = "";
@@ -2032,7 +2040,11 @@ class ExpandableFuncNode extends FuncDefNode{
 
 class AnnotatedFuncNode extends ExpandableFuncNode{
     public function compile_statement($prefix="", $replacements=array()){
-        if (!isset($this->children[3])) {
+        $body_start_index = 3;
+        if(isset($this->children[3]) && $this->children[3] instanceof AnnotationNode){
+            $body_start_index = 4;
+        }
+        if (!isset($this->children[$body_start_index])) {
             $parent_node = $this->get_mainfunc_node();
             $this->children = array_merge($this->children, array_slice($parent_node->children, 3));
             $len = count($this->children);
@@ -3307,7 +3319,8 @@ class Parser{
             "fn" => array("FuncDefNode", "LeafNode", "LeafNode", "LiteralNode", self::$values),
             "lambda" => array("LambdaNode", "LeafNode", "LiteralNode", self::$values),
             "fun" => array("ExpandableFuncNode", "LeafNode", self::$ann_or_name, "LiteralNode", self::$values),
-            "ann" => array("AnnotatedFuncNode", "LeafNode", "LeafNode", "LiteralNode"),
+            "ann" => array("AnnotatedFuncNode", "LeafNode", "LeafNode", "LiteralNode",
+                array(self::$ann_or_name)),
             "do" => array("DoNode", "LeafNode", self::$values),
             "cond" => array("CondNode", "LeafNode", array(self::$cond_pair)),
             "if" => array("LispyIfNode", "LeafNode", self::$value, self::$value, self::$value),
@@ -3326,7 +3339,8 @@ class Parser{
             "::" => array("StaticCallNode", "LeafNode", "LeafNode", self::$values),
             "new" => array("InstantiationNode", "LeafNode", "LeafNode", self::$values),
             "class" => array("ClassNode", "LeafNode", "LeafNode", self::$values),
-            "class-extends" => array("ClassExtendsNode", "LeafNode", "LeafNode", self::$list_form, self::$values),
+            "class-extends" => array("ClassExtendsNode", "LeafNode", "LeafNode",
+                self::$list_form, self::$values),
             "access" => array("AccessModifierNode", "LeafNode", "LeafNode", self::$values),
             "interface" => array("InterfaceNode", "LeafNode", "LeafNode", self::$values),
             "defrecord" => array("DefRecordNode", "LeafNode", "LeafNode", array("VariableNode")),
