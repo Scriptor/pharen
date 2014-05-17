@@ -38,6 +38,7 @@ class Annotation {
 class TypeSig {
     const SAME_VALTYPE = 3;
     const SAME_TYPE = 2;
+    const EMPTY_SIG = 1;
     const ANY_MATCH = 0;
 
     public $any = True;
@@ -55,6 +56,7 @@ class TypeSig {
         $otherlen = count($other->annotations);
 
         if($thislen !== $otherlen) return 0;
+        if($thislen === 0) return self::EMPTY_SIG;
         $score = 0;
 
         for($x=0; $x<$thislen; $x++){
