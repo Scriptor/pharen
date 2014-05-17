@@ -56,7 +56,7 @@ class TypeSig {
         $otherlen = count($other->annotations);
 
         if($thislen !== $otherlen) return 0;
-        if($thislen === 0) return self::EMPTY_SIG;
+        if($thislen === 0 && $otherlen === 0) return self::EMPTY_SIG;
         $score = 0;
 
         for($x=0; $x<$thislen; $x++){
