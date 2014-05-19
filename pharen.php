@@ -63,13 +63,24 @@ class TypeSig {
             $thistype = $this->annotations[$x];
             $othertype = $other->annotations[$x];
 
+            if(is_object($thistype)) $thisname = $thistype->typename;
+            if(is_object($othertype)) $othername = $othertype->typename;
+
             if($thistype === "Any" || $othertype === "Any"){
                 $score += self::ANY_MATCH;
             }else if(($thistype->value_type && $othertype->value-type) &&
                      ($thistype->value_type === $othertype->value_type)){
                 $score += self::SAME_VALTYPE;
-            }else if($thistype->typename === $othertype->typename){
+            }else if($thisname === $othername){
                 $score += self::SAME_TYPE;
+            }else if(is_subclass_of($thisname, $othername)){
+                continue;
+                $reflection = new ReflectionClass($thisname);
+                $reflection = $reflection->getParentClass();
+                $chainlen = 1;
+                while($reflection->getName() !== $othername){
+                    $chainlen++;
+                }
             }else{
                 return 0;
             }
@@ -1877,6 +1888,7 @@ class ExpandableFuncNode extends FuncDefNode{
     static $name_counters = array();
     static $typesig_map = array();
     static $functypes = array();
+    static $top_inliner = Null;
 
     public $inlining = False;
     public $tmp_var;
@@ -1918,18 +1930,21 @@ class ExpandableFuncNode extends FuncDefNode{
     }
 
     public function inline($args, $compiled_args){
-        $this->inlining = true;
+        $this->inlining = True;
+        if(!self::$top_inliner){
+            self::$top_inliner = $this;
+        }
+
         # Todo: Modify VariableNode to change every instance of param
         # name to the argument
         $replacements = array();
-        $simple_replacements = array("Node", "InfixNode", "LeafNode");
         foreach($this->param_vals as $i=>$param) {
             $arg = $args[$i];
             if($arg instanceof LeafNode
-                || $arg instanceof InfixNode
-                || get_class($arg) === 'Node'){
+                    || get_class($arg) === 'Node'){
+                $replacements[$param] = $arg->compile();
+            }else{
                 $replacements[$param] = $compiled_args[$i];
-            } else {
                 $tmp_var = self::get_next_replacement_var();
                 $this->tmps .= $this->format_line($tmp_var
                     .' = '.$compiled_args[$i].';');
@@ -1947,6 +1962,10 @@ class ExpandableFuncNode extends FuncDefNode{
 
         $code = $this->compile_statement("", $replacements);
 
+        $this->inlining = False;
+        if(self::$top_inliner === $this){
+            self::$top_inliner = Null;
+        }
         if($simple){
             return $code;
         }else{
@@ -2029,7 +2048,12 @@ class ExpandableFuncNode extends FuncDefNode{
 
         Node::$tmp .= $lexings;
         Node::$tmp .= $splats;
-        Node::$tmp .= $this->tmps;
+        if(self::$top_inliner === $this){
+            Node::$tmp .= $this->tmps;
+        }else{
+            self::$top_inliner->tmps .= $this->tmps;
+        }
+        $this->tmps = "";
 
         if($this->simple_inlinable()){
             return trim($body, " \t\n;");
