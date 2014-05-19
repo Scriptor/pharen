@@ -607,6 +607,7 @@ class Node implements Iterator, ArrayAccess, Countable{
     public $returns_special_form;
     public $indent = Null;
     public $is_method_call;
+    public $annotation;
     public $value_type_match = False;
 
     public $quoted;
@@ -836,7 +837,7 @@ class Node implements Iterator, ArrayAccess, Countable{
             }else if(is_string($arg)){
                 $output[] = $arg;
             }else{
-                $output[] = $a = $arg->compile();
+                $output[] = $arg->compile();
             }
         }
         return $output;
@@ -910,6 +911,9 @@ class Node implements Iterator, ArrayAccess, Countable{
         $scope = $this->get_scope();
         $func_name = $this->get_func_name();
 
+        // For when type-computation requires 
+        $compiled_args = Null;
+
         $func = new FuncInfo($func_name, $this->force_not_partial, array_slice($this->children, 1), $this->get_scope());
 
         if(MicroNode::is_micro($func_name)){
@@ -978,6 +982,7 @@ class Node implements Iterator, ArrayAccess, Countable{
                 isset(ExpandableFuncNode::$funcs[$func_name])){
             $func_node = ExpandableFuncNode::$funcs[$func_name];
             $args = array_slice($this->children, 1);
+            $compiled_args = $this->compile_args($args);
             $typesig = new TypeSig;
             foreach($args as $arg){
                 if($arg instanceof VariableNode){
@@ -987,7 +992,11 @@ class Node implements Iterator, ArrayAccess, Countable{
                        $typesig->add_type("Any");
                     }
                 }else{
-                    $typesig->add_type("Any");
+                    if($ann = $arg->annotation){
+                        $typesig->add_type($ann);
+                    }else{
+                        $typesig->add_type("Any");
+                    }
                 }
             }
 
@@ -1005,6 +1014,7 @@ class Node implements Iterator, ArrayAccess, Countable{
                     $highest_score = $score;
                     $typesig_found = True;
                     $func_node = $pair[1];
+                    $this->annotation = $func_node->return_type;
                 }
             }
 
@@ -1012,12 +1022,20 @@ class Node implements Iterator, ArrayAccess, Countable{
             if($is_tail && ($typesig_found || $func_name[0] === '^')){
                 $func_name = $func_node->true_name;
             }else if(!$is_tail && $typesig_found){
-                return $func_node->inline(array_slice($this->children, 1));
+                return $func_node->inline($args, $compiled_args);
             }
         }
 
-        $args = $this->compile_args(array_slice($this->children, 1));
-        $args_string = implode(", ", $args);
+        if(!$compiled_args){
+            $compiled_args = $this->compile_args(array_slice($this->children, 1));
+        }
+        if(!$this->annotation){
+            $func_node = FuncDefNode::get_pharen_func($func_name);
+            if(is_object($func_node)){
+                $this->annotation = $func_node->return_type;
+            }
+        }
+        $args_string = implode(", ", $compiled_args);
         return "$func_name($args_string)";
     }
 
@@ -1592,7 +1610,11 @@ class FuncDefNode extends SpecialForm{
     }
 
     static function get_pharen_func($func_name){
-        return self::$functions[$func_name];
+        if(isset(self::$functions[$func_name])){
+            return self::$functions[$func_name];
+        }else{
+            return Null;
+        }
     }
 
     public function compile(){
@@ -1858,7 +1880,7 @@ class ExpandableFuncNode extends FuncDefNode{
 
     public $inlining = False;
     public $tmp_var;
-    public $replacement_tmps;
+    public $tmps;
     public $typesig;
     public $typed_only = False;
     public $parent_name;
@@ -1895,19 +1917,22 @@ class ExpandableFuncNode extends FuncDefNode{
         return $code;
     }
 
-    public function inline($args){
+    public function inline($args, $compiled_args){
         $this->inlining = true;
         # Todo: Modify VariableNode to change every instance of param
         # name to the argument
         $replacements = array();
+        $simple_replacements = array("Node", "InfixNode", "LeafNode");
         foreach($this->param_vals as $i=>$param) {
             $arg = $args[$i];
-            if($arg instanceof LeafNode){
-                $replacements[$param] = $arg->compile();
+            if($arg instanceof LeafNode
+                || $arg instanceof InfixNode
+                || get_class($arg) === 'Node'){
+                $replacements[$param] = $compiled_args[$i];
             } else {
                 $tmp_var = self::get_next_replacement_var();
-                $this->replacement_tmps .= $this->format_line($tmp_var
-                    .' = '.$arg->compile().';');
+                $this->tmps .= $this->format_line($tmp_var
+                    .' = '.$compiled_args[$i].';');
                 $replacements[$param] = $tmp_var;
             }
         }
@@ -1981,8 +2006,12 @@ class ExpandableFuncNode extends FuncDefNode{
     }
 
     public function simple_inlinable(){
-        if (count($this->children) > 4) return False;
-        $fourth_node = $this->children[3];
+        $body_index = 3;
+        if($this->children[3] instanceof AnnotationNode){
+            $body_index = 4;
+        }
+        if (count($this->children) > $body_index+1) return False;
+        $fourth_node = $this->children[$body_index];
         if($fourth_node instanceof SpecialForm) return False;
         if($fourth_node instanceof Node && count($fourth_node->children) >= 3) {
             if(MacroNode::is_macro($fourth_node->get_func_name())){
@@ -2000,7 +2029,7 @@ class ExpandableFuncNode extends FuncDefNode{
 
         Node::$tmp .= $lexings;
         Node::$tmp .= $splats;
-        Node::$tmp .= $this->replacement_tmps;
+        Node::$tmp .= $this->tmps;
 
         if($this->simple_inlinable()){
             return trim($body, " \t\n;");
@@ -2017,16 +2046,18 @@ class ExpandableFuncNode extends FuncDefNode{
 
         if($this->tmp_var){
             $prefix = $this->tmp_var.' = ';
-        } else {
+        }else{
             $prefix = "";
         }
+        $node_tmp = Node::add_tmp("");
+        $this->tmps = $node_tmp.$this->tmps;
         return $node->compile_statement($prefix);
     }
 
     public function bind_param($param){
         if($param instanceof Annotation){
             $this->typesig->add_type($param);
-        } else {
+        }else{
             $this->typesig->add_type("Any");
         }
         parent::bind_param($param);
@@ -2048,9 +2079,10 @@ class AnnotatedFuncNode extends ExpandableFuncNode{
         }
         if (!isset($this->children[$body_start_index])) {
             $parent_node = $this->get_mainfunc_node();
-            $this->children = array_merge($this->children, array_slice($parent_node->children, 3));
+            $this->children = array_merge($this->children,
+                array_slice($parent_node->children, $body_start_index));
             $len = count($this->children);
-            for($x=3; $x<$len; $x++){
+            for($x=$body_start_index; $x<$len; $x++){
                 $this->children[$x]->parent = $this;
             }
         }
