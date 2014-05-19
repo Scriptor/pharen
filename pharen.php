@@ -74,13 +74,13 @@ class TypeSig {
             }else if($thisname === $othername){
                 $score += self::SAME_TYPE;
             }else if(is_subclass_of($thisname, $othername)){
-                continue;
                 $reflection = new ReflectionClass($thisname);
                 $reflection = $reflection->getParentClass();
                 $chainlen = 1;
                 while($reflection->getName() !== $othername){
                     $chainlen++;
                 }
+                return 1/pow(2, $chainlen);
             }else{
                 return 0;
             }
@@ -1890,7 +1890,7 @@ class ExpandableFuncNode extends FuncDefNode{
     static $functypes = array();
     static $top_inliner = Null;
 
-    public $inlining = False;
+    public $inlining = 0;
     public $tmp_var;
     public $tmps;
     public $typesig;
@@ -1930,7 +1930,7 @@ class ExpandableFuncNode extends FuncDefNode{
     }
 
     public function inline($args, $compiled_args){
-        $this->inlining = True;
+        $this->inlining++;
         if(!self::$top_inliner){
             self::$top_inliner = $this;
         }
@@ -1962,8 +1962,8 @@ class ExpandableFuncNode extends FuncDefNode{
 
         $code = $this->compile_statement("", $replacements);
 
-        $this->inlining = False;
-        if(self::$top_inliner === $this){
+        $this->inlining--;
+        if(self::$top_inliner === $this && !$this->inlining){
             self::$top_inliner = Null;
         }
         if($simple){
@@ -2048,7 +2048,7 @@ class ExpandableFuncNode extends FuncDefNode{
 
         Node::$tmp .= $lexings;
         Node::$tmp .= $splats;
-        if(self::$top_inliner === $this){
+        if(self::$top_inliner === $this && $this->inlining === 1){
             Node::$tmp .= $this->tmps;
         }else{
             self::$top_inliner->tmps .= $this->tmps;
@@ -3502,7 +3502,9 @@ class Parser{
             $expected = $this->reduce_state($expected);
         }
 
-        if(($tok instanceof NameToken && ctype_alnum(str_replace('-', '', str_replace('_', '', $tok->value)))) and (strstr($tok->value, ".") || strToUpper($tok->value) == $tok->value)){
+        if(($tok instanceof NameToken
+                && (ctype_alnum(str_replace(array('-', '_', '.'), '', $tok->value))))
+            && (strstr($tok->value, ".") || strToUpper($tok->value) == $tok->value)){
             // Check if the token is all upper case, which means it's a constant
             $class = "LeafNode";
             array_shift($cur_state);
