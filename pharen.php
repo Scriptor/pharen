@@ -122,7 +122,24 @@ class TypeSig {
 }
 
 class CompileError extends Exception {}
-class TypeCompileError extends CompileError {}
+class FuncCallTypeError extends CompileError{
+    public function __construct($func_name, $func_typesig, $arg_typesig){
+        parent::__construct(
+            "Wrong argument type signature for: $func_name()\n"
+            . "\tExpecting: $func_typesig\n"
+            . "\tGiven: $arg_typesig"
+        );
+    }
+}
+class FuncReturnTypeError extends CompileError{
+    public function __construct($func_name, $specified, $inferred){
+        parent::__construct(
+            "Incompatible return type found for: $func_name()\n"
+            . "\tSpecified: $specified\n"
+            . "\tInferred: $inferred"
+        );
+    }
+}
 
 class Token implements IPharenComparable, IPharenHashable{
     public $value;
@@ -1091,11 +1108,7 @@ class Node implements Iterator, ArrayAccess, Countable{
                 $this->annotation = $func_node->return_type;
                 $func_typesig = $func_node->typesig;
                 if(!$func_typesig->any && !$typesig->match($func_typesig)){
-                    throw new TypeCompileError(
-                        "Wrong argument type signature for: $func_name()\n"
-                        . "\tExpecting: $func_typesig\n"
-                        . "\tGiven: $typesig"
-                    );
+                    throw new FuncCallTypeError($func_name, $func_typesig, $typesig);
                 }
             }
         }
@@ -1866,7 +1879,20 @@ class FuncDefNode extends SpecialForm{
     }
 
     public function compile_return_line($node){
-        return $node->compile_return();
+        $code = $node->compile_return();
+        
+        if($this->return_type && $inferred=$node->get_annotation()){
+            $specified_sig = new TypeSig;
+            $specified_sig->add_type($this->return_type);
+            $inferred_sig = new TypeSig;
+            $inferred_sig->add_type($inferred);
+            $score = $specified_sig->match($inferred_sig);
+            if($score === 0){
+                throw new FuncReturnTypeError($this->name, $specified_sig, $inferred_sig);
+            }
+        }
+
+        return $code;
     }
 
     public function is_tail_recursive($last_node){
@@ -3209,9 +3235,11 @@ class DefNode extends Node{
 
     public function compile_statement($prefix=""){
         $this->scope = $this->parent->get_scope();
-        $varname = $this->children[1]->compile();
+        $var_node = $this->children[1];
+        $val_node = $this->children[2];
+        $varname = $var_node->compile();
 
-        $this->scope->bind($varname, $this->children[2]);
+        $this->scope->bind($varname, $val_node);
         $code = $this->format_statement($this->scope->get_binding($varname));
         $code .= $this->scope->get_lexing($varname, True, $prefix);
 
