@@ -24,6 +24,8 @@ function split_body_last($xs){
 }
             
 class Annotation {
+    static $primitives = array('int', 'float', 'string', 'boolean');
+
     public $typename;
     public $var;
     public $value_type;
@@ -32,6 +34,22 @@ class Annotation {
         $this->typename = $typename;
         $this->var = $var;
         $this->value_type = $value_type;
+    }
+
+    public function __toString(){
+        if($this->value_type){
+            return "<{$this->typename}:{$this->value_type}>";
+        }else{
+            return "<{$this->typename}>";
+        }
+    }
+
+    public function get_php_typename(){
+        if(in_array($this->typename, self::$primitives)){
+            return "";
+        }else{
+            return $this->typename;
+        }
     }
 }
 
@@ -43,6 +61,18 @@ class TypeSig {
 
     public $any = True;
     public $annotations = array();
+
+    public function __toString(){
+        $str = "";
+        foreach($this->annotations as $ann){
+            if(is_string($ann)){
+                $str .= "<Any> ";
+            }else if(is_object($ann)){
+                $str .= "$ann ";
+            }
+        }
+        return $str;
+    }
 
     public function add_type($ann){
         if($ann !== "Any"){
@@ -90,6 +120,9 @@ class TypeSig {
         return $score;
     }
 }
+
+class CompileError extends Exception {}
+class TypeCompileError extends CompileError {}
 
 class Token implements IPharenComparable, IPharenHashable{
     public $value;
@@ -924,12 +957,28 @@ class Node implements Iterator, ArrayAccess, Countable{
         return 'new \PharenLambda(\''.RootNode::$ns.'\\\\'.$tmp_name.'\', Lexical::get_closure_id("'.Node::$ns.'", '.$scope_id_str.'))';
     }
 
+    public function get_args_typesig($args){
+        $typesig = new TypeSig;
+        foreach($args as $arg){
+            if($ann = $arg->get_annotation()){
+                $typesig->add_type($ann);
+            }else{
+                $typesig->add_type("Any");
+            }
+        }
+        return $typesig;
+    }
+
     public function compile($is_statement=False, $is_return=False, $prefix=""){
         $scope = $this->get_scope();
         $func_name = $this->get_func_name();
 
-        // For when type-computation requires 
+        // For when type-computation requires $args to be pre-compiled
+        // pre-compilation forces calculation of annotations
         $compiled_args = Null;
+        $typesig = Null;
+        $typesig_found = False;
+        $func_node = Null;
 
         $func = new FuncInfo($func_name, $this->force_not_partial, array_slice($this->children, 1), $this->get_scope());
 
@@ -1000,16 +1049,8 @@ class Node implements Iterator, ArrayAccess, Countable{
             $func_node = ExpandableFuncNode::$funcs[$func_name];
             $args = array_slice($this->children, 1);
             $compiled_args = $this->compile_args($args);
-            $typesig = new TypeSig;
-            foreach($args as $arg){
-                if($ann = $arg->get_annotation()){
-                    $typesig->add_type($ann);
-                }else{
-                   $typesig->add_type("Any");
-                }
-            }
+            $typesig = $this->get_args_typesig($args);
 
-            $typesig_found = False;
             $typesig_map = ExpandableFuncNode::$typesig_map[$func_name];
             $highest_score = 0;
             if($this->value_type_match){
@@ -1019,7 +1060,8 @@ class Node implements Iterator, ArrayAccess, Countable{
             foreach($typesig_map as $pair){
                 $func_typesig = $pair[0];
                 $score = $typesig->match($func_typesig);
-                if ($score > $highest_score) {
+                if($score > $highest_score
+                        || ($typesig->any && $func_typesig->any)){
                     $highest_score = $score;
                     $typesig_found = True;
                     $func_node = $pair[1];
@@ -1035,15 +1077,29 @@ class Node implements Iterator, ArrayAccess, Countable{
             }
         }
 
+        $args = array_slice($this->children, 1);
         if(!$compiled_args){
-            $compiled_args = $this->compile_args(array_slice($this->children, 1));
+            $compiled_args = $this->compile_args($args);
         }
         if(!$this->annotation){
-            $func_node = FuncDefNode::get_pharen_func($func_name);
+            if(!$func_node || !$typesig_found){
+                $func_node = FuncDefNode::get_pharen_func($func_name);
+                $typesig = $this->get_args_typesig($args);
+            }
+
             if(is_object($func_node)){
                 $this->annotation = $func_node->return_type;
+                $func_typesig = $func_node->typesig;
+                if(!$func_typesig->any && !$typesig->match($func_typesig)){
+                    throw new TypeCompileError(
+                        "Wrong argument type signature for: $func_name()\n"
+                        . "\tExpecting: $func_typesig\n"
+                        . "\tGiven: $typesig"
+                    );
+                }
             }
         }
+
         $args_string = implode(", ", $compiled_args);
         return "$func_name($args_string)";
     }
@@ -1211,7 +1267,6 @@ class LeafNode extends Node{
     public $value;
     public $tok;
     public $annotation;
-    public $type;
 
     public static function phpfy_name($name){
         $char_mappings = array(
@@ -1271,7 +1326,23 @@ class LeafNode extends Node{
     }
 
     public function get_annotation(){
-        return new Annotation($this->type, "", $this->value);
+        if($this->annotation) return $this->annotation;
+
+        $val = $this->value;
+        $lowerval = strtolower($val);
+        $type = Null;
+        if(is_numeric($val)){
+            if(floatval($val) == intval($val)){
+                $type = 'int';
+            }else{
+                $type = 'float';
+            }
+        }else if($lowerval === 'true'
+            || $lowerval === 'false'){
+                $type = 'boolean';
+        }
+        $this->annotation = new Annotation($type, "", $this->value);
+        return $this->annotation;
     }
 }
 
@@ -1365,6 +1436,13 @@ class FuncValNode extends LeafNode{
         }
         return "'"."$ns\\".$name."'";
     }
+
+    public function get_annotation(){
+        if($this->annotation) return $this->annotation;
+
+        $this->annotation = new Annotation("callable", "", $this->value);
+        return $this->annotation;
+    }
 }
 
 class VariableNode extends LeafNode{
@@ -1427,6 +1505,14 @@ class AnnotationNode extends LeafNode{
             $type = "callable";
             $value_type = $tok->value;
             break;
+        case 'NumberToken':
+            if(floatval($tok->value) == intval($tok->value)){
+                $type = "int";
+            }else{
+                $type = "float";
+            }
+            $value_type = $tok->value;
+            break;
         }
         return array($type, $value_type);
     }
@@ -1440,6 +1526,13 @@ class StringNode extends LeafNode{
 
     public function compile(){
         return '"'.$this->value.'"';
+    }
+
+    public function get_annotation(){
+        if($this->annotation) return $this->annotation;
+
+        $this->annotation = new Annotation("string", "", $this->value);
+        return $this->annotation;
     }
 }
 
@@ -1605,7 +1698,9 @@ class FuncDefNode extends SpecialForm{
     public $is_partial;
     public $name;
     public $is_tail_recursive;
-    public $return_type = Null;
+
+    public $typesig;
+    public $return_type;
 
     static function is_pharen_func($func_name){
         if(!empty(RootNode::$ns) && strpos($func_name, "\\")){
@@ -1652,6 +1747,9 @@ class FuncDefNode extends SpecialForm{
 
     public function compile_statement($prefix=""){
         $this->scope = $this->scope === Null ? new Scope($this) : $this->scope;
+        if(!$this->typesig){
+            $this->typesig = new Typesig;
+        }
 
         if(!$this->name){
             $this->name = $this->get_name();
@@ -1841,12 +1939,14 @@ class FuncDefNode extends SpecialForm{
     }
 
     public function bind_param($param){
+        $type = "Any";
         if(is_array($param)){
             $this->scope->bind($param[0], $param[1]);
             $this->param_vals[] = $param[0];
         }else{
             $val = new LeafNode($this, Null, $param);
             if($param instanceof Annotation){
+                $type = $param;
                 $val->annotation = $param;
                 $this->scope->bind($param->var, $val);
                 $this->param_vals[] = $param->var;
@@ -1855,6 +1955,7 @@ class FuncDefNode extends SpecialForm{
                 $this->param_vals[] = $param;
             }
         }
+        $this->typesig->add_type($type);
     }
 
     public function build_params_string($params){
@@ -1870,7 +1971,7 @@ class FuncDefNode extends SpecialForm{
             }
             $params .= ", ".$param[0].'='.$default;
         }else if($param instanceof Annotation){
-            $params .= ",{$param->typename} {$param->var}";
+            $params .= ",{$param->get_php_typename()} {$param->var}";
         }else{
             $params .= ", $param";
         }
@@ -1918,8 +2019,6 @@ class ExpandableFuncNode extends FuncDefNode{
         }else{
             $this->scope->replacements->exchangeArray($replacements);
         }
-
-        $this->typesig = new TypeSig;
 
         $code = parent::compile_statement($prefix);
 
@@ -2080,15 +2179,6 @@ class ExpandableFuncNode extends FuncDefNode{
         $node_tmp = Node::add_tmp("");
         $this->tmps = $node_tmp.$this->tmps;
         return $node->compile_statement($prefix);
-    }
-
-    public function bind_param($param){
-        if($param instanceof Annotation){
-            $this->typesig->add_type($param);
-        }else{
-            $this->typesig->add_type("Any");
-        }
-        parent::bind_param($param);
     }
 
     public function bind_params($params){
@@ -3605,7 +3695,12 @@ function compile_file($fname, $output_dir=Null){
     Node::$ns = $dir.$ns;
 
     $code = file_get_contents($fname);
-    $phpcode = compile($code);
+
+    try{
+        $phpcode = compile($code);
+    }catch(CompileError $e){
+        die;
+    }
  
     $output = $output_dir.DIRECTORY_SEPARATOR.$file.".php";
     file_put_contents($output, $phpcode);
@@ -3624,7 +3719,12 @@ function compile($code, $root=Null, $ns=Null, $scope=Null){
     }
     $parser = new Parser($tokens);
     $node_tree = $parser->parse($root, $scope);
-    $phpcode = $node_tree->compile();
+    try{
+        $phpcode = $node_tree->compile();
+    }catch(CompileError $e){
+        echo "\nCompile Error:\n".$e->getMessage()."\n";
+        throw $e;
+    }
     return $phpcode;
 }
 
