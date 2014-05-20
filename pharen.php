@@ -61,14 +61,16 @@ class TypeSig {
 
         for($x=0; $x<$thislen; $x++){
             $thistype = $this->annotations[$x];
+            $thisname = Null;
             $othertype = $other->annotations[$x];
+            $othername = Null;
 
             if(is_object($thistype)) $thisname = $thistype->typename;
             if(is_object($othertype)) $othername = $othertype->typename;
 
             if($thistype === "Any" || $othertype === "Any"){
                 $score += self::ANY_MATCH;
-            }else if(($thistype->value_type && $othertype->value-type) &&
+            }else if(($thistype->value_type && $othertype->value_type) &&
                      ($thistype->value_type === $othertype->value_type)){
                 $score += self::SAME_VALTYPE;
             }else if($thisname === $othername){
@@ -863,6 +865,10 @@ class Node implements Iterator, ArrayAccess, Countable{
         return False;
     }
 
+    public function get_annotation(){
+        return $this->annotation;
+    }
+
     public function get_last_func_call(){
         return $this->children[0];
     }
@@ -996,18 +1002,10 @@ class Node implements Iterator, ArrayAccess, Countable{
             $compiled_args = $this->compile_args($args);
             $typesig = new TypeSig;
             foreach($args as $arg){
-                if($arg instanceof VariableNode){
-                    if($ann = $arg->get_annotation()){
-                        $typesig->add_type($ann);
-                    }else{
-                       $typesig->add_type("Any");
-                    }
+                if($ann = $arg->get_annotation()){
+                    $typesig->add_type($ann);
                 }else{
-                    if($ann = $arg->annotation){
-                        $typesig->add_type($ann);
-                    }else{
-                        $typesig->add_type("Any");
-                    }
+                   $typesig->add_type("Any");
                 }
             }
 
@@ -1213,6 +1211,7 @@ class LeafNode extends Node{
     public $value;
     public $tok;
     public $annotation;
+    public $type;
 
     public static function phpfy_name($name){
         $char_mappings = array(
@@ -1269,6 +1268,10 @@ class LeafNode extends Node{
         return strlen($this->value) > 1 && !is_numeric($this->value) && !in_array($this->value, self::$reserved) ?
             self::phpfy_name($this->value)
             : $this->value;
+    }
+
+    public function get_annotation(){
+        return new Annotation($this->type, "", $this->value);
     }
 }
 
@@ -1351,6 +1354,7 @@ class UseNode extends KeywordCallNode{
 }
 
 class FuncValNode extends LeafNode{
+    public $type = "callable";
 
     public function compile(){
         $name = parent::compile();
