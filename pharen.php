@@ -2232,6 +2232,15 @@ class ExpandableFuncNode extends FuncDefNode{
     }
 }
 
+class GradualTypingNode extends Node{
+    public function compile(){
+        var_dump(get_class($this->children[2]));
+    }
+    public function compile_statement(){
+        return $this->compile();
+    }
+}
+
 class AnnotatedFuncNode extends ExpandableFuncNode{
     public function compile_statement($prefix="", $replacements=array()){
         $body_start_index = 3;
@@ -3516,6 +3525,7 @@ class Parser{
             "fn" => array("FuncDefNode", "LeafNode", "LeafNode", "LiteralNode", self::$values),
             "lambda" => array("LambdaNode", "LeafNode", "LiteralNode", self::$values),
             "fun" => array("ExpandableFuncNode", "LeafNode", self::$ann_or_name, "LiteralNode", self::$values),
+            "ann" => array("GradualTypingNode", "LeafNode", "LeafNode", "LiteralNode", self::$values), 
             "poly-ann" => array("AnnotatedFuncNode", "LeafNode", "LeafNode", "LiteralNode",
                 array(self::$ann_or_name)),
             "do" => array("DoNode", "LeafNode", self::$values),
@@ -3656,6 +3666,15 @@ class Parser{
                 $class = $expected[$tok_class];
             }else{
                 $class = "LeafNode";
+            }
+            array_shift($cur_state);
+        }else if($expected === "LiteralNode"){
+            if($tok->unquoted
+                || $tok instanceof OpenParenToken
+                || $tok instanceof OpenBracketToken){
+                    $class = $expected;
+            }else{
+                $class = self::$value[get_class($tok)];
             }
             array_shift($cur_state);
         }else{
