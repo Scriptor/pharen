@@ -121,23 +121,30 @@ class TypeSig {
     }
 }
 
-class CompileError extends Exception {}
+class CompileError extends Exception {
+    public $linenum;
+
+    public function __construct($msg, $line){
+        $this->linenum = $line;
+        parent::__construct($msg);
+    }
+}
 class FuncCallTypeError extends CompileError{
-    public function __construct($func_name, $func_typesig, $arg_typesig){
+    public function __construct($func_name, $func_typesig, $arg_typesig, $func_line, $call_line){
         parent::__construct(
-            "Wrong argument type signature for: $func_name()\n"
+            "Wrong argument type signature for: $func_name (defined on line $func_line)\n"
             . "\tExpecting: $func_typesig\n"
-            . "\tGiven: $arg_typesig"
-        );
+            . "\tGiven: $arg_typesig",
+        $call_line);
     }
 }
 class FuncReturnTypeError extends CompileError{
-    public function __construct($func_name, $specified, $inferred){
+    public function __construct($func_name, $specified, $inferred, $func_line, $call_line){
         parent::__construct(
-            "Incompatible return type found for: $func_name()\n"
+            "Incompatible return type found for: $func_name (defined on $func_line)\n"
             . "\tSpecified: $specified\n"
-            . "\tInferred: $inferred"
-        );
+            . "\tInferred: $inferred",
+        $call_line);
     }
 }
 
@@ -146,6 +153,7 @@ class Token implements IPharenComparable, IPharenHashable{
     public $quoted;
     public $unquoted;
     public $unquote_spliced;
+    public $linenum;
 
     public function __construct($value=null){
         $this->value = $value;
@@ -245,6 +253,7 @@ class Lexer{
     private $toks = array();
     private $escaping = false;
     private $i=0;
+    private $linenum = 1;
 	
     public function __toString(){
         return "<".__CLASS__.">";
@@ -289,15 +298,20 @@ class Lexer{
         $this->state = "new-expression";
         $this->esaping = False;
         $this->char = "";
+        $this->linenum = 1;
     }
 
     public function lex(){
         for($this->i=0;$this->i<strlen($this->code);$this->i++){
             $this->get_char();
+            if($this->char === "\n"){
+                $this->linenum++;
+            }
             $this->lex_char();
 
             $toks_size = sizeof($this->toks);
             if($toks_size == 0 or $this->tok !== $this->toks[$toks_size-1]){
+                $this->tok->linenum = $this->linenum;
                 $this->toks[] = $this->tok;
             }
         }
@@ -663,6 +677,7 @@ class Node implements Iterator, ArrayAccess, Countable{
     public $parent;
     public $children;
     public $tokens;
+    public $linenum;
     public $return_flag = False;
     public $has_variable_func = False;
     public $in_macro;
@@ -1108,7 +1123,8 @@ class Node implements Iterator, ArrayAccess, Countable{
                 $this->annotation = $func_node->return_type;
                 $func_typesig = $func_node->typesig;
                 if(!$func_typesig->any && !$typesig->match($func_typesig)){
-                    throw new FuncCallTypeError($func_name, $func_typesig, $typesig);
+                    throw new FuncCallTypeError($func_name, $func_typesig, $typesig,
+                        $func_node->linenum, $this->linenum);
                 }
             }
         }
@@ -1888,7 +1904,8 @@ class FuncDefNode extends SpecialForm{
             $inferred_sig->add_type($inferred);
             $score = $specified_sig->match($inferred_sig);
             if($score === 0){
-                throw new FuncReturnTypeError($this->name, $specified_sig, $inferred_sig);
+                throw new FuncReturnTypeError($this->name, $specified_sig, $inferred_sig,
+                    $this->linenum, $node->linenum);
             }
         }
 
@@ -3647,6 +3664,7 @@ class Parser{
         }
 
         $node = new $class($parent, null, $tok->value, $tok);
+        $node->linenum = $tok->linenum;
         return array($node, $state);
     }
 
@@ -3725,7 +3743,7 @@ function compile_file($fname, $output_dir=Null){
     $code = file_get_contents($fname);
 
     try{
-        $phpcode = compile($code);
+        $phpcode = compile($code, Null, Null, Null, $fname);
     }catch(CompileError $e){
         die;
     }
@@ -3735,7 +3753,7 @@ function compile_file($fname, $output_dir=Null){
     return $phpcode;
 }
  
-function compile($code, $root=Null, $ns=Null, $scope=Null){
+function compile($code, $root=Null, $ns=Null, $scope=Null, $filename=Null){
     if($ns !== Null){
         Node::$ns = $ns;
     }
@@ -3750,7 +3768,7 @@ function compile($code, $root=Null, $ns=Null, $scope=Null){
     try{
         $phpcode = $node_tree->compile();
     }catch(CompileError $e){
-        echo "\nCompile Error:\n".$e->getMessage()."\n";
+        echo "\nCompile Error in $filename, line {$e->linenum}:\n".$e->getMessage()."\n";
         throw $e;
     }
     return $phpcode;
