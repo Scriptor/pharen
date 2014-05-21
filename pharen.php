@@ -75,12 +75,40 @@ class TypeSig {
     }
 
     public function add_type($ann){
+        $ann = $ann === Null ? "Any" : $ann;
         if($ann !== "Any"){
             $this->any = False;
         }
         array_unshift($this->annotations, $ann);
     }
 
+    public function interface_chain_score($subclass, $ancestor){
+        $reflection = new ReflectionClass($subclass);
+        $chainlen = 0;
+        while(!$reflection->implementsInterface($ancestor)){
+                $chainlen++;
+                $reflection = $reflection->getParentClass();
+        }
+        return 1/pow(2, $chainlen);
+    }
+
+    public function class_chain_score($subclass, $ancestor){
+        $chainlen = 1;
+        while($parent=get_parent_class($subclass) !== $ancestor){
+            $chainlen++;
+            $subclass = $parent;
+        }
+        return 1/pow(2, $chainlen);
+    }
+
+    public function calc_chain_score($subclass, $ancestor){
+        if(interface_exists($ancestor)){
+            return $this->interface_chain_score($subclass, $ancestor);
+        }else{
+            return $this->class_chain_score($subclass, $ancestor);
+        }
+    }
+    
     public function match(TypeSig $other){
         $thislen = count($this->annotations);
         $otherlen = count($other->annotations);
@@ -106,13 +134,8 @@ class TypeSig {
             }else if($thisname === $othername){
                 $score += self::SAME_TYPE;
             }else if(is_subclass_of($thisname, $othername)){
-                $reflection = new ReflectionClass($thisname);
-                $reflection = $reflection->getParentClass();
-                $chainlen = 1;
-                while($reflection->getName() !== $othername){
-                    $chainlen++;
-                }
-                return 1/pow(2, $chainlen);
+                $chain_score = $this->calc_chain_score($thisname, $othername);
+                $score += $chain_score;
             }else{
                 return 0;
             }
@@ -144,6 +167,15 @@ class FuncReturnTypeError extends CompileError{
             "Incompatible return type found for: $func_name (defined on $func_line)\n"
             . "\tSpecified: $specified\n"
             . "\tInferred: $inferred",
+        $call_line);
+    }
+}
+class AnnotationTypeError extends CompileError{
+    public function __construct($existing_ann, $new_ann, $varname, $call_line){
+        parent::__construct(
+            "Incompatible specified annotation for: $varname\n"
+            . "\tExisting: $existing_ann\n"
+            . "\tSpecified with (ann): $new_ann",
         $call_line);
     }
 }
@@ -1500,14 +1532,24 @@ class VariableNode extends LeafNode{
         }
     }
     
-    public function get_annotation(){
+    private function get_var(){
         $varname = '$'.parent::compile();
-        $var = $this->get_scope()->find($varname, true, true);
+        return $this->get_scope()->find($varname, true, true);
+    }
+
+    public function get_annotation(){
+        $var = $this->get_var();
+
         if($var && isset($var->annotation)){
-            return $var->annotation;
+            return $var->get_annotation();
         }else{
-            return null;
+            return Null;
         }
+    }
+
+    public function set_annotation($ann){
+        $var = $this->get_var();
+        $var->annotation = $ann;
     }
 
     public function compile_nolookup(){
@@ -1777,7 +1819,7 @@ class FuncDefNode extends SpecialForm{
     public function compile_statement($prefix=""){
         $this->scope = $this->scope === Null ? new Scope($this) : $this->scope;
         if(!$this->typesig){
-            $this->typesig = new Typesig;
+            $this->typesig = new TypeSig;
         }
 
         if(!$this->name){
@@ -2234,8 +2276,32 @@ class ExpandableFuncNode extends FuncDefNode{
 
 class GradualTypingNode extends Node{
     public function compile(){
-        var_dump(get_class($this->children[2]));
+        $name_node = $this->children[1];
+        $third_child = $this->children[2];
+
+        if($third_child instanceof LiteralNode){
+
+        }else if($third_child instanceof AnnotationNode){
+            list($typename, $value_type) = $third_child->compile();
+            $new_ann = new Annotation($typename, $name_node->compile(), $value_type);
+
+            $existing_ann = $name_node->get_annotation();
+            if($existing_ann){
+                $existing_typesig = new TypeSig;
+                $existing_typesig->add_type($existing_ann);
+                $new_typesig = new TypeSig;
+                $new_typesig->add_type($new_ann);
+                if($new_typesig->match($existing_typesig) === 0){
+                    throw new AnnotationTypeError($existing_ann, $new_ann,
+                        $name_node->compile(), $this->linenum);
+                }
+            }else{
+                $name_node->set_annotation($new_ann);
+            }
+        }
+        return "";
     }
+
     public function compile_statement(){
         return $this->compile();
     }
@@ -3427,7 +3493,7 @@ class PlambdaDefNode extends FuncDefNode {
     public function compile_statement($prefix=""){
       
         $this->scope = $this->scope == Null ? new Scope($this) : $this->scope;
-        $this->typesig = $this->typesig == Null ? new Typesig : $this->typesig;
+        $this->typesig = $this->typesig == Null ? new TypeSig : $this->typesig;
         $this->params = $this->children[1];
 
         $params = $this->get_param_names($this->params);
@@ -3526,7 +3592,7 @@ class Parser{
             "fn" => array("FuncDefNode", "LeafNode", "LeafNode", "LiteralNode", self::$values),
             "lambda" => array("LambdaNode", "LeafNode", "LiteralNode", self::$values),
             "fun" => array("ExpandableFuncNode", "LeafNode", self::$ann_or_name, "LiteralNode", self::$values),
-            "ann" => array("GradualTypingNode", "LeafNode", "LeafNode", "LiteralNode", self::$values), 
+            "ann" => array("GradualTypingNode", "LeafNode", "VariableNode", "LiteralNode", self::$values), 
             "poly-ann" => array("AnnotatedFuncNode", "LeafNode", "LeafNode", "LiteralNode",
                 array(self::$ann_or_name)),
             "do" => array("DoNode", "LeafNode", self::$values),
