@@ -152,6 +152,17 @@ class TypeSig {
     }
 }
 
+class FuncPlaceHolder{
+    public $typesig;
+    public $return_type;
+    public $linenum;
+
+    public function __construct($name){
+        $reflection = new ReflectionFunction($name);
+        $linenum = $reflection->getStartLine();
+    }
+}
+
 class CompileError extends Exception {
     public $linenum;
 
@@ -162,8 +173,13 @@ class CompileError extends Exception {
 }
 class FuncCallTypeError extends CompileError{
     public function __construct($func_name, $func_typesig, $arg_typesig, $func_line, $call_line){
+        if($func_line){
+            $defined = "(defined on line $func_line)";
+        }else{
+            $defined = "";
+        }
         parent::__construct(
-            "Wrong argument type signature for: $func_name (defined on line $func_line)\n"
+            "Wrong argument type signature for: $func_name $defined\n"
             . "\tExpecting: $func_typesig\n"
             . "\tGiven: $arg_typesig",
         $call_line);
@@ -171,8 +187,13 @@ class FuncCallTypeError extends CompileError{
 }
 class FuncReturnTypeError extends CompileError{
     public function __construct($func_name, $specified, $inferred, $func_line, $call_line){
+        if($func_line){
+            $defined = "(defined on $func_line)";
+        }else{
+            $defined = "";
+        }
         parent::__construct(
-            "Incompatible return type found for: $func_name (defined on $func_line)\n"
+            "Incompatible return type found for: $func_name $defined\n"
             . "\tSpecified: $specified\n"
             . "\tInferred: $inferred",
         $call_line);
@@ -486,7 +507,10 @@ class FuncInfo{
         $this->force_not_partial = $force_not_partial;
 
         if(FuncDefNode::is_pharen_func($this->name)){
-            $this->func = FuncDefNode::get_pharen_func($this->name);
+            $func = FuncDefNode::get_pharen_func($this->name);
+            if(!($func instanceof FuncPlaceHolder)){
+                $this->func = $func;
+            }
         }else if(in_array($name, Parser::$INFIX_OPERATORS)){
             $this->func = new InfixFunc;
         }
@@ -1159,7 +1183,7 @@ class Node implements Iterator, ArrayAccess, Countable{
                 $typesig = $this->get_args_typesig($args);
             }
 
-            if(is_object($func_node)){
+            if(is_object($func_node) && $func_node->typesig){
                 $this->annotation = $func_node->return_type;
                 $func_typesig = $func_node->typesig;
                 if(!$func_typesig->any && !$typesig->match($func_typesig)){
@@ -1768,6 +1792,7 @@ class SignatureNode extends Node{
 
 class FuncDefNode extends SpecialForm{
     static $functions;
+    static $placeholder_funcs;
 
     protected $body_index = 3;
     public $scope;
@@ -1801,6 +1826,19 @@ class FuncDefNode extends SpecialForm{
     static function get_pharen_func($func_name){
         if(isset(self::$functions[$func_name])){
             return self::$functions[$func_name];
+        }else if(isset(self::$placeholder_funcs[$func_name])){
+            return self::$placeholder_funcs[$func_name];
+        }else{
+            return Null;
+        }
+    }
+
+    static function get_placeholder_func($func_name){
+        $phpfied = LeafNode::phpfy_name($func_name);
+        if(function_exists($phpfied)){
+            $func = new FuncPlaceHolder($phpfied);
+            self::$placeholder_funcs[$phpfied] = $func;
+            return $func;
         }else{
             return Null;
         }
@@ -2286,13 +2324,25 @@ class ExpandableFuncNode extends FuncDefNode{
 }
 
 class GradualTypingNode extends Node{
+    public function get_func_node($name){
+        $func_node = FuncDefNode::get_pharen_func($name);
+        if(!$func_node){
+            $func_node = FuncDefNode::get_placeholder_func($name);
+        }
+        return $func_node;
+    }
+
     public function compile(){
         $name_node = $this->children[1];
         $third_child = $this->children[2];
 
         if($third_child instanceof LiteralNode){
             $name = $name_node->value;
-            $func_node = FuncDefNode::get_pharen_func($name);
+            $func_node = $this->get_func_node($name);
+            if(!$func_node){
+                return "";
+            }
+
             $params_sig = new TypeSig;
             $typename = Null;
             $value_type = Null;
