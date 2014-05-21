@@ -3427,6 +3427,7 @@ class PlambdaDefNode extends FuncDefNode {
     public function compile_statement($prefix=""){
       
         $this->scope = $this->scope == Null ? new Scope($this) : $this->scope;
+        $this->typesig = $this->typesig == Null ? new Typesig : $this->typesig;
         $this->params = $this->children[1];
 
         $params = $this->get_param_names($this->params);
