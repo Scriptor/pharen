@@ -67,13 +67,13 @@
 
 (fn first (xs)
   (-> (seq xs) (first)))
-(ann first (^Seq xs))
+(poly-ann first (^Seq xs))
 (fun first (^FastSeq xs)
      (-> xs first))
 
 (fn rest (xs)
   (-> (seq xs) (rest)))
-(ann rest (^Seq xs))
+(poly-ann rest (^Seq xs))
 (fun rest (^FastSeq xs)
      (-> xs rest))
 
@@ -183,7 +183,7 @@
 
 (fn empty? (xs)
   (or (inst? (seq xs) PharenEmptyList) (not (seq xs))))
-(ann empty? (^Seq xs))
+(poly-ann empty? (^Seq xs))
 (fun empty? (^FastSeq xs)
      (=== (-> xs length) 0))
 
@@ -249,7 +249,7 @@
   (if (seq? xs)
     (-> xs (cons x))
     (-> (seq xs) (cons x))))
-(ann cons (x ^Seq xs))
+(poly-ann cons (x ^Seq xs))
 
 (fn assoc (key val hm)
   (-> (hashify hm) (assoc key val)))
@@ -358,7 +358,7 @@
   (if (empty? xs)
     acc
     (reduce f ($f (first xs) acc) (rest xs))))
-(ann reduce (f acc ^Seq xs))
+(poly-ann reduce (f acc ^Seq xs))
 
 (fn reduce-fns (fns acc xs)
   (if (empty? xs)
