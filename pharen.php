@@ -2360,8 +2360,13 @@ class AnnotatedFuncNode extends ExpandableFuncNode{
         }
         if (!isset($this->children[$body_start_index])) {
             $parent_node = $this->get_mainfunc_node();
+            if($parent_node->children[3] instanceof AnnotationNode){
+                $parent_start_index = 4;
+            }else{
+                $parent_start_index = 3;
+            }
             $this->children = array_merge($this->children,
-                array_slice($parent_node->children, $body_start_index));
+                array_slice($parent_node->children, $parent_start_index));
             $len = count($this->children);
             for($x=$body_start_index; $x<$len; $x++){
                 $this->children[$x]->parent = $this;
