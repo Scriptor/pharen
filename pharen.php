@@ -62,6 +62,14 @@ class TypeSig {
     public $any = True;
     public $annotations = array();
 
+    public static function match_annotations($ann1, $ann2){
+        $typesig1 = new Typesig;
+        $typesig1->add_type($ann1);
+        $typesig2 = new TypeSig;
+        $typesig2->add_type($ann2);
+        return $typesig1->match($typesig2);
+    }
+
     public function __toString(){
         $str = "";
         foreach($this->annotations as $ann){
@@ -1938,8 +1946,9 @@ class FuncDefNode extends SpecialForm{
 
     public function compile_return_line($node){
         $code = $node->compile_return();
+        $inferred = $node->get_annotation();
         
-        if($this->return_type && $inferred=$node->get_annotation()){
+        if($this->return_type && $inferred){
             $specified_sig = new TypeSig;
             $specified_sig->add_type($this->return_type);
             $inferred_sig = new TypeSig;
@@ -1949,6 +1958,8 @@ class FuncDefNode extends SpecialForm{
                 throw new FuncReturnTypeError($this->name, $specified_sig, $inferred_sig,
                     $this->linenum, $node->linenum);
             }
+        }else if($inferred){
+            $this->return_type = $inferred;
         }
 
         return $code;
@@ -2280,7 +2291,41 @@ class GradualTypingNode extends Node{
         $third_child = $this->children[2];
 
         if($third_child instanceof LiteralNode){
+            $name = $name_node->value;
+            $func_node = FuncDefNode::get_pharen_func($name);
+            $params_sig = new TypeSig;
+            $typename = Null;
+            $value_type = Null;
+            foreach($third_child->children as $param_node){
+                if($param_node instanceof AnnotationNode){
+                    list($typename, $value_type) = $param_node->compile();
+                }else{
+                    if($typename){
+                        $ann = new Annotation($typename,
+                            $param_node->compile(), $value_type);
+                        $params_sig->add_type($ann);
+                    }
+                    $typename = Null;
+                    $value_type = Null;
+                }
+            }
+            $func_node->typesig = $params_sig;
 
+            if(isset($this->children[3])){
+                $return_ann_node = $this->children[3];
+                list($typename, $value_type) = $return_ann_node->compile();
+                $return_type = new Annotation($typename, "<return>", $value_type);
+
+                if($func_node->return_type){
+                    $score = TypeSig::match_annotations($return_type, $func_node->return_type);
+                    if($score === 0){
+                        throw new FuncReturnTypeError($name, $return_type, $func_node->return_type,
+                            $func_node->linenum, $this->linenum);
+                    }
+                }else{
+                    $func_node->return_type = $return_type;
+                }
+            }
         }else if($third_child instanceof AnnotationNode){
             list($typename, $value_type) = $third_child->compile();
             $new_ann = new Annotation($typename, $name_node->compile(), $value_type);
