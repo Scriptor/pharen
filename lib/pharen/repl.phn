@@ -83,11 +83,12 @@
   (let [embedded-code (. "(local *1 " code ") (return *1)")
         raw-ns (:: .RootNode raw-ns)
         final-code (add-uses embedded-code)]
-    (compile final-code NULL (phpfy-ns raw-ns) (:: .RootNode last-scope))))
+    (compile final-code NULL (phpfy-ns raw-ns) (:: .RootNode last-scope)
+             "<repl>" FALSE)))
 
 (fn compile-code (code)
   (local compiled-code (wrap-compile code))
-  (if compiled-code
+  (if-not (false? compiled-code)
     compiled-code
     FALSE))
 
@@ -99,7 +100,7 @@
     (if (== code "quit")
       (exit 0)
       (let [compiled-code (compile-code code)]
-        (if compiled-code
+        (if-not (false? compiled-code)
           (do 
             (extract repl-vars)
             (prn-result (eval (. "?>" compiled-code)))
