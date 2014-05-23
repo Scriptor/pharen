@@ -3941,7 +3941,7 @@ function compile_file($fname, $output_dir=Null){
     return $phpcode;
 }
  
-function compile($code, $root=Null, $ns=Null, $scope=Null, $filename=Null){
+function compile($code, $root=Null, $ns=Null, $scope=Null, $filename=Null, $throw=True){
     if($ns !== Null){
         Node::$ns = $ns;
     }
@@ -3957,7 +3957,9 @@ function compile($code, $root=Null, $ns=Null, $scope=Null, $filename=Null){
         $phpcode = $node_tree->compile();
     }catch(CompileError $e){
         echo "\nCompile Error in $filename, line {$e->linenum}:\n".$e->getMessage()."\n";
-        throw $e;
+        if($throw){
+            throw $e;
+        }
     }
     return $phpcode;
 }
