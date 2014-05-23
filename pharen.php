@@ -2395,11 +2395,12 @@ class GradualTypingNode extends Node{
                 $name_node->set_annotation($new_ann);
             }
         }
-        return "";
+        return "NULL";
     }
 
     public function compile_statement(){
-        return $this->compile();
+        $this->compile();
+        return "";
     }
 }
 
