@@ -1293,6 +1293,7 @@ class RootNode extends Node{
         $this->children = array();
         $this->indent = "";
         $this->scope = $scope ? $scope : new Scope($this);
+        self::$last_scope = $this->scope;
     }
 
     public function format_line_indent($code, $prefix=""){
