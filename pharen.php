@@ -3953,6 +3953,7 @@ function compile($code, $root=Null, $ns=Null, $scope=Null, $filename=Null, $thro
     }
     $parser = new Parser($tokens);
     $node_tree = $parser->parse($root, $scope);
+    $phpcode = "";
     try{
         $phpcode = $node_tree->compile();
     }catch(CompileError $e){
