@@ -1617,6 +1617,19 @@ class SplatNode extends VariableNode{
 
 class AnnotationNode extends LeafNode{
 
+    public function process_type_expr($toks){
+        $constructor = $toks[1]->value;
+        if(!($toks[2] instanceof CloseParenToken)){
+            $len = count($toks);
+            $args = array();
+            for($i=2; $i<$len-1; $i++){
+                $args[] = $toks[$i]->value;
+            }
+            $args_str = implode(",", $args);
+        }
+        return $constructor."($args_str)";
+    }
+
     public function compile(){
         $code = $this->value;
         $lexer = new Lexer($code);
@@ -1624,6 +1637,9 @@ class AnnotationNode extends LeafNode{
         $tok = $toks[0];
         $value_type = "";
         switch(get_class($tok)){
+        case 'OpenParenToken':
+            $type = $this->process_type_expr($toks);
+            break;
         case 'NameToken':
             $type = parent::compile();
             break;
