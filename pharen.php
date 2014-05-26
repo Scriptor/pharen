@@ -292,6 +292,20 @@ class CommentToken extends Token{
 }
 
 class AnnotationToken extends Token{
+    private $paren_count = 0;
+    
+    public function is_open(){
+        return $this->paren_count === 0;
+    }
+
+    public function append($ch){
+        if($ch === '('){
+            $this->paren_count++;
+        }else{
+            $this->paren_count--;
+        }
+        parent::append($ch);
+    }
 }
 
 class FuncValToken extends Token{
@@ -410,10 +424,18 @@ class Lexer{
             }
         }else if($this->state == "append"){
             if(trim($this->char) === "" or $this->char === ","){
-                $this->state = "new-expression";
+                if($this->tok instanceof AnnotationToken && $this->tok->is_open()){
+                    $this->tok->append($this->char);
+                }else{
+                    $this->state = "new-expression";
+                }
             }else if($this->char == ")"){
-                $this->tok = new CloseParenToken;
-                $this->state = "new-expression";
+                    if($this->tok instanceof AnnotationToken && $this->tok->is_open()){
+                        $this->tok->append($this->char);
+                    }else{
+                        $this->tok = new CloseParenToken;
+                    }
+                    $this->state = "new-expression";
             }else if($this->char == "]"){
                 $this->tok = new CloseBracketToken;
                 $this->state = "new-expression";
