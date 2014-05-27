@@ -68,13 +68,16 @@
     (. use-str code)))
 
 (fn prn-result (x)
-  (prn (cond
-         ((=== NULL x) "Null")
-         ((=== TRUE x) "True")
-         ((=== FALSE x) "False")
-         ((is-object x) (if (method-exists x "__toString") x (. "<" (get-class x) ">")))
-         ((is-string x) (. "\"" x "\""))
-         (TRUE x))))
+  (let [result (cond
+                ((=== NULL x) "Null")
+                ((=== TRUE x) "True")
+                ((=== FALSE x) "False")
+                ((is-object x) (if (method-exists x "__toString") x (. "<" (get-class x) ">")))
+                ((is-string x) (. "\"" x "\""))
+                (TRUE x))]
+    (if (< 80 (strlen result))
+      (prn (. (substr result 0 80) "..."))
+      (prn result))))
 
 (fn phpfy-ns (ns)
   (str-replace "-" "_" (str-replace "." "_" ns)))
