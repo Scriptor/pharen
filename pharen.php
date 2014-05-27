@@ -2433,9 +2433,8 @@ class GradualTypingNode extends Node{
                     throw new AnnotationTypeError($existing_ann, $new_ann,
                         $name_node->compile(), $this->linenum);
                 }
-            }else{
-                $name_node->set_annotation($new_ann);
             }
+            $name_node->set_annotation($new_ann);
         }
         return "NULL";
     }
