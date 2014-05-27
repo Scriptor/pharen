@@ -359,6 +359,7 @@
     acc
     (reduce f ($f (first xs) acc) (rest xs))))
 (poly-ann reduce (f acc ^Seq xs))
+(poly-ann reduce (f acc ^FastSeq xs))
 
 (fn reduce-fns (fns acc xs)
   (if (empty? xs)
