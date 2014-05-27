@@ -182,7 +182,7 @@
   (or (zero? n) (empty? xs)))
 
 (fn empty? (xs)
-  (or (inst? (seq xs) PharenEmptyList) (not (seq xs))))
+  (or (inst? (seq xs) .PharenEmptyList) (not (seq xs))))
 (poly-ann empty? (^Seq xs))
 (fun empty? (^FastSeq xs)
      (=== (-> xs length) 0))
