@@ -136,9 +136,12 @@ class TypeSig {
 
             if($thistype === "Any" || $othertype === "Any"){
                 $score += self::ANY_MATCH;
-            }else if(($thistype->value_type && $othertype->value_type) &&
-                     ($thistype->value_type === $othertype->value_type)){
-                $score += self::SAME_VALTYPE;
+            }else if($othertype->value_type){
+                if($thistype->value_type !== $othertype->value_type){
+                    return 0;
+                }else{
+                    $score += self::SAME_VALTYPE;
+                }
             }else if($thisname === $othername){
                 $score += self::SAME_TYPE;
             }else if(is_subclass_of($thisname, $othername)){
