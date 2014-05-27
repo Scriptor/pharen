@@ -1341,6 +1341,7 @@ class RootNode extends Node{
             $code .= $this->format_line("require_once(".$prefix.".'"."/"."lexical.php"."');");
         }
         $code .= $this->format_line("use Pharen\Lexical as Lexical;");
+        $code .= $this->format_line("use \Seq as Seq;");
 
         $code .= $this->scope->init_namespace_scope();
 
