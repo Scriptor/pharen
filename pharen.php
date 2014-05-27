@@ -2096,7 +2096,7 @@ class FuncDefNode extends SpecialForm{
                     $type_data = $last_ann->compile();
                     $typename = $type_data[0];
                     $value_type = $type_data[1];
-                    $var = $node->compile();
+                    $var = $node->compile(True);
                     $params[] = new Annotation($typename, $var, $value_type);
                     $last_ann = Null;
                 }else{
@@ -2462,7 +2462,7 @@ class AnnotatedFuncNode extends ExpandableFuncNode{
             $this->children = array_merge($this->children,
                 array_slice($parent_node->children, $parent_start_index));
             $len = count($this->children);
-            for($x=$body_start_index; $x<$len; $x++){
+            for($x=0; $x<$len; $x++){
                 $this->children[$x]->parent = $this;
             }
         }
