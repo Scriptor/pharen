@@ -321,7 +321,8 @@ class Lexer{
     static $keyword_rewrites = array(
         'or' => 'pharen-or',
         'and' => 'pharen-and',
-        'list' => 'pharen-list'
+        'list' => 'pharen-list',
+        'sort' => 'pharen-sort'
     );
 
     public $code;
