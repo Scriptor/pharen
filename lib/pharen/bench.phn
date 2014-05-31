@@ -6,30 +6,32 @@
          time-duration (- (microtime TRUE) time-start)]
      time-duration))
 
-(defmacro bench (expr)
+(defmacro bench (name expr)
   '(let [n 10
          times []]
-     (prn (generate-report n
+     (prn (generate-report ~name n
                            (dotimes [i n]
                              (local t (trial ~expr))
                              (set! times (cons t times)))))))
 
 (fn pretty (t)
   (if (> t 1000)
-    (. t " seconds")
-    (. (* 1000 t) " ms")))
+    (. (sprintf "%.4f" t) " seconds")
+    (. (sprintf "%.4f" (* 1000 t)) " ms")))
 
-(fn generate-report (n times)
+(fn generate-report (name n times)
   (let [mean (stats.mean times)
         median (stats.median times)
         max (stats.max times)
         min (stats.min times)
-        std-dev (stats.std-dev times)]
-    (. "Benchmarking " n " trials:\n"
-       (str-repeat "=" 25) "\n"
-       "Mean:\t "   (pretty mean) "\n"
-       "Median:\t " (pretty median) "\n\n"
-       "Std dev: " (pretty std-dev) "\n"
+        std-dev (stats.std-dev times)
+        plusmin (round (* (/ std-dev mean) 100) 2)
+        header (. "Benchmarking " name " - " n " trials:")]
+    (. header "\n"
+       (str-repeat "=" (strlen header)) "\n"
+       "Mean:\t "   (pretty mean) " +/- " plusmin "%\n"
+       "Median:\t " (pretty median) "\n"
        "Max:\t "    (pretty max) "\n"
        "Min:\t "    (pretty min) "\n"
+       "Std dev: " (pretty std-dev) "\n"
        )))
