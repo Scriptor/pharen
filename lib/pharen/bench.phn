@@ -26,7 +26,7 @@
         max (stats.max times)
         min (stats.min times)
         std-dev (stats.std-dev times)
-        plusmin (round (* (/ std-dev mean) 100) 2)
+        plusmin (round (* (/ (* 2 std-dev) mean) 100) 2)
         header (. "Benchmarking " name " - " n " trials:")]
     (. header "\n"
        (str-repeat "=" (strlen header)) "\n"
@@ -56,9 +56,10 @@
         header (. "Comparing " name1 " and " name2)]
     (prn (.
           header "\n"
-          (str-repeat "-" (strlen header)) "\n"
+          (str-repeat "=" (strlen header)) "\n"
           (if (neg? mean-diffs) ; b1 is faster
-            (. name1 " is faster by "
+            (. name1 " is on average faster by "
                (get-perc mean-diffs mean2) "%")
-            (. name2 " is faster by "
-               (get-perc mean-diffs mean2) "%"))))))
+            (. name2 " is on average faster by "
+               (get-perc mean-diffs mean2) "%"))
+          "\n"))))
