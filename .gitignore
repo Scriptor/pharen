@@ -1,6 +1,9 @@
 pharen_old.php
+phakefile.php
+lib/phake/phake.php
 *.tmp
 *.swp
 lib/pharen/*.php
 examples/*.php
+examples/test/*.php
 .DS_Store
