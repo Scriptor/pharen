@@ -133,7 +133,7 @@ class PharenList extends FastSeq
     }
 
     public function count(){
-        if($this->length){
+        if(isset($this->length)){
             return $this->length;
         }else{
             $this->length = 1 + $this->rest()->count();
