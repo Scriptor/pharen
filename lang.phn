@@ -297,6 +297,10 @@
     (cons ($f (first xs) (first ys))
           (zip-with f (rest xs) (rest ys)))))
 
+(fn pharen-sort (xs)
+  (let [arr (arr xs)]
+    (sort arr)
+    arr))
 
 (fn seq-join (xs [glue ""])
   (implode glue (arr xs)))
