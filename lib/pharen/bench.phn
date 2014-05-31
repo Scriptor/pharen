@@ -9,10 +9,11 @@
 (defmacro bench (name expr)
   '(let [n 10
          times []]
-     (prn (generate-report ~name n
-                           (dotimes [i n]
+     (local times (dotimes [i n]
                              (local t (trial ~expr))
-                             (set! times (cons t times)))))))
+                             (set! times (cons t times))))
+     (prn (generate-report ~name n times))
+     {:name ~name :times times}))
 
 (fn pretty (t)
   (if (> t 1000)
@@ -35,3 +36,29 @@
        "Min:\t "    (pretty min) "\n"
        "Std dev: " (pretty std-dev) "\n"
        )))
+
+(fn get-diffs (xs ys)
+  (map-indexed (lambda (x i)
+                       (- x (:ys i)))
+               xs))
+(fn get-perc (x y)
+  (round (* (/ (abs x) (abs y)) 100) 2))
+
+(fn compare-benches (b1 b2)
+  (let [name1 (:b1 :name)
+        name2 (:b2 :name)
+        times1 (:b1 :times) ^Seq
+        times2 (:b2 :times) ^Seq
+        mean1 (stats.mean times1)
+        mean2 (stats.mean times2)
+        diffs (get-diffs times1 times2)
+        mean-diffs (stats.mean diffs)
+        header (. "Comparing " name1 " and " name2)]
+    (prn (.
+          header "\n"
+          (str-repeat "-" (strlen header)) "\n"
+          (if (neg? mean-diffs) ; b1 is faster
+            (. name1 " is faster by "
+               (get-perc mean-diffs mean2) "%")
+            (. name2 " is faster by "
+               (get-perc mean-diffs mean2) "%"))))))
