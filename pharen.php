@@ -1907,6 +1907,17 @@ class FuncDefNode extends SpecialForm{
         return $this->children[1]->compile();
     }
 
+    private function get_param_name($param){
+        if(is_array($param)){
+            $param_name = $param[0];
+        }else if($param instanceof Annotation){
+            $param_name = $param->var;
+        }else{
+            $param_name = $param;
+        }
+        return $param_name;
+    }
+
     public function compile_statement($prefix=""){
         $this->scope = $this->scope === Null ? new Scope($this) : $this->scope;
         if(!$this->typesig){
@@ -1966,12 +1977,19 @@ class FuncDefNode extends SpecialForm{
             }
             
             $new_param_values = array_slice($last_expr->get_last_expr()->children, 1);
+            $newvals = array();
             $params_len = count($new_param_values);
             $recur = "";
             $tmp = "";
             for($x=0; $x<$params_len; $x++){
                 $val_node = $new_param_values[$x];
-                $recur .= $this->format_line_indent("\$__tailrecursetmp$x = " . $val_node->compile().";");
+                $newval = $val_node->compile();
+                $newvals[$x] = $newval;
+                $param_name = $this->get_param_name($params[$x]);
+                if($newval === $param_name){
+                    continue;
+                }
+                $recur .= $this->format_line_indent("\$__tailrecursetmp$x = ".$newval.";");
                 $tmp .= Node::$tmp;
                 Node::$tmp = "";
             }
@@ -1981,15 +1999,10 @@ class FuncDefNode extends SpecialForm{
                 array_pop($params);
             }
             foreach($params as $param){
-                if(is_array($param)){
-                    $param_name = $param[0];
-                }else if($param instanceof Annotation){
-                    $param_name = $param->var;
-                }else{
-                    $param_name = $param;
+                $param_name = $this->get_param_name($param);
+                if($param_name !== $newvals[$x]){
+                    $body .= $this->format_line_indent($param_name. " = \$__tailrecursetmp$x;");
                 }
-                $val_node = $new_param_values[$x];
-                $body .= $this->format_line_indent($param_name. " = \$__tailrecursetmp$x;");
                 $x++;
             }
             $body .= $this->format_line("}");
