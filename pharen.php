@@ -3532,6 +3532,29 @@ class BindingNode extends Node{
         return "\$__lettmpvar".self::$tmp_num++;
     }
 
+    private function pair($arr){
+        $pairs = array();
+
+        $pair = Null;
+        $state = "name";
+        $typename = Null;
+        $val_type = Null;
+        foreach($arr as $x){
+            if($x instanceof AnnotationNode){
+                list($typename, $val_type) = $x->compile();
+                $pairs[count($pairs)-1][] = new Annotation($typename, "", $val_type);
+            }else if($state === "name"){
+                $pair = array($x);
+                $state = "val";
+            }else if($state === "val"){
+                $pair[] = $x;
+                $state = "name";
+                $pairs[] = $pair;
+            }
+        }
+        return $pairs;
+    }
+
     public function compile_statement($prefix="", $return=False, $expr=False){
         if(MacroNode::$ghosting){
             return "";
@@ -3544,7 +3567,7 @@ class BindingNode extends Node{
 
         $pairs = $this->children[1]->children;
         if(isset($pairs[0]) && !($pairs[0] instanceof ListNode)){
-            $pairs = array_chunk($pairs, 2);
+            $pairs = $this->pair($pairs);
         }
         $varnames = array();
         $code = "";
@@ -3555,6 +3578,10 @@ class BindingNode extends Node{
 
             $scope->bind($varname, $pair_node[1]);
             $bindings[$varname] = $this->format_statement($scope->get_binding($varname));
+
+            if(isset($pair_node[2])){
+                $pair_node[0]->set_annotation($pair_node[2]);
+            }
         }
 
         $body = "";
