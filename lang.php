@@ -583,10 +583,8 @@ function reduce($f, $acc, $xs){
 		if(empty__question($xs)){
 				return $acc;
 		}
-		$__tailrecursetmp0 = $f;
 		$__tailrecursetmp1 = $f(first($xs), $acc);
 		$__tailrecursetmp2 = rest($xs);
-		$f = $__tailrecursetmp0;
 		$acc = $__tailrecursetmp1;
 		$xs = $__tailrecursetmp2;
 	}
@@ -607,10 +605,8 @@ function reduce1($f, $acc,Seq $xs){
 		if($__inline_result0){
 					return $acc;
 		}
-		$__tailrecursetmp0 = $f;
 		$__tailrecursetmp1 = $f($xs->first(), $acc);
 		$__tailrecursetmp2 = $xs->rest();
-		$f = $__tailrecursetmp0;
 		$acc = $__tailrecursetmp1;
 		$xs = $__tailrecursetmp2;
 	}
@@ -623,10 +619,8 @@ function reduce2($f, $acc,FastSeq $xs){
 		if($xs->length === 0){
 						return $acc;
 		}
-		$__tailrecursetmp0 = $f;
 		$__tailrecursetmp1 = $f($xs->first, $acc);
 		$__tailrecursetmp2 = $xs->rest;
-		$f = $__tailrecursetmp0;
 		$acc = $__tailrecursetmp1;
 		$xs = $__tailrecursetmp2;
 	}
@@ -667,10 +661,8 @@ function reduce_pairs($f, $acc, $xs){
 		if(empty__question($xs)){
 				return $acc;
 		}
-		$__tailrecursetmp0 = $f;
 		$__tailrecursetmp1 = $f(each($xs), $acc);
 		$__tailrecursetmp2 = rest($xs);
-		$f = $__tailrecursetmp0;
 		$acc = $__tailrecursetmp1;
 		$xs = $__tailrecursetmp2;
 	}
@@ -715,9 +707,7 @@ function until($f, $xs){
 		else if($result = $f(first($xs))){
 				return $result;
 		}
-		$__tailrecursetmp0 = $f;
 		$__tailrecursetmp1 = rest($xs);
-		$f = $__tailrecursetmp0;
 		$xs = $__tailrecursetmp1;
 	}
 }
@@ -726,7 +716,7 @@ function map_indexed($f, $xs, $idx=0){
 	$__scope_id = Lexical::init_closure("_home_scriptor_pharenlang", 179);
 	Lexical::bind_lexing("_home_scriptor_pharenlang", 179, '$f', $f);
 	if(empty__question($xs)){
-		return $xs;
+		return \PharenVector::create_from_array(array());
 	}
 	else{
 		return cons($f(first($xs), $idx), map_indexed($f, rest($xs), inc($idx)));

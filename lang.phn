@@ -403,7 +403,7 @@
 
 (fn map-indexed (f xs [idx 0])
   (if (empty? xs)
-    xs
+    []
     (cons ($f (first xs) idx) (map-indexed f (rest xs) (inc idx)))))
 
 (fn map-pairs (f pairs)
