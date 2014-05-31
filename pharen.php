@@ -2049,7 +2049,7 @@ class FuncDefNode extends SpecialForm{
             $specified_sig->add_type($this->return_type);
             $inferred_sig = new TypeSig;
             $inferred_sig->add_type($inferred);
-            $score = $specified_sig->match($inferred_sig);
+            $score = $inferred_sig->match($specified_sig);
             if($score === 0){
                 throw new FuncReturnTypeError($this->name, $specified_sig, $inferred_sig,
                     $this->linenum, $node->linenum);
