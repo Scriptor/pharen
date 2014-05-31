@@ -119,12 +119,12 @@
 (defmacro dotimes (binding &exprs)
   (def varname (:binding 0))
   (def n (:binding 1))
-  '((lambda (~varname)
+  '((lambda (~varname --dotimes-result)
            (if (>= ~varname ~n)
-             NULL
+             --dotimes-result
              (do
-               ~@exprs
-               (recur (inc ~varname))))) 0))
+               (local --dotimes-result (do ~@exprs))
+               (recur (inc ~varname) --dotimes-result)))) 0 NULL))
 
 (fn prn (s &other)
   (let
