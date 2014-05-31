@@ -3303,7 +3303,7 @@ class SuperGlobalNode extends Node{
 class DictNode extends Node{
     static $delimiter_tokens = array("OpenBraceToken", "CloseBraceToken");
 
-    public function compile(){
+    public function compile($prefix=""){
         // Use an offset when using the (dict... notation for dictionaries
         $offset = (count($this->children) > 0 and $this->children[0] instanceof LeafNode and $this->children[0]->value === "dict") ? 1 : 0;
         $pairs = array_slice($this->children, $offset);
@@ -3318,11 +3318,11 @@ class DictNode extends Node{
             $value = $pair[1]->compile();
             $mappings[] = "$key => $value";
         }
-        return "hashify(array(".implode(", ", $mappings)."))";
+        return $prefix."hashify(array(".implode(", ", $mappings)."))";
     }
 
-    public function compile_statement(){
-        return $this->compile().";\n";
+    public function compile_statement($prefix){
+        return $this->compile($prefix).";\n";
     }
 
     public function convert_to_list($return_as_array=False, $get_values=False){
