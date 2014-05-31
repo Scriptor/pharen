@@ -3562,15 +3562,18 @@ class BindingNode extends Node{
         if($return === True || $prefix !== ""){
             $ret_stashed_children = $this->children;
             $last_node = array_pop($this->children);
+        }
+
+        foreach(array_slice($this->children, 2) as $line){
+            $body .= $line->compile_statement();
+        }
+
+        if($return === True || $prefix !== ""){
             if($prefix){
                 $last_line = $last_node->compile_statement($prefix);
             }else{
                 $last_line = $last_node->compile_return();
             }
-        }
-
-        foreach(array_slice($this->children, 2) as $line){
-            $body .= $line->compile_statement();
         }
 
         $code .= $this->scope->init_lexical_scope();
