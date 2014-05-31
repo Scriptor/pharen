@@ -1,0 +1,41 @@
+(ns pharen.stats)
+
+(fun add (x y)
+     (+ x y))
+(poly-ann reduce (^#add f acc ^Seq xs))
+
+(fn sum (^Seq xs)
+  (reduce #add 0 xs))
+
+(fn mean (^Seq xs)
+  (let [sum (sum xs)]
+    (/ sum (count xs))))
+
+(fn avg (&nums)
+  (ann nums ^Seq)
+  (mean nums))
+
+(fn median (^Seq xs)
+  (let [c (count xs)
+        mid (floor (/ c 2))]
+    (cond
+      ((empty? xs) NULL)
+      ((even? c) (avg (:xs (dec mid)) (:xs mid)))
+      ((odd? c) (:xs mid)))))
+
+(fn min (^Seq xs)
+  (reduce #\min (first xs) xs))
+
+(fn max (^Seq xs)
+  (reduce #\max (first xs) xs))
+
+(fn square (x)
+  (* x x))
+
+(fn std-dev (^Seq xs)
+  (let [mean (mean xs)
+        c (count xs)
+        diffs (map (- mean) xs)
+        diffs-sq (map #square diffs)]
+    (ann diffs-sq ^Seq)
+    (sqrt (/ (sum diffs-sq) c))))
