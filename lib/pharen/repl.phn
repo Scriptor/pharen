@@ -8,6 +8,10 @@
 (def greetings ["Maybe solve P v NP!" "Happy Pharening!" "(map) new worlds!"
                 "Maybe solve Hello World!" "Curly fries are delicious and cheap!"])
 
+(fn get-file-vars (file vars)
+  (include-once file)
+  (array-diff-key (get-defined-vars) vars))
+
 (fn starts-with (needle haystack)
   (== (substr haystack 0 (strlen needle)) needle))
 
@@ -96,17 +100,17 @@
     FALSE))
 
 (fn intro ()
-  (prn (. "Initialized Pharen REPL. " (:greetings (array-rand (arr greetings))) "\n")))
+  (. "Initialized Pharen REPL. " (:greetings (array-rand (arr greetings))) "\n"))
 
-(fn work ([previous-code ""] [repl-vars []])
-  (let [code (. previous-code " " (prompt (get-prompt previous-code)))]
-    (if (== code "quit")
-      (exit 0)
+(fn work ([previous-code ""] [repl-vars []] [prompt #prompt] [prn-result #prn-result])
+  (let [code (. previous-code " " ($prompt (get-prompt previous-code)))]
+    (if (== (trim code) "quit")
+      FALSE
       (let [compiled-code (compile-code code)]
         (if-not (false? compiled-code)
           (do 
             (extract repl-vars)
-            (prn-result (eval (. "?>" compiled-code)))
+            ($prn-result (eval (. "?>" compiled-code)))
             (local previous-code ""))
           (local previous-code code))
-        (work previous-code repl-vars)))))
+        (work previous-code repl-vars prompt prn-result)))))
