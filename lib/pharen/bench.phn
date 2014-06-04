@@ -20,7 +20,7 @@
     (. (sprintf "%.4f" t) " seconds")
     (. (sprintf "%.4f" (* 1000 t)) " ms")))
 
-(fn generate-report (name n times)
+(fn generate-report (name n ^Seq times)
   (let [mean (stats.mean times)
         median (stats.median times)
         max (stats.max times)
@@ -51,7 +51,7 @@
         times2 (:b2 :times) ^Seq
         mean1 (stats.mean times1)
         mean2 (stats.mean times2)
-        diffs (get-diffs times1 times2)
+        diffs (get-diffs times1 times2) ^Seq
         mean-diffs (stats.mean diffs)
         header (. "Comparing " name1 " and " name2)]
     (prn (.
