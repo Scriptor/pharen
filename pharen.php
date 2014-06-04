@@ -1025,7 +1025,11 @@ class Node implements Iterator, ArrayAccess, Countable{
     }
 
     public function get_last_func_call(){
-        return $this->children[0];
+        if(isset($this->children[0])){
+            return $this->children[0];
+        }else{
+            return Null;
+        }
     }
 
     public function get_body_nodes(){
@@ -1932,7 +1936,7 @@ class FuncDefNode extends SpecialForm{
 
         $params = $this->get_param_names($this->params);
         $this->bind_params($params);
-        if($this->children[3] instanceof AnnotationNode){
+        if(isset($this->children[3]) && $this->children[3] instanceof AnnotationNode){
             $this->body_index = 4;
             $ann_node = $this->children[3];
             list($typename, $value_type) = $ann_node->compile();
@@ -2065,7 +2069,10 @@ class FuncDefNode extends SpecialForm{
         if ($last_node instanceof QuoteWrapper ||
             $last_node instanceof FuncDefNode) return False;
         $last_func_call = $last_node->get_last_func_call();
-        $last_func_call_val = $last_func_call->compile();
+        $last_func_call_val = Null;
+        if($last_func_call){
+            $last_func_call_val = $last_func_call->compile();
+        }
         if ($last_func_call_val === "recur") return True;
         return count($this->children) > 3 &&
             !($this instanceof MacroNode) &&
@@ -2536,7 +2543,9 @@ class MacroNode extends FuncDefNode{
             $scope->bind_tok($param_node->compile(True), $tok);
             if($tok instanceof PharenCachedList){
                 $scope->bind($param_node->compile(True), self::get_values_from_list($tok));
-            }else if($tok instanceof PharenHashMap || $tok instanceof QuoteWrapper){
+            }else if($tok instanceof PharenHashMap
+                || $tok instanceof QuoteWrapper
+                || $tok instanceof PharenEmptyList){
                 $scope->bind($param_node->compile(True), $tok);
             }else{
                 $scope->bind($param_node->compile(True), $tok->value);
