@@ -11,6 +11,6 @@
         (phake.compile-except [(phake.project-path "/lib/phake/phake.phn")])))
 
 (task "test" "Running tests for Pharen compiler"
-      (compile-file (project-path "/test/pharen_tests.phn"))
-      (require (project-path "/test/pharen_tests.php"))
+      (compile-file (phake.project-path "/test/pharen_tests.phn"))
+      (require (phake.project-path "/test/pharen_tests.php"))
       TRUE)
