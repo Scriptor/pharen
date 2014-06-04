@@ -1,7 +1,8 @@
+(ns pharen.phake)
 (use pharen.path as path)
-(define "PHAKE_SYSTEM" (realpath (dirname __FILE__)))
-(define "PHAREN_SYSTEM" (path.join PHAKE-SYSTEM "../.."))
-(define "PROJECT_SYSTEM" (getcwd))
+(define "pharen\phake\PHAKE_SYSTEM" (realpath (dirname __FILE__)))
+(define "pharen\phake\PHAREN_SYSTEM" (path.join PHAKE-SYSTEM "../.."))
+(define "pharen\phake\PROJECT_SYSTEM" (getcwd))
 
 (require-once (. PHAREN-SYSTEM "/pharen.php"))
 (compile-lang)
