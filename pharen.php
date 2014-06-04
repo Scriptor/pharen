@@ -3033,8 +3033,24 @@ class ClassNode extends SpecialForm{
     public function compile_statement(){
         $class_name = $this->children[1]->compile();
         $this->class_name = $class_name;
+        $implements = $this->compile_implements(2);
         $body = $this->compile_body();
-        return $this->generate($class_name, $body);
+        return $this->generate($class_name.$implements, $body);
+    }
+
+    public function compile_implements($index){
+        $implements = "";
+        $interfaces = array();
+        if($this->children[$index] instanceof ListNode
+            && count($this->children[$index]->children > 0)){
+                $implements = " implements ";
+                $this->body_index = $index + 1;
+                foreach($this->children[$index] as $c){
+                    $interfaces[] = $c->value;
+                }
+                $implements .= implode(", ", $interfaces);
+        }
+        return $implements;
     }
 }
 
@@ -3047,19 +3063,11 @@ class ClassExtendsNode extends ClassNode{
 
         $class_name = $this->children[1]->compile();
         $this->class_name = $class_name;
-        $parent_class = $this->children[2]->value;
 
-        $implements = "";
-        $interfaces = array();
-        if($this->children[3] instanceof ListNode
-            && count($this->children[3]->children > 0)){
-                $implements = " implements ";
-                $this->body_index = 4;
-                foreach($this->children[3] as $c){
-                    $interfaces[] = $c->value;
-                }
-                $implements .= implode(", ", $interfaces);
-        }
+        $extends = "";
+        $parent_class = $this->children[2]->value;
+        $implements = $this->compile_implements(3);
+
         $body = $this->compile_body();
         return $this->generate($class_name." extends ".$parent_class.$implements, $body);
     }
