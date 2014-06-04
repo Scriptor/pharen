@@ -3047,9 +3047,21 @@ class ClassExtendsNode extends ClassNode{
 
         $class_name = $this->children[1]->compile();
         $this->class_name = $class_name;
-        $parent_class = $this->children[2]->children[0]->value;
+        $parent_class = $this->children[2]->value;
+
+        $implements = "";
+        $interfaces = array();
+        if($this->children[3] instanceof ListNode
+            && count($this->children[3]->children > 0)){
+                $implements = " implements ";
+                $this->body_index = 4;
+                foreach($this->children[3] as $c){
+                    $interfaces[] = $c->value;
+                }
+                $implements .= implode(", ", $interfaces);
+        }
         $body = $this->compile_body();
-        return $this->generate($class_name." extends ".$parent_class, $body);
+        return $this->generate($class_name." extends ".$parent_class.$implements, $body);
     }
 }
 
@@ -3802,7 +3814,7 @@ class Parser{
             "new" => array("InstantiationNode", "LeafNode", "LeafNode", self::$values),
             "class" => array("ClassNode", "LeafNode", "LeafNode", self::$values),
             "class-extends" => array("ClassExtendsNode", "LeafNode", "LeafNode",
-                self::$list_form, self::$values),
+                "LeafNode", self::$values),
             "access" => array("AccessModifierNode", "LeafNode", "LeafNode", self::$values),
             "interface" => array("InterfaceNode", "LeafNode", "LeafNode", self::$values),
             "defrecord" => array("DefRecordNode", "LeafNode", "LeafNode", array("VariableNode")),
