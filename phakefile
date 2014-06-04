@@ -1,9 +1,14 @@
-(proj "Pharen"
+(use pharen.phake as phake)
+(use pharen.repl as repl)
+
+(phake.proj "Pharen"
     {"description" "Lisp -> PHP Compiler"
      "version" "0.1.5"})
 
 (task "build" "Compiling all project files written in Pharen"
-      (compile-dir (project-path "/lib/pharen") (compile-except [(project-path "/lib/phake/phake.phn")])))
+      (phake.compile-dir
+        (phake.project-path "/lib/pharen")
+        (phake.compile-except [(phake.project-path "/lib/phake/phake.phn")])))
 
 (task "test" "Running tests for Pharen compiler"
       (compile-file (project-path "/test/pharen_tests.phn"))
