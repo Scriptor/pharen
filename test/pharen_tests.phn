@@ -33,7 +33,9 @@
        "lazy"
        "ns",
        "lang_functions",
-       "php_interop"]]
+       "php_interop",
+       "types"
+       ]]
 
 
   (test.describe "Pharen"

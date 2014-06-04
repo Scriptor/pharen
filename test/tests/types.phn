@@ -1,0 +1,28 @@
+(ns pharen.tests.types)
+
+(fn foo (^int x) ^int
+  x)
+
+(def x 1)
+(ann x ^int)
+(check (foo x) 1)
+(check (foo (foo x)) 1)
+
+(let
+  [var1 "var1"
+   var2 "var2" ^B
+   a 1 ^int
+   var3 "var3"
+   var4 "var4" ^C]
+  (check (foo a) 1))
+
+(poly-ann foo (^double x) ^double)
+(def y 1.5)
+(ann y ^double)
+(check (foo y) 1.5)
+(check (foo (foo y)) 1.5)
+
+(fun foo (^boolean x) ^boolean
+     FALSE)
+(check (foo TRUE) FALSE)
+(check (foo (foo TRUE)) FALSE)
