@@ -87,11 +87,13 @@
   (str-replace "-" "_" (str-replace "." "_" ns)))
 
 (fn wrap-compile (code)
-  (let [embedded-code (. "(local *1 " code ") (return *1)")
-        raw-ns (:: .RootNode raw-ns)
-        final-code (add-uses embedded-code)]
-    (compile final-code NULL (phpfy-ns raw-ns) (:: .RootNode last-scope)
-             "<repl>" FALSE)))
+  (if (=== (trim code) "")
+    ""
+    (let [embedded-code (. "(local *1 " code ") (return *1)")
+          raw-ns (:: .RootNode raw-ns)
+          final-code (add-uses embedded-code)]
+      (compile final-code NULL (phpfy-ns raw-ns) (:: .RootNode last-scope)
+               "<repl>" FALSE))))
 
 (fn compile-code (code)
   (local compiled-code (wrap-compile code))
