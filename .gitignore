@@ -5,5 +5,7 @@ lib/phake/phake.php
 *.swp
 lib/pharen/*.php
 examples/*.php
-examples/test/*.php
+test/*.php
+test/tmp
+ex
 .DS_Store
