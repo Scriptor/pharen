@@ -248,6 +248,9 @@ function arr($x){
 	if(is_array($x)){
 		return $x;
 	}
+	else if(($x instanceof PharenHashMap)){
+		return $x->arr();
+	}
 	else if(($x instanceof IPharenSeq)){
 		return $x->arr();
 	}
