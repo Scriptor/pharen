@@ -449,6 +449,10 @@ class PharenHashMap implements Countable, ArrayAccess, Iterator, IPharenComparab
         }
     }
 
+    public function arr(){
+        return $this->hashmap;
+    }
+
     public function hashOf($key){
         if(is_object($key)){
             if($key instanceof IPharenHashable){

@@ -238,6 +238,7 @@
 (fn arr (x)
   (cond
     ((is-array x) x)
+    ((inst? x "PharenHashMap") (-> x (arr)))
     ((inst? x "IPharenSeq") (-> x (arr)))))
 
 
