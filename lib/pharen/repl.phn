@@ -71,7 +71,7 @@
                   "")]
     (. use-str code)))
 
-(fn prn-result (x)
+(fn fmt-result (x)
   (let [result (cond
                 ((=== NULL x) "Null")
                 ((=== TRUE x) "True")
@@ -80,8 +80,8 @@
                 ((is-string x) (. "\"" x "\""))
                 (TRUE x))]
     (if (< 80 (strlen result))
-      (prn (. (substr result 0 80) "..."))
-      (prn result))))
+      (. (substr result 0 80) "...")
+      result)))
 
 (fn phpfy-ns (ns)
   (str-replace "-" "_" (str-replace "." "_" ns)))
@@ -104,7 +104,7 @@
 (fn intro ()
   (. "Initialized Pharen REPL. " (:greetings (array-rand (arr greetings))) "\n"))
 
-(fn work ([previous-code ""] [repl-vars []] [prompt #prompt] [prn-result #prn-result])
+(fn work ([previous-code ""] [repl-vars []] [prompt #prompt] [prn-result #prn])
   (let [code (. previous-code " " ($prompt (get-prompt previous-code)))]
     (if (== (trim code) "quit")
       FALSE
@@ -112,7 +112,7 @@
         (if-not (false? compiled-code)
           (do 
             (extract repl-vars)
-            ($prn-result (eval (. "?>" compiled-code)))
+            ($prn-result (fmt-result (eval (. "?>" compiled-code))))
             (local previous-code ""))
           (local previous-code code))
         (work previous-code repl-vars prompt prn-result)))))
