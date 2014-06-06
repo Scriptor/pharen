@@ -2532,6 +2532,8 @@ class MacroNode extends FuncDefNode{
                 foreach($args as $tok){
                     if($tok instanceof PharenCachedList){
                         $values[] = self::get_values_from_list($tok);
+                    }else if($tok instanceof PharenHashMap){
+                        $values[] = $tok;
                     }else{
                         $values[] = $tok->value;
                     }
@@ -2554,6 +2556,7 @@ class MacroNode extends FuncDefNode{
         $old_ns = RootNode::$ns;
         RootNode::$ns = $macronode->macro_ns;
         $old_tmpfunc = Node::$tmpfunc;
+        Node::$tmpfunc = ''; // Prevents running multiple defs of same fn
         $old_tmp = Node::$tmp;
         $code = $macronode->parent_compile();
         RootNode::$ns = $old_ns;
@@ -2562,9 +2565,11 @@ class MacroNode extends FuncDefNode{
             Node::$tmpfunc = $old_tmpfunc;
         }else{
             $code = "use Pharen\Lexical as Lexical;\n"
+                // Below needed so that code for PHP function of macro is added
                 .Node::add_tmpfunc($code);
             eval($code);
             $macronode->evaluated = True;
+            Node::$tmpfunc = $old_tmpfunc;
         }
         Node::$tmp = $old_tmp;
     }
@@ -2574,6 +2579,8 @@ class MacroNode extends FuncDefNode{
         foreach($list->cached_array as $el){
             if($el instanceof PharenEmptyList){
                 continue;
+            }else if($el instanceof PharenHashMap){
+                $values[] = $el;
             }elseif(!($el instanceof PharenList)){
                 $values[] = $el->value;
             }else{
@@ -2707,9 +2714,11 @@ class QuoteWrapper{
                     $els = Lexical::get_lexical_binding(Node::$ns, $scope->id, '$'.$phpfied, $closure_id);
                 }
                 foreach($els as $el){
-                    if($el instanceof PharenList && isset($el->delimiter_tokens)){
-                        $flattened = $this->flatten($el);
-                        $new_tokens = array_merge($new_tokens, $flattened);
+                    if(($el instanceof PharenList
+                            || $el instanceof PharenHashMap)
+                        && isset($el->delimiter_tokens)){
+                            $flattened = $this->flatten($el);
+                            $new_tokens = array_merge($new_tokens, $flattened);
                     }else{
                         $new_tokens[] = $this->lex_val($el);
                     }
@@ -2740,17 +2749,25 @@ class QuoteWrapper{
         $tokens = array();
         $tokens []= new $delims[0];
 
-        if ($list instanceof PharenHashMap) {
+        if($list instanceof PharenHashMap){
             $listified = array();
-            foreach ($list as $key=>$val) {
-                $listified[] = $key;
-                $listified[] = $val;
+            if($list->hashmap instanceof SplObjectStorage){
+                $list = $list->hashmap;
+            }
+            foreach($list as $key=>$val){
+                if($list instanceof SplObjectStorage){
+                    $listified[] = $val;
+                    $listified[] = $list[$val];
+                }else{
+                    $listified[] = $key;
+                    $listified[] = $val;
+                }
             }
             $list = $listified;
         }
 
         foreach($list as $el){
-            if($el instanceof PharenList){
+            if($el instanceof PharenList || $el instanceof PharenHashMap){
                 $tokens = array_merge($tokens, $this->flatten($el));
             }else{
                 $tokens[] = $this->lex_val($el);
@@ -3360,7 +3377,10 @@ class DictNode extends Node{
             if($tok instanceof Node){
                 $list[] = $val = $tok->convert_to_list($return_as_array, $get_values);
             }else{
-                if($get_values && ($tok instanceof StringToken || $tok instanceof NumberToken)){
+                if($get_values
+                        && ($tok instanceof StringToken
+                        || $tok instanceof NumberToken
+                        || $tok instanceof KeywordToken)){
                     $tok_value = $tok->value;
                     if($tok instanceof NumberToken){
                         if(ctype_digit($tok_value)){
@@ -3377,7 +3397,7 @@ class DictNode extends Node{
         }
 
         $pairs = array_chunk($list, 2);
-        $dict = array();
+        $dict = $get_values ? array() : new SplObjectStorage;
         foreach($pairs as $pair){
             $dict[$pair[0]] = $pair[1];
         }

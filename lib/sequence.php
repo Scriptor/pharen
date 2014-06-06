@@ -511,7 +511,11 @@ class PharenHashMap implements Countable, ArrayAccess, Iterator, IPharenComparab
     }
 
     public function valid(){
-        return isset($this->hashmap[key($this->hashmap)]);
+        if($this->hashmap instanceof SplObjectStorage){
+            return $this->hashmap->valid();
+        }else{
+            return isset($this->hashmap[key($this->hashmap)]);
+        }
     }
 
     public function eq($other){
