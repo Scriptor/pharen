@@ -1,0 +1,19 @@
+(use pharen.phake as phake)
+
+(fn replace-placeholders (file &repls)
+  (let [contents (file-get-contents file)
+        replace (lambda (repl contents)
+                        (let [placeholder (. "{" (:repl 0) "}")
+                              replacement (:repl 1)]
+                          (str-replace placeholder replacement contents)))]
+    (file-put-contents (reduce replace contents repls) file)))
+
+(task "create" "Creating new project"
+      (keyword-call global $argv)
+      (let [name (:argv 2)
+            name-arg (escapeshellarg name)
+            default-dir (. phake.PHAKE_SYSTEM "/templates/default/")
+            proj-dir (. (getcwd) "/" name "/")]
+        (exec (. "cp -r " default-dir " " name-arg))
+        (local phakefile (. proj-dir "/phakefile.phn"))
+        (replace-placeholders phakefile ["project-name" name])))

@@ -49,8 +49,13 @@
       ~@body))
 
 (compile-with-flag "executable" (. PHAKE-SYSTEM "/phake.phn"))
-(compile-file (project-path "/phakefile"))
-(require (project-path "/phakefile.php"))
+(compile-file (. PHAKE-SYSTEM "/builtins.phn"))
+(require (. PHAKE-SYSTEM "/builtins.php"))
+
+(def phakefile (project-path "/phakefile"))
+(when (file-exists phakefile)
+  (compile-file phakefile)
+  (require (. phakefile ".php")))
 
 (if (> (count argv) 1)
   ((:argv 1))

@@ -1,0 +1,5 @@
+(use pharen.phake as phake)
+
+(phake.proj "{project-name}"
+            {"description" "Enter your description here"
+             "version" "<version>"})
