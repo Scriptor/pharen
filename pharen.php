@@ -1358,8 +1358,7 @@ class RootNode extends Node{
         }
 
         if(Flags::is_true('debug')){
-            $basename = basename($filename, EXTENSION);
-            $debug_file = $basename.".debug.php";
+            $debug_file = COMPILER_SYSTEM."/template_debug.php";
             $setuplines++;
             $code .= $this->format_line("require_once('$debug_file');");
             $setuplines++;
@@ -1402,12 +1401,11 @@ class RootNode extends Node{
         Debug::$line_mapping = $final_line_mapping;
 
         if(Flags::is_true('debug')){
-            $debug_contents = file_get_contents(COMPILER_SYSTEM."/template_debug.php");
-            $debug_contents .= 
-                "function get_line_map(){\n"
-                    ."return json_decode('".json_encode($final_line_mapping)."');\n"
-                ."}\n";
-            file_put_contents($debug_file, $debug_contents);
+            $map_file_dir = dirname($filename);
+            $map_file = $map_file_dir."/".basename($filename, EXTENSION).".linemap.php";
+            $map_file_contents = "<?php\n"
+                    ."return json_decode('".json_encode($final_line_mapping)."');\n";
+            file_put_contents($map_file, $map_file_contents);
         }
 
         return $hashbang.$php_tag.$code;
