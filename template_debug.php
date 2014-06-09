@@ -1,10 +1,9 @@
 <?php
 namespace pharen\debug;
 function convert_line_num($line_map, $errline){
-    $pharen_line = 1;
     foreach($line_map as $php_line=>$ph_line){
+        $pharen_line = $ph_line;
         if($php_line >= $errline){
-            $pharen_line = $ph_line;
             break;
         }
     }
