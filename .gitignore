@@ -1,6 +1,7 @@
 pharen_old.php
 phakefile.php
 lib/phake/phake.php
+lib/phake/builtins.php
 *.tmp
 *.swp
 lib/pharen/*.php
