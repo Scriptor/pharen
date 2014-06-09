@@ -12,7 +12,10 @@ if(__FILE__ === realpath($_SERVER['SCRIPT_NAME'])){
             if(strpos($arg, "--") === 0){
                 set_flag(substr($arg, 2));
             }else if(strpos($arg, "-") === 0){
-                set_flag(substr($arg, 1));
+                $simple_args = substr($arg, 1);
+                foreach(str_split($simple_args) as $simple_arg){
+                    set_flag($simple_arg);
+                }
             }else{
                 $input_files[] = $arg;
             }

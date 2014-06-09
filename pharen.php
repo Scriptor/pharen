@@ -8,7 +8,9 @@ define("COMPILER_SYSTEM", dirname(__FILE__));
 define("EXTENSION", ".phn");
 
 require_once(COMPILER_SYSTEM."/lang.php");
+require_once(COMPILER_SYSTEM."/debug.php");
 require_once(COMPILER_SYSTEM."/lib/sequence.php");
+use pharen\Debug;
 use Pharen\Lexical as Lexical;
 
 // Some utility functions for use in Pharen
@@ -1330,15 +1332,20 @@ class RootNode extends Node{
         return $this->format_line($code, $prefix);
     }
 
-    public function compile(){
+    public function compile($filename){
         $code = "";
         $hashbang = "";
+        $setuplines = 0;
         if(Flags::is_true('executable')){
+            $setuplines++;
             $hashbang = $this->format_line("#! /usr/bin/env php");
         }
 
+        $setuplines++;
         $php_tag = $this->format_line("<?php");
+
         if(!Flags::is_true('no-import-lang')){
+            $setuplines++;
             $code .= $this->format_line("require_once('".COMPILER_SYSTEM."/"."lang.php"."');");
         }else{
             if(!Flags::is_true('import-lexi-relative')){
@@ -1346,24 +1353,63 @@ class RootNode extends Node{
             } else {
                 $prefix = "dirname(__FILE__)";
             }
+            $setuplines++;
             $code .= $this->format_line("require_once(".$prefix.".'"."/"."lexical.php"."');");
         }
+
+        if(Flags::is_true('debug')){
+            $basename = basename($filename, EXTENSION);
+            $debug_file = $basename.".debug.php";
+            $setuplines++;
+            $code .= $this->format_line("require_once('$debug_file');");
+            $setuplines++;
+        }
+
+        $setuplines += 3;
         $code .= $this->format_line("use Pharen\Lexical as Lexical;");
         $code .= $this->format_line('use \Seq as Seq;');
         $code .= $this->format_line('use \FastSeq as FastSeq;');
 
-        $code .= $this->scope->init_namespace_scope();
+        $ns_scope = $this->scope->init_namespace_scope();
+        $setuplines += substr_count($ns_scope, "\n");
+        $code .= $ns_scope;
 
         $body = "";
+        $bodyline = 1;
+        $body_line_mapping = array();
         foreach($this->children as $child){
-            $body .= Node::add_tmpfunc($child->compile_statement());
+            $body_line_mapping[$bodyline] = $child->linenum;
+            $child_code = Node::add_tmpfunc($child->compile_statement());
+            $body .= $child_code;
+            $bodyline += substr_count($child_code, "\n");
         }
 
+        $lex_scope = $this->scope->init_lexical_scope();
+        $lex_scope_lines = substr_count($lex_scope, "\n");
         $code .= $this->scope->init_lexical_scope().$body;
 
+        $ns_lines = 0;
         if(self::$ns_string){
             $code = self::$ns_string . $code;
+            $ns_lines = substr_count(self::$ns_string, "\n");
         }
+
+        $final_line_mapping = array();
+        foreach($body_line_mapping as $bl => $phl){
+            $final_line = $bl + $lex_scope_lines + $ns_lines + $setuplines;
+            $final_line_mapping[$final_line] = $phl;
+        }
+        Debug::$line_mapping = $final_line_mapping;
+
+        if(Flags::is_true('debug')){
+            $debug_contents = file_get_contents(COMPILER_SYSTEM."/template_debug.php");
+            $debug_contents .= 
+                "function get_line_map(){\n"
+                    ."return json_decode('".json_encode($final_line_mapping)."');\n"
+                ."}\n";
+            file_put_contents($debug_file, $debug_contents);
+        }
+
         return $hashbang.$php_tag.$code;
     }
 
@@ -2389,7 +2435,7 @@ class ExpandableFuncNode extends FuncDefNode{
 }
 
 class GradualTypingNode extends Node{
-    public function get_func_node($name){
+    public static function get_func_node($name){
         $func_node = FuncDefNode::get_pharen_func($name);
         if(!$func_node){
             $func_node = FuncDefNode::get_placeholder_func($name);
@@ -2403,7 +2449,7 @@ class GradualTypingNode extends Node{
 
         if($third_child instanceof LiteralNode){
             $name = $name_node->value;
-            $func_node = $this->get_func_node($name);
+            $func_node = self::get_func_node($name);
             if(!$func_node){
                 return "";
             }
@@ -2489,6 +2535,25 @@ class AnnotatedFuncNode extends ExpandableFuncNode{
         }
         $code = parent::compile_statement($prefix, $replacements);
         return $code;
+    }
+}
+
+class AnnOfNode extends Node{
+    public function compile(){
+        $node = $this->children[1];
+        if($node instanceof FuncValNode){
+            $name = $node->value;
+            $func_node = GradualTypingNode::get_func_node($name);
+        }else if($node instanceof VariableNode){
+            $ann = $node->get_annotation();
+            $serialized = serialize($ann);
+            return "unserialize('$serialized')";
+        }
+    }
+
+    public function compile_statement(){
+        $code = $this->compile();
+        return $this->format_statement($code.";");
     }
 }
 
@@ -3832,6 +3897,7 @@ class Parser{
             "ann" => array("GradualTypingNode", "LeafNode", "VariableNode", "LiteralNode", self::$values), 
             "poly-ann" => array("AnnotatedFuncNode", "LeafNode", "LeafNode", "LiteralNode",
                 array(self::$ann_or_name)),
+            "ann-of" => array("AnnOfNode", "LeafNode", self::$value),
             "do" => array("DoNode", "LeafNode", self::$values),
             "cond" => array("CondNode", "LeafNode", array(self::$cond_pair)),
             "if" => array("LispyIfNode", "LeafNode", self::$value, self::$value, self::$value),
@@ -4027,7 +4093,8 @@ class Flags{
     public static $shortcuts = array(
         'r' => 'repl',
         'e' => 'executable',
-        'l' => 'no-import-lang'
+        'l' => 'no-import-lang',
+        'd' => 'debug'
     );
 
     public static function is_true($flag) {
@@ -4090,7 +4157,7 @@ function compile($code, $root=Null, $ns=Null, $scope=Null, $filename=Null, $thro
     $node_tree = $parser->parse($root, $scope);
     $phpcode = "";
     try{
-        $phpcode = $node_tree->compile();
+        $phpcode = $node_tree->compile($filename);
     }catch(CompileError $e){
         echo "\nCompile Error in $filename, line {$e->linenum}:\n".$e->getMessage()."\n";
         if($throw){
@@ -4106,14 +4173,17 @@ function compile_lang(){
     $old_lang_setting = isset(Flags::$flags['no-import-lang']) ? Flags::$flags['no-import-lang'] : False;
     $old_lexi_setting = isset(Flags::$flags['import-lexi-relative']) ? Flags::$flags['import-lexi-relative'] : False;
     $old_executable_setting = isset(Flags::$flags['executable']) ? Flags::$flags['executable'] : False;
+    $old_debug_setting = isset(Flags::$flags['debug']) ? Flags::$flags['debug'] : False;
     set_flag("no-import-lang");
     set_flag("import-lexi-relative");
     set_flag("executable", False);
+    set_flag("debug", False);
     if(!$old_lang_setting){
         $lang_code = compile_file(COMPILER_SYSTEM . DIRECTORY_SEPARATOR . "lang.phn");
     }
     set_flag("import-lexi-relative", $old_lexi_setting);
     set_flag("no-import-lang", $old_lang_setting);
     set_flag("executable", $old_executable_setting);
+    set_flag("debug", $old_debug_setting);
     Flags::$lang_compiled = True;
 }
