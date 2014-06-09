@@ -11,7 +11,7 @@ function convert_line_num($line_map, $errline){
 }
 
 function generate_pharen_err($file, $line, $msg){
-    return "$msg in $file:$line\n";
+    return "Error: $msg near $file:$line\n";
 }
 
 function error_handler($errno, $errstr, $errfile, $errline, $errctx){
