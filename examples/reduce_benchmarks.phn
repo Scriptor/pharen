@@ -1,0 +1,17 @@
+(load "pharen/bench")
+(require "examples/array_benches.php")
+
+(fun add (x y)
+     (+ x y))
+(poly-ann reduce (^#add f acc ^FastSeq xs))
+
+(def xs [1 .. 1000])
+(ann xs ^FastSeq)
+(def arr (range 1 1000))
+
+(def reduce-bench (bench "reduce" (reduce #add 0 xs)))
+(def array-bench (bench "array_reduce" (test-array-reduce arr)))
+(def foreach-bench (bench "foreach" (test-foreach arr)))
+
+(compare-benches reduce-bench array-bench)
+(compare-benches reduce-bench foreach-bench)
