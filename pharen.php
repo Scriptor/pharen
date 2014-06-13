@@ -3905,7 +3905,7 @@ class Parser{
             "if" => array("LispyIfNode", "LeafNode", self::$value, self::$value, self::$value),
             "$" => array("SuperGlobalNode", "LeafNode", "LeafNode", self::$value),
             "def" => array("DefNode", "LeafNode", "VariableNode", self::$value),
-            "local" => array("LocalNode", "LeafNode", "VariableNode", self::$value),
+            "local" => array("LocalNode", "LeafNode", self::$value, self::$value),
             "let" => array("BindingNode", "LeafNode", "LiteralNode", self::$values),
             "dict" => array("DictNode", "LeafNode", array(self::$value)),
             "dict-literal" => array("DictNode", array(self::$value)),
