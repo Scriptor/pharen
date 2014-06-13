@@ -1358,6 +1358,11 @@ class RootNode extends Node{
         }
 
         if(Flags::is_true('debug')){
+            $map_file_dir = dirname($filename);
+            if(file_exists($custom_debug_file=($map_file_dir."/pharen_debug.php"))){
+                $setuplines++;
+                $code .= $this->format_line("require_once('$custom_debug_file');");
+            }
             $debug_file = COMPILER_SYSTEM."/template_debug.php";
             $setuplines++;
             $code .= $this->format_line("require_once('$debug_file');");
@@ -1401,7 +1406,6 @@ class RootNode extends Node{
         Debug::$line_mapping = $final_line_mapping;
 
         if(Flags::is_true('debug')){
-            $map_file_dir = dirname($filename);
             $map_file = $map_file_dir."/".basename($filename, EXTENSION).".linemap.php";
             $map_file_contents = "<?php\n"
                     ."return json_decode('".json_encode($final_line_mapping)."');\n";
