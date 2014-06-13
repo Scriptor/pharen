@@ -13,6 +13,9 @@
        ~@body)
      NULL))
 
+(defmacro when-set (val)
+  '(when (isset ~val) ~val))
+
 (defmacro error (&msgs)
   '(error-log (. ~@msgs)))
 
