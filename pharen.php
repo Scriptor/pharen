@@ -136,7 +136,7 @@ class TypeSig {
             if(is_object($thistype)) $thisname = $thistype->typename;
             if(is_object($othertype)) $othername = $othertype->typename;
 
-            if($thistype === "Any" || $othertype === "Any"){
+            if($othertype === "Any"){
                 $score += self::ANY_MATCH;
             }else if($othertype->value_type){
                 if($thistype->value_type !== $othertype->value_type){
