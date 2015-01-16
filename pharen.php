@@ -89,7 +89,7 @@ class TypeSig {
         if($ann !== "Any"){
             $this->any = False;
         }
-        array_unshift($this->annotations, $ann);
+        array_push($this->annotations, $ann);
     }
 
     public function interface_chain_score($subclass, $ancestor){
@@ -119,28 +119,46 @@ class TypeSig {
         }
     }
     
-    public function match(TypeSig $other){
-        $thislen = count($this->annotations);
-        $otherlen = count($other->annotations);
+    public function is_exclusive($typename){
+        return substr($typename, -1) === '^';
+    }
 
-        if($thislen !== $otherlen) return 0;
+    public function match(TypeSig $other){
+        // thislen is usually the arguments type sig
+        // otherlen is usually the func parameters type sig
+        $thisanns  = $this->annotations;
+        $otheranns = $other->annotations;
+        $thislen   = count($thisanns);
+        $otherlen  = count($otheranns);
+
         if($thislen === 0 && $otherlen === 0) return self::EMPTY_SIG;
+
+        if($thislen < $otherlen) return 0;
+        if($thislen > $otherlen){
+            for($x=$otherlen; $x < $thislen; $x++){
+                $otheranns[$x] = "Any";
+            }
+        }
         $score = 0;
 
         for($x=0; $x<$thislen; $x++){
-            $thistype = $this->annotations[$x];
+            $thistype = $thisanns[$x];
             $thisname = Null;
-            $othertype = $other->annotations[$x];
+            $othertype = $otheranns[$x];
             $othername = Null;
 
             if(is_object($thistype)) $thisname = $thistype->typename;
             if(is_object($othertype)) $othername = $othertype->typename;
 
             if($othertype === "Any"){
-                $score += self::ANY_MATCH;
+                if($this->is_exclusive($thisname)){
+                    return False;
+                }else{
+                    $score += self::ANY_MATCH;
+                }
             }else if($othertype->value_type){
                 if($thistype->value_type !== $othertype->value_type){
-                    return 0;
+                    return False;
                 }else{
                     $score += self::SAME_VALTYPE;
                 }
@@ -150,7 +168,7 @@ class TypeSig {
                 $chain_score = $this->calc_chain_score($thisname, $othername);
                 $score += $chain_score;
             }else{
-                return 0;
+                return False;
             }
         }
         return $score;
@@ -1209,7 +1227,9 @@ class Node implements Iterator, ArrayAccess, Countable{
         if(!$compiled_args){
             $compiled_args = $this->compile_args($args);
         }
-        if(!$this->annotation){
+        if(!$this->annotation
+                && !$this->parent instanceof MethodCallNode
+                && !MacroNode::is_macro($func_name)){
             if(!$func_node || !$typesig_found){
                 $func_node = FuncDefNode::get_pharen_func($func_name);
                 $typesig = $this->get_args_typesig($args);
@@ -1218,7 +1238,7 @@ class Node implements Iterator, ArrayAccess, Countable{
             if(is_object($func_node) && $func_node->typesig){
                 $this->annotation = $func_node->return_type;
                 $func_typesig = $func_node->typesig;
-                if(!$func_typesig->any && !$typesig->match($func_typesig)){
+                if($typesig->match($func_typesig) === False){
                     throw new FuncCallTypeError($func_name, $func_typesig, $typesig,
                         $func_node->linenum, $this->linenum);
                 }
