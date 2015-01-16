@@ -125,7 +125,7 @@ class TypeSig {
     }
     
     public function is_exclusive($typename){
-        return substr($typename, -1) === '^';
+        return substr($typename, -1) === '__exclam';
     }
 
     public function match(TypeSig $other){
