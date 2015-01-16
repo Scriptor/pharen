@@ -1784,9 +1784,9 @@ class StringNode extends LeafNode{
     }
 }
 
-class KeywordNode extends StringNode{
+class KeywordNode extends LeafNode{
     public function compile() {
-        return parent::compile();
+        return '"'.parent::compile().'"';
     }
 }
 
