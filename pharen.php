@@ -62,6 +62,7 @@ class TypeSig {
     const ANY_MATCH = 0;
 
     public $any = True;
+    public $exclusive = False;
     public $annotations = array();
 
     public static function match_annotations($ann1, $ann2){
@@ -88,6 +89,10 @@ class TypeSig {
         $ann = $ann === Null ? "Any" : $ann;
         if($ann !== "Any"){
             $this->any = False;
+
+            if($this->is_exclusive($ann->typename)){
+                $this->exclusive = True;
+            }
         }
         array_push($this->annotations, $ann);
     }
@@ -205,6 +210,20 @@ class FuncCallTypeError extends CompileError{
             "Wrong argument type signature for: $func_name $defined\n"
             . "\tExpecting: $func_typesig\n"
             . "\tGiven: $arg_typesig",
+        $call_line);
+    }
+}
+class ExclusiveUnhandledError extends CompileError{
+    public function __construct($func_name, $typesig, $func_line, $call_line){
+        if($func_line){
+            $defined = "(defined on $func_line)";
+        }else{
+            $defined = "";
+        }
+        parent::__construct(
+            "Passing exclusive type signature to untyped function: $func_name $defined\n"
+            . "\tExpecting: Unable to determine\n"
+            . "\tGiven: $typesig\n",
         $call_line);
     }
 }
@@ -1228,8 +1247,9 @@ class Node implements Iterator, ArrayAccess, Countable{
             $compiled_args = $this->compile_args($args);
         }
         if(!$this->annotation
-                && !$this->parent instanceof MethodCallNode
-                && !MacroNode::is_macro($func_name)){
+            && !$this->parent instanceof MethodCallNode
+            && !MacroNode::is_macro($func_name)){
+
             if(!$func_node || !$typesig_found){
                 $func_node = FuncDefNode::get_pharen_func($func_name);
                 $typesig = $this->get_args_typesig($args);
@@ -1242,6 +1262,14 @@ class Node implements Iterator, ArrayAccess, Countable{
                     throw new FuncCallTypeError($func_name, $func_typesig, $typesig,
                         $func_node->linenum, $this->linenum);
                 }
+            }else if($typesig->exclusive){
+                if(!is_object($func_node)){
+                    $func_line = Null;
+                }else{
+                    $func_line = $func_node->linenum;
+                }
+                throw new ExclusiveUnhandledError($func_name, $typesig, $func_line,
+                    $this->linenum);
             }
         }
 
