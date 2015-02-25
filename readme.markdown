@@ -21,3 +21,5 @@ or drop by the IRC channel at #pharen on irc.freenode.net.
 
 If you'd like to contribute, check out the [contribute](http://scriptor.github.com/pharen/contribute.html)
 page on the docs site.
+
+Compatible with PHP 5.5.
