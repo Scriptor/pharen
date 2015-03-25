@@ -11,7 +11,7 @@ You can download the [ZIP file](http://github.com/Scriptor/pharen/archives/maste
 from Github.
 If you have Git installed, you can also run:
 
-{% highlight sh %}
+{% highlight python %}
 $ git clone git://github.com/Scriptor/pharen.git
 {% endhighlight %}
 
@@ -19,19 +19,19 @@ $ git clone git://github.com/Scriptor/pharen.git
 After downloading and if needed, extracting, Pharen, `cd` into its directory and run:
 
 <b>On Unix systems:</b>
-{% highlight sh %}
+{% highlight ruby %}
 $ sudo ./install.sh
 {% endhighlight %}
 
 <b>On Windows:</b>
-{% highlight sh %}
+{% highlight ruby %}
 install.bat
 {% endhighlight %}
 
 ### Using Pharen ### {#using-pharen}
 To use the compiler:
 
-{% highlight sh %}
+{% highlight ruby %}
 $ pharen your_file.phn
 {% endhighlight %}
 
@@ -41,7 +41,7 @@ for a Pharen file extension, although you can use your own.
 
 Adding more file names causes each file to be compiled in order:
 
-{% highlight sh %}
+{% highlight ruby %}
 $ pharen your_file.phn file2.phn file3.phn fileN.phn
 {% endhighlight %}
 

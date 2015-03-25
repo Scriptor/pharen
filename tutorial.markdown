@@ -5,12 +5,12 @@ name: tutorial
 ---
 
 ### About this tutorial {#about}
-This tutorial will you get started with Pharen by writing a bare-bones pastebin. Each section is split into a code-centered portion and a more in-depth explanation. Every code sample starts with a comment containing the filename it should go into. The finished code for the pastebin is available [on Github](http://github.com/scriptor/pastebin).
+This tutorial will you get started with Pharen by writing a bare-bones pastebin. You will need PHP 5.4 and an editor. Each section is split into a code-centered portion and a more in-depth explanation. Every code sample starts with a comment containing the filename it should go into. The finished code for the pastebin is available [on Github](http://github.com/scriptor/pastebin).
 
 ### Getting set up {#set-up}
 First, get Pharen from the [download page](/pharen/download.html). Then open up a shell, cd into the directory the Pharen files are located and run:
 
-{% highlight sh %}
+{% highlight python %}
 $ sudo ./install.sh
 {% endhighlight %}
 
@@ -18,9 +18,9 @@ This installs the `pharen` command so you can use it from anywhere.
 
 Note regarding syntax highlighting: There are no editor plugins for Pharen available yet. For now, you can configure your editor to use another lisp's highlighting for Pharen. For example, to have Vim treat Pharen files (.phn) as Clojure files (.clj), add the following to your .vimrc:
 
-{% highlight sh %}
+{% highlight python %}
 au BufNewFile,BufRead *.phn set filetype=clojure
-{% endhighlight %}*
+{% endhighlight %}
 
 ### Hello world {#hello-world}
 Open a text editor (any should work) and enter the following code:
@@ -33,7 +33,7 @@ Open a text editor (any should work) and enter the following code:
 
 Save this in your server's document root directory as `hello.phn`. From inside this directory run the following command to compile it:
 
-{% highlight sh %}
+{% highlight hs %}
 $ pharen hello.phn
 {% endhighlight %}
 
