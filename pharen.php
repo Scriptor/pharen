@@ -160,14 +160,14 @@ class TypeSig {
             $othername = Null;
             $is_exclusive = False;
 
-            if(is_object($thistype)) $thisname = $thistype->typename;
-            if(is_object($othertype)){
-                $othername = $othertype->typename;
-                if(self::is_exclusive($othername)){
+            if(is_object($thistype)){
+                $thisname = $thistype->typename;
+                if(self::is_exclusive($thisname)){
                     $is_exclusive = True;
-                    $othername = substr($othername, 0, -strlen('__exclam'));
+                    $thisname = substr($thisname, 0, -strlen('__exclam'));
                 }
             }
+            if(is_object($othertype)) $othername = $othertype->typename;
 
             if($othertype === "Any"){
                 if($is_exclusive){
