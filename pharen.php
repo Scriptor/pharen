@@ -46,8 +46,15 @@ class Annotation {
         }
     }
 
+    public function is_primitive(){
+        $typename = TypeSig::is_exclusive($this->typename) ?
+            substr($this->typename, 0, -strlen('__exclam'))
+            : $this->typename;
+        return in_array($typename, self::$primitives);
+    }
+
     public function get_php_typename(){
-        if(in_array($this->typename, self::$primitives)){
+        if($this->is_primitive()){
             return "";
         }else{
             return $this->typename;
@@ -73,6 +80,10 @@ class TypeSig {
         return $typesig1->match($typesig2);
     }
 
+    public static function is_exclusive($typename){
+        return substr($typename, -strlen('__exclam')) === '__exclam';
+    }
+
     public function __toString(){
         $str = "";
         foreach($this->annotations as $ann){
@@ -90,7 +101,7 @@ class TypeSig {
         if($ann !== "Any"){
             $this->any = False;
 
-            if($this->is_exclusive($ann->typename)){
+            if(self::is_exclusive($ann->typename)){
                 $this->exclusive = True;
             }
         }
@@ -124,10 +135,6 @@ class TypeSig {
         }
     }
     
-    public function is_exclusive($typename){
-        return substr($typename, -1) === '__exclam';
-    }
-
     public function match(TypeSig $other){
         // thislen is usually the arguments type sig
         // otherlen is usually the func parameters type sig
@@ -151,12 +158,19 @@ class TypeSig {
             $thisname = Null;
             $othertype = $otheranns[$x];
             $othername = Null;
+            $is_exclusive = False;
 
             if(is_object($thistype)) $thisname = $thistype->typename;
-            if(is_object($othertype)) $othername = $othertype->typename;
+            if(is_object($othertype)){
+                $othername = $othertype->typename;
+                if(self::is_exclusive($othername)){
+                    $is_exclusive = True;
+                    $othername = substr($othername, 0, -strlen('__exclam'));
+                }
+            }
 
             if($othertype === "Any"){
-                if($this->is_exclusive($thisname)){
+                if($is_exclusive){
                     return False;
                 }else{
                     $score += self::ANY_MATCH;
@@ -1554,7 +1568,7 @@ class LeafNode extends Node{
         $lowerval = strtolower($val);
         $type = Null;
         if(is_numeric($val)){
-            if(floatval($val) == intval($val)){
+            if(floatval($val) === intval($val)){
                 $type = 'int';
             }else{
                 $type = 'float';
