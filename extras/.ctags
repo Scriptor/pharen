@@ -1,0 +1,8 @@
+--langdef=Pharen
+--langmap=Pharen:.phn
+--regex-pharen=/\([ \t]*def[ \t]+([-[:alnum:]*+!_:\/.?]+)/\1/d,definition/
+--regex-pharen=/\([ \t]*fn[ \t]+([-[:alnum:]*+!_:\/.?]+)/\1/f,function/
+--regex-pharen=/\([ \t]*defmacro[ \t]+([-[:alnum:]*+!_:\/.?]+)/\1/m,macro/
+--regex-pharen=/\([ \t]*defmulti[ \t]+([-[:alnum:]*+!_:\/.?]+)/\1/a,multimethod definition/
+--regex-pharen=/\([ \t]*defmethod[ \t]+([-[:alnum:]*+!_:\/.?]+)/\1/b,multimethod instance/
+--regex-pharen=/\([ \t]*ns[ \t]+([-[:alnum:]*+!_:\/.?]+)/\1/n,namespace/
