@@ -5,10 +5,10 @@ if(!function_exists("pharen\\debug\\convert_line_num")){
     function convert_line_num($line_map, $errline){
         $pharen_line = 1;
         foreach($line_map as $php_line=>$ph_line){
-            $pharen_line = $ph_line;
-            if($php_line >= $errline){
+            if($php_line > $errline){
                 break;
             }
+            $pharen_line = $ph_line;
         }
         return $pharen_line;
     }

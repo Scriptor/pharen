@@ -1428,7 +1428,6 @@ class RootNode extends Node{
             $debug_file = COMPILER_SYSTEM."/template_debug.php";
             $setuplines++;
             $code .= $this->format_line("require_once('$debug_file');");
-            $setuplines++;
         }
 
         $setuplines += 3;
