@@ -1,0 +1,18 @@
+(use pharen.phake as phake)
+
+(phake.proj "{project-name}"
+            {"description" "Enter your description here"
+             "version" "<version>"})
+
+(task "build" "Building {project-name}"
+      (compile-file (phake.project-path "{project-name}.phn")))
+
+(task "run" "Beginning run sequence for {project-name}"
+      (build)
+      (require (phake.project-path "{project-name}.php")))
+
+(task "test" "Testing {project-name}..."
+      (compile-file (phake.project-path "/test/tests.phn"))
+      (require (phake.project-path "/test/tests.php"))
+      TRUE)
+

@@ -6,14 +6,21 @@
                         (let [placeholder (. "{" (:repl 0) "}")
                               replacement (:repl 1)]
                           (str-replace placeholder replacement contents)))]
-    (file-put-contents (reduce replace contents repls) file)))
+    (file-put-contents file (reduce replace contents repls))))
 
-(task "create" "Creating new project"
+(task "create" "Creating new project..."
       (keyword-call global $argv)
       (let [name (:argv 2)
             name-arg (escapeshellarg name)
             default-dir (. phake.PHAKE_SYSTEM "/templates/default/")
             proj-dir (. (getcwd) "/" name "/")]
         (exec (. "cp -r " default-dir " " name-arg))
-        (local phakefile (. proj-dir "/phakefile.phn"))
-        (replace-placeholders phakefile ["project-name" name])))
+        (let
+          [phakefile (. proj-dir "/phakefile")
+           testsfile (. proj-dir "/test/tests.phn")
+           mainfile (. proj-dir "/" name ".phn")
+           replacements ["project-name" name]]
+          (rename (. proj-dir "/main.phn") mainfile)
+          (replace-placeholders mainfile replacements)
+          (replace-placeholders testsfile replacements)
+          (replace-placeholders phakefile replacements))))

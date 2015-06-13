@@ -1,0 +1,8 @@
+(ns {project-name}.tests)
+(use pharen.test as test)
+(use {project-name})
+
+(define "TESTS_DIR" (dirname __FILE__))
+
+; Your tests should go below
+(test.it "No tests written, yet." (test.check 1 1))

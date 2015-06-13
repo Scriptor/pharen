@@ -1,0 +1,4 @@
+(ns {project-name})
+
+; Main project code goes here
+(prn "Hello, world!")
