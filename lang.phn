@@ -443,8 +443,15 @@
   '(method* private ~name ~args
             ~@code))
 
+(defmacro static-method (name args &code)
+  '(method* static ~name ~args
+            ~@code))
+
 (defmacro this (&exprs)
   '(-> this ~@exprs))
+
+(defmacro self (&expr)
+  '(:: self ~@exprs))
 
 (defmacro signature (name args)
   '(signature* public ~name ~args))
