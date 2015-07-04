@@ -1666,6 +1666,15 @@ class FuncValNode extends LeafNode{
         $name = parent::compile();
         if(RootNode::$ns && !function_exists($name) && !strpos($name, "\\")){
             $ns = RootNode::$ns;
+        }else if(strpos($name, "\\")){
+            $last_slash = strrpos($name, "\\");
+            $ns = substr($name, 0, $last_slash);
+            $name = substr($name, $last_slash + 1);
+            foreach(RootNode::$uses[RootNode::$ns] as $full_ns => $use){
+                if($use[1] === $ns){
+                    $ns = $use[0];
+                }
+            }
         }else{
             $ns = "";
         }
