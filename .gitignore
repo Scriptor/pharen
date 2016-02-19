@@ -7,6 +7,5 @@ lib/phake/builtins.php
 lib/pharen/*.php
 examples/*.php
 test/*.php
-test/tmp
 ex
 .DS_Store
