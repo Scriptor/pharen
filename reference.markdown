@@ -38,6 +38,8 @@ An expression is anything that results in a value. Almost everything in Pharen i
 {% highlight clojure %}
 ; A basic function call: my-function is passed a string and a variable
 (my-function "argument 1" argument-2)
+; An even more basic function call: you don't have to pass my-function any parameters
+(my-function)
 ; Expressions can be used anywhere that atomic values can be used.
 (my-function (another-function "argument 1") argument-2)
 {% endhighlight %}
