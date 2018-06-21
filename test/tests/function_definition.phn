@@ -2,13 +2,22 @@
   1)
 (check (one-expr) 1)
 
+(local foo #one-expr)
+(check ($foo) 1)
+
 (fn one-arg (a)
     (. "Argument is " a))
 (check (one-arg "this") "Argument is this")
 
+(local foo2 #one-arg)
+(check ($foo2 "this") "Argument is this")
+
 (fn add-two-args (a b)
     (+ a b))
 (check (add-two-args 133 123) 256)
+
+(local foo3 #add-two-args)
+(check ($foo3 133 123) 256)
 
 (fn two-exprs (a b)
     (one-arg a)
